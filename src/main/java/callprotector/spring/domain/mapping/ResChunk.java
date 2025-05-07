@@ -1,4 +1,6 @@
 package callprotector.spring.domain.mapping;
 
-public class ResChunk {
+import callprotector.spring.domain.common.BaseEntity;
+
+public class ResChunk extends BaseEntity {
 }
