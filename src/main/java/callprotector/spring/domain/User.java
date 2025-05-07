@@ -5,6 +5,9 @@ import callprotector.spring.domain.enums.Position;
 import callprotector.spring.domain.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.LastModifiedDate;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -39,8 +42,10 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private Long totalCall = 0L;
 
-    public void increaseCallCount() {
-        this.totalCall += 1;
-    }
+    @Column(nullable = false, length = 15)
+    private Long phoneNumber;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 
 }
