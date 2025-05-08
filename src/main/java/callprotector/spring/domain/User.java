@@ -3,11 +3,14 @@ package callprotector.spring.domain;
 import callprotector.spring.domain.enums.Department;
 import callprotector.spring.domain.enums.Position;
 import callprotector.spring.domain.common.BaseEntity;
+import callprotector.spring.domain.mapping.LegalBotQuery;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -47,5 +50,11 @@ public class User extends BaseEntity {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<ChatSession> chatSessions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<LegalBotQuery> legalBotQueries = new ArrayList<>();
 
 }
