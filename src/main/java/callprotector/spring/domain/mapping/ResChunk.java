@@ -17,12 +17,6 @@ public class ResChunk extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "res_id", nullable = false)
-    private Long resId;
-
-    @Column(name = "chunk_id", nullable = false)
-    private Long chunkId;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "res_id", nullable = false)
     private LegalBotResponse response;

@@ -31,7 +31,7 @@ public class ChatSession extends BaseEntity {
     @Column(nullable = false)
     private Integer status;
 
-    @OneToMany(mappedBy = "chatSession")
+    @OneToMany(mappedBy = "chatSession", cascade = CascadeType.ALL)
     private List<LegalBotQuery> legalBotQueries = new ArrayList<>();
 
 }

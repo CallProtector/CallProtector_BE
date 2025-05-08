@@ -32,7 +32,7 @@ public class LegalBotResponse extends BaseEntity {
     @Column(nullable = false)
     private String sourceDocs;
 
-    @OneToMany(mappedBy = "response")
+    @OneToMany(mappedBy = "response", cascade = CascadeType.ALL)
     private List<ResChunk> resChunks = new ArrayList<>();
 
 }
