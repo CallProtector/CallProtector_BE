@@ -1,5 +1,5 @@
 ---
-name: 'Fix: 여기에 제목을 입력하세요'
+name: 'Fix: '
 about: 해당 템플릿을 사용해 Bug Fix 이슈를 생성해 주세요.
 title: ''
 labels: ''
