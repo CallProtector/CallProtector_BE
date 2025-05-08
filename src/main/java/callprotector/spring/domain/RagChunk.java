@@ -15,7 +15,7 @@ public class RagChunk {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "document_id", insertable = false, updatable = false)
+    @JoinColumn(name = "document_id", nullable = false)
     private RagDocs ragDocs;
 
     @Column(nullable = false)

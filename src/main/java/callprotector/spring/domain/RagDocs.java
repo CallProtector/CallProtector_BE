@@ -33,7 +33,7 @@ public class RagDocs {
     @Column(nullable = false)
     private String sourceUrl;
 
-    @OneToMany(mappedBy = "ragDocs")
+    @OneToMany(mappedBy = "ragDocs", cascade = CascadeType.ALL)
     private List<RagChunk> chunks = new ArrayList<>();
 
 }
