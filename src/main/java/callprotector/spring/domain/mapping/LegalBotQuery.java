@@ -4,6 +4,7 @@ import callprotector.spring.domain.CallSession;
 import callprotector.spring.domain.ChatSession;
 import callprotector.spring.domain.User;
 import callprotector.spring.domain.common.BaseEntity;
+import callprotector.spring.domain.enums.BotKind;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -42,7 +43,7 @@ public class LegalBotQuery extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Integer botKind;
+    private BotKind botKind;
 
 }
 
