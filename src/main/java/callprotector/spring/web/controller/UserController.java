@@ -1,5 +1,4 @@
 package callprotector.spring.web.controller;
 
-public class TestController {
-
+public class UserController {
 }
