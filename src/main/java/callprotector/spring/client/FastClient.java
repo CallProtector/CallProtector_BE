@@ -23,7 +23,7 @@ public class FastClient { // Service는 비즈니스 로직만 전담하고, Cli
 
     private final String FASTAPI_URL = "http://localhost:8000/filter-abuse";
 
-    public AbuseResponseDTO.AbuseFilterDTO sendTextToFlask(String text) {
+    public AbuseResponseDTO.AbuseFilterDTO sendTextToFastAPI(String text) {
         Map<String, String> request = Map.of("text", text);
 
         // Spring의 RestTemplate: 외부 HTTP 서버에 요청을 보내는 도구
