@@ -40,7 +40,7 @@ public class WebSecurityConfig
                     )
 
                     .authorizeHttpRequests((authorizeRequests) ->
-                            authorizeRequests.requestMatchers("/health","/users/auth/**",
+                            authorizeRequests.requestMatchers("/health","/users/auth/**", "/abuse/**",
                                             "/v3/api-docs/**", "/swagger-ui/**", "/swagger-resources/**","/chat/**","/mail/**","/temp/**").permitAll()
 
                                     .anyRequest().authenticated()
