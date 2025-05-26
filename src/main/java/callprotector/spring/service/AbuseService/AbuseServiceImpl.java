@@ -15,6 +15,6 @@ public class AbuseServiceImpl implements AbuseService{
 
     @Override
     public AbuseResponseDTO.AbuseFilterDTO analyzeText(String text) {
-        return fastClient.sendTextToFlask(text);
+        return fastClient.sendTextToFastAPI(text);
     }
 }
