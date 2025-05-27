@@ -1,9 +1,11 @@
 package callprotector.spring.web.controller;
 
 
+import callprotector.spring.apiPayload.ApiResponse;
 import callprotector.spring.service.AbuseService.AbuseService;
 import callprotector.spring.web.dto.request.AbuseRequestDTO;
 import callprotector.spring.web.dto.response.AbuseResponseDTO;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
@@ -22,11 +24,14 @@ public class AbuseController {
     private final AbuseService abuseService; // -> 의존성 주입 시, 주입된 객체가 바뀌지 않도록 보장
 
     // 함수에 응답 형식 DTO, 파라미터에 요청 형식 DTO (클라이언트가 요청 보내니까 파라미터, 처리결과는 응답이니가 응답 DTO)
+    @Operation(summary = "욕설 필터링 API", description = "욕설 필터링 API입니다.")
     @GetMapping("/abuse-filter")
-    public ResponseEntity<AbuseResponseDTO.AbuseFilterDTO> filterAbuse(@RequestBody AbuseRequestDTO.AbuseFilterDTO request) {
-        AbuseResponseDTO.AbuseFilterDTO response = abuseService.analyzeText(request.getText());
-        return ResponseEntity.ok(response);
+    public ApiResponse<AbuseResponseDTO.AbuseFilterDTO> filterAbuse(@RequestBody AbuseRequestDTO.AbuseFilterDTO request) {
+        AbuseResponseDTO.AbuseFilterDTO result = abuseService.analyzeText(request.getText());
+        return ApiResponse.onSuccess(result);
     }
+
+
 
 
 
