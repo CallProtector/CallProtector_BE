@@ -18,7 +18,7 @@ public class TwilioWebhookController {
 
     @PostMapping(value = "/voice", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
     public String onIncomingCall(@RequestParam Map<String, String> params) {
-        System.out.println("📞 Inbound Call From: " + params.get("From"));
+        System.out.println("☆ Inbound Call From: " + params.get("From"));
         VoiceResponse response = new VoiceResponse.Builder()
                 .start(new Start.Builder()
                         .stream(new Stream.Builder()
