@@ -1,5 +1,6 @@
 package callprotector.spring.config;
 
+import callprotector.spring.client.FastClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.gax.rpc.ClientStream;
@@ -36,8 +37,7 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                     .setEncoding(RecognitionConfig.AudioEncoding.MULAW)
                     .setSampleRateHertz(8000)
                     .setLanguageCode("ko-KR")
-                    .setUseEnhanced(true)  // chj: 품질 개선 모델 사용(얘 최고인듯요)
-                    // .setModel("phone_call") // chj:  한국어에서는 사용 불가
+                    .setUseEnhanced(true)
                     .build();
 
             StreamingRecognitionConfig streamingConfig = StreamingRecognitionConfig.newBuilder()
@@ -105,16 +105,16 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
             String base64 = json.get("media").get("payload").asText();
             byte[] audioBytes = Base64.getDecoder().decode(base64);
 
-            // 디버깅용 오디오 저장
-            try (FileOutputStream fos = new FileOutputStream("debug_audio_" + session.getId() + ".mulaw", true)) {
-                fos.write(audioBytes);
-            }
+//            // 디버깅용 오디오 저장
+//            String filename = "debug_audio_" + session.getId() + ".mulaw";
+//            try (FileOutputStream fos = new FileOutputStream(filename, true)) {
+//                fos.write(audioBytes);
+//            }
 
-            // chj : 200ms 버퍼링 후 일정 크기로 묶어 전송
-            // 오디오 버퍼링 및 주기적 전송
+            // 오디오 200ms 버퍼링 후 일정 크기로 묶어 주기적으로 전송
             audioBuffer.write(audioBytes);
             long now = System.currentTimeMillis();
-            if (now - lastSendTime >= 200) { // 200ms 주기 전송
+            if (now - lastSendTime >= 200) {
                 byte[] chunk = audioBuffer.toByteArray();
                 try {
                     clientStream.send(StreamingRecognizeRequest.newBuilder()
@@ -152,8 +152,8 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
             }
 
             if (speechClient != null) {
-                // ✅ 응답 처리 시간 대기
-                // chj: 1초 무음만 전송하고 곧바로 종료
+                // 응답 처리 시간 대기
+                // 1초 무음 전송 후 즉시 종료
                 boolean terminated = speechClient.awaitTermination(2, java.util.concurrent.TimeUnit.SECONDS);
                 if (!terminated) {
                     log.warn("☆ SpeechClient 종료 대기 시간 초과. 강제 종료합니다.");
