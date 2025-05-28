@@ -7,8 +7,8 @@ public class UserRequestDTO {
     @Builder
     @Getter
     @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
+    @NoArgsConstructor // 기본 생성자 초기화
+    @AllArgsConstructor // 모든 필드 초기화
     // 회원가입 요청 DTO
     public static class SignupDTO {
         private String name;

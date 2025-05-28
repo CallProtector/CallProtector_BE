@@ -36,17 +36,15 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	// spring-security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
-	//implementation group: 'io.jsonwebtoken', name:'jjwt',version:'0.11.2'
-	// 이거 맞냐?
-	implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.2'
-	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.2'
-	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.2'
+	// JJWT 라이브러리 (JWT 구현체) 3종 세트
+	implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.2' // 인터페이스 정의
+	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.2' // 실제 구현체
+	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.2' // JSON 변환기 (Claims ↔ JSON 직렬화용)
+
 	// 이메일 인증
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 
-	// Twilio
-	implementation 'com.twilio.sdk:twilio:10.7.2'
-
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
 
 }
 
