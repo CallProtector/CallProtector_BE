@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>Twilio 수신 테스트</title>
+    <script src="https://sdk.twilio.com/js/client/v1.13/twilio.min.js"></script>
+</head>
+<body>
+<h2>📞 브라우저 전화 수신 대기 중...</h2>
+<button id="accept-btn" style="display:none;">📞 전화 수락</button>
+
+<script>
+    let pendingConnection = null;
+
+    fetch('/token')
+        .then(res => res.json())
+        .then(data => {
+            const accessToken = data.twilioAccessToken;
+            const device = new Twilio.Device(accessToken, { debug: true });
+
+            device.on('ready', () => {
+                console.log('✅ Device ready');
+
+                // 오디오 출력 장치를 명시적으로 설정
+                Twilio.Device.audio.speakerDevices.set('default');
+            });
+
+            device.on('incoming', conn => {
+                console.log('📞 수신:', conn.parameters.From);
+                pendingConnection = conn;
+                document.getElementById("accept-btn").style.display = "inline";
+            });
+
+            document.getElementById("accept-btn").addEventListener("click", () => {
+                if (pendingConnection) {
+                    pendingConnection.accept();
+                    console.log("✅ 수신 수락됨");
+                    pendingConnection = null;
+                }
+                document.getElementById("accept-btn").style.display = "none";
+            });
+
+            device.on('connect', () => console.log('🔊 통화 연결됨'));
+            device.on('disconnect', () => {
+                console.log('❌ 통화 종료');
+                document.getElementById("accept-btn").style.display = "none";
+            });
+
+            device.on('error', err => {
+                console.error('🚨 Twilio 오류:', err);
+                document.getElementById("accept-btn").style.display = "none";
+            });
+        });
+</script>
+</body>
+</html>
