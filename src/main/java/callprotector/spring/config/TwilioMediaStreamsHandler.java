@@ -6,33 +6,28 @@ import com.google.api.gax.rpc.ClientStream;
 import com.google.api.gax.rpc.ResponseObserver;
 import com.google.api.gax.rpc.StreamController;
 import com.google.cloud.speech.v1.*;
-
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.CloseStatus;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Base64;
-import java.util.List;
-
 
 @Component
 @Slf4j
 public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
     private SpeechClient speechClient;
     private ClientStream<StreamingRecognizeRequest> clientStream;
-    private ByteArrayOutputStream audioBuffer = new ByteArrayOutputStream();
-
+    private final ByteArrayOutputStream audioBuffer = new ByteArrayOutputStream();
+    private long lastSendTime = System.currentTimeMillis();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        log.info("🔗 Twilio 연결됨: {}", session.getId());
+        log.info("☆ WebSocket 연결됨: {}", session.getId());
 
         try {
             speechClient = SpeechClient.create();
@@ -41,6 +36,8 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                     .setEncoding(RecognitionConfig.AudioEncoding.MULAW)
                     .setSampleRateHertz(8000)
                     .setLanguageCode("ko-KR")
+                    .setUseEnhanced(true)  // chj: 품질 개선 모델 사용(얘 최고인듯요)
+                    // .setModel("phone_call") // chj:  한국어에서는 사용 불가
                     .build();
 
             StreamingRecognitionConfig streamingConfig = StreamingRecognitionConfig.newBuilder()
@@ -50,36 +47,30 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
 
             ResponseObserver<StreamingRecognizeResponse> responseObserver = new ResponseObserver<>() {
                 public void onStart(StreamController controller) {
-                    log.info("🟢 STT 스트리밍 시작됨");
-
+                    log.info("☆ STT 스트리밍 시작됨");
                 }
 
                 public void onResponse(StreamingRecognizeResponse response) {
-                   log.info("⭐️ StreamingRecognizeResponse가 수신");
-                    if (response == null) {
-                        log.warn("❌ 응답 자체가 null임");
-                        return;
-                    }
-
-                    List<StreamingRecognitionResult> results = response.getResultsList();
-                    log.info("📦 응답 결과 수: {}", results.size());
-
                     for (StreamingRecognitionResult result : response.getResultsList()) {
                         if (result.getAlternativesCount() > 0) {
                             String transcript = result.getAlternatives(0).getTranscript();
                             boolean isFinal = result.getIsFinal();
-                            log.info("📝 {} 인식 결과: {}", isFinal ? "최종" : "중간", transcript);
-                        } else {
-                            log.warn("⚠️ 결과는 있지만 대안이 없음");
+
+                            if (isFinal) {
+                                log.info("☆★☆ 최종 인식 결과: {}", transcript);
+                            } else {
+                                log.info("☆ 중간 인식 결과: {}", transcript);
+                            }
                         }
                     }
                 }
+
                 public void onError(Throwable t) {
-                    log.error("❗ STT 오류 발생", t);
+                    log.error("☆ STT 오류 발생", t);
                 }
 
                 public void onComplete() {
-                    log.info("✅ STT 세션 종료");
+                    log.info("☆ STT 세션 종료");
                 }
             };
 
@@ -88,14 +79,10 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                     .setStreamingConfig(streamingConfig)
                     .build());
 
-            if (clientStream == null) {
-                log.error("❌ STT clientStream 초기화 실패");
-            } else {
-                log.info("✅ clientStream 초기화 완료");
-            }
+            log.info("☆ clientStream 초기화 완료");
 
         } catch (IOException e) {
-            log.error("❌ SpeechClient 초기화 실패: {}", e.getMessage());
+            log.error("☆  SpeechClient 초기화 실패: {}", e.getMessage());
             closeSessionWithError(session, "STT 서비스 초기화 실패");
         }
     }
@@ -103,91 +90,90 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         if (clientStream == null) {
-            log.error("❌ clientStream is null. 초기화되지 않음");
+            log.error("☆ clientStream is null. 초기화되지 않음");
             return;
         }
 
         String payload = message.getPayload();
-        log.info("📨 초기 메시지 수신 (text): {}", payload);
-
         ObjectMapper mapper = new ObjectMapper();
         JsonNode json = mapper.readTree(payload);
 
-        if (json.has("event") && "start".equals(json.get("event").asText())) {
-            JsonNode mediaFormat = json.get("start").get("mediaFormat");
-            String encoding = mediaFormat.get("encoding").asText();
-            int sampleRate = mediaFormat.get("sampleRate").asInt();
-            int channels = mediaFormat.get("channels").asInt();
-            log.info("Twilio Start Event - Encoding: {}, SampleRate: {}, Channels: {}", encoding, sampleRate, channels);
-        }
-
         if (json.has("event") && "media".equals(json.get("event").asText())) {
             String track = json.get("media").get("track").asText();
-            if (!"inbound".equals(track)) return; //inbound만 처리 중
+            if (!"inbound".equals(track)) return;
 
             String base64 = json.get("media").get("payload").asText();
             byte[] audioBytes = Base64.getDecoder().decode(base64);
 
-
-            // 오디오 파일로 저장해서 실제 음성이 들어오는지 확인 -> 확인 완료 ✅
-            String filename = "test_audio_inbound_" + session.getId() + ".mulaw";
-
-            try (FileOutputStream fos = new FileOutputStream(filename, true)) {
+            // 디버깅용 오디오 저장
+            try (FileOutputStream fos = new FileOutputStream("debug_audio_" + session.getId() + ".mulaw", true)) {
                 fos.write(audioBytes);
-            } catch (Exception e) {
-                log.error("❗오디오 저장 실패", e);
             }
 
-
-            // 오디오 들어올 때마다 바로 전송 (160 bytes 단위)
-            clientStream.send(StreamingRecognizeRequest.newBuilder()
-                    .setAudioContent(ByteString.copyFrom(audioBytes))
-                    .build());
-            log.info("📤 오디오 전송 ({} bytes)", audioBytes.length);
+            // chj : 200ms 버퍼링 후 일정 크기로 묶어 전송
+            // 오디오 버퍼링 및 주기적 전송
+            audioBuffer.write(audioBytes);
+            long now = System.currentTimeMillis();
+            if (now - lastSendTime >= 200) { // 200ms 주기 전송
+                byte[] chunk = audioBuffer.toByteArray();
+                try {
+                    clientStream.send(StreamingRecognizeRequest.newBuilder()
+                            .setAudioContent(ByteString.copyFrom(chunk))
+                            .build());
+                    log.info("☆ 오디오 청크 전송 ({} bytes)", chunk.length);
+                } catch (Exception e) {
+                    log.error("☆ 오디오 전송 중 예외 발생: {}", e.getMessage());
+                }
+                audioBuffer.reset();
+                lastSendTime = now;
+            }
         }
     }
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) {
-        log.error("❗오류 발생: {}", exception.getMessage());
+        log.error("☆ WebSocket 오류 발생: {}", exception.getMessage());
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        log.info("🔌 연결 종료: {}", session.getId());
+        log.info("☆ 연결 종료: {}", session.getId());
+
         try {
-            // 마지막 버퍼 처리
-            if (audioBuffer.size() > 0 && clientStream != null) {
-                byte[] lastChunk = audioBuffer.toByteArray();
-                clientStream.send(StreamingRecognizeRequest.newBuilder()
-                        .setAudioContent(ByteString.copyFrom(lastChunk))
-                        .build());
-                audioBuffer.reset();
-                log.info("📤 종료 전 STT 최종 청크 전송 완료 ({} bytes)", lastChunk.length);
-            }
             if (clientStream != null) {
-                log.info("📤 종료 전 침묵 추가 전송");
-                byte[] silence = new byte[8000];  // 1초 분량 침묵 (mu-law 8000Hz)
+                byte[] silence = new byte[8000]; // 1초 무음 전송
                 clientStream.send(StreamingRecognizeRequest.newBuilder()
                         .setAudioContent(ByteString.copyFrom(silence))
                         .build());
 
-                Thread.sleep(1500);  // STT 응답 대기 시간
+                log.info("☆ 종료 전 침묵 오디오 전송 완료");
+                clientStream.closeSend();
+                log.info("☆ STT 스트림 closeSend() 호출 완료");
+            }
 
-                clientStream.closeSend();  // 세션 종료
-                log.info("✅ STT 스트림 closeSend() 호출 완료");
+            if (speechClient != null) {
+                // ✅ 응답 처리 시간 대기
+                // chj: 1초 무음만 전송하고 곧바로 종료
+                boolean terminated = speechClient.awaitTermination(2, java.util.concurrent.TimeUnit.SECONDS);
+                if (!terminated) {
+                    log.warn("☆ SpeechClient 종료 대기 시간 초과. 강제 종료합니다.");
+                }
+
+                speechClient.shutdownNow();
+                log.info("☆ SpeechClient 종료 완료");
             }
 
         } catch (Exception e) {
-            log.error("❗ WebSocket 세션 종료 중 오류 발생", e);
+            log.error("☆ 세션 종료 처리 중 오류", e);
         }
     }
+
 
     private void closeSessionWithError(WebSocketSession session, String reason) {
         try {
             session.close(CloseStatus.SERVER_ERROR.withReason(reason));
         } catch (IOException e) {
-            log.error("❗세션 강제 종료 실패: {}", e.getMessage());
+            log.error("☆ 세션 종료 실패", e);
         }
     }
 }

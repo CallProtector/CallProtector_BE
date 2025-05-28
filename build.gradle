@@ -43,8 +43,9 @@ dependencies {
 
 	// 이메일 인증
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
-
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+
+
 	// 최신 Twilio Core SDK
 	implementation 'com.twilio.sdk:twilio:10.7.2'
 
