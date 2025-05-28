@@ -48,9 +48,23 @@ public class WebSecurityConfig
                     )
 
                     .authorizeHttpRequests((authorizeRequests) ->
-                            authorizeRequests.requestMatchers("/health","/users/auth/**", "/abuse/**",
-                                            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-resources/**","/chat/**","/mail/**","/temp/**").permitAll()
-
+                            authorizeRequests
+                                    .requestMatchers(
+                                            "/health",
+                                            "/users/auth/**",
+                                            "/school/**",
+                                            "/v3/api-docs/**",
+                                            "/swagger-ui/**",
+                                            "/swagger-resources/**",
+                                            "/chat/**",
+                                            "/mail/**",
+                                            "/api/webhook/**",
+                                            "/twiml",
+                                            "/ws/**",
+                                            "/token/**",
+                                            "/twilio/voice",
+                                            "/popup.html")
+                                    .permitAll()
                                     .anyRequest().authenticated()
                     )
                     .exceptionHandling((exceptionConfig) ->
@@ -81,7 +95,6 @@ public class WebSecurityConfig
                 PrintWriter writer = response.getWriter();
                 writer.write(new ObjectMapper().writeValueAsString(apiResponse));
                 writer.flush();
-
             };
 
 }
