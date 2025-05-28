@@ -1,5 +1,6 @@
 package callprotector.spring.config;
 
+import callprotector.spring.apiPayload.ApiResponse;
 import callprotector.spring.security.JwtAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.filter.CorsFilter;
@@ -24,6 +27,11 @@ import java.io.PrintWriter;
 @Slf4j
 public class WebSecurityConfig
 {
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -40,8 +48,8 @@ public class WebSecurityConfig
                     )
 
                     .authorizeHttpRequests((authorizeRequests) ->
-                            authorizeRequests.requestMatchers("/health","/users/auth/**","/school/**",
-                                            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-resources/**","/chat/**","/mail/**").permitAll()
+                            authorizeRequests.requestMatchers("/health","/users/auth/**", "/abuse/**",
+                                            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-resources/**","/chat/**","/mail/**","/temp/**").permitAll()
 
                                     .anyRequest().authenticated()
                     )
@@ -62,24 +70,18 @@ public class WebSecurityConfig
 
     }
 
-    // ApiResponse 패키지를 아직 만들지 않아, 추가 안 함
     private final AuthenticationEntryPoint unauthorizedEntryPoint =
             (request, response, authException) -> {
+
+                ApiResponse<?> apiResponse = new ApiResponse(false,"401","인증이 필요합니다.",null);
                 response.setCharacterEncoding("UTF-8");
                 response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-                // 여러 필드를 포함한 JSON
-                String json = "{"
-                        + "\"success\": false,"
-                        + "\"code\": 401,"
-                        + "\"message\": \"인증이 필요합니다.\","
-                        + "\"data\": null"
-                        + "}";
-
                 PrintWriter writer = response.getWriter();
-                writer.write(json);
+                writer.write(new ObjectMapper().writeValueAsString(apiResponse));
                 writer.flush();
+
             };
 
 }
