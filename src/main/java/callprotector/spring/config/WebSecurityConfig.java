@@ -71,7 +71,7 @@ public class WebSecurityConfig
                             exceptionConfig
                                     .authenticationEntryPoint(unauthorizedEntryPoint)
                     ); // 401 403 관련 예외처리
-            ;
+
             http.addFilterAfter(
                     jwtAuthenticationFilter,
                     CorsFilter.class
