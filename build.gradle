@@ -45,7 +45,27 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+	// 최신 Twilio Core SDK
+	implementation 'com.twilio.sdk:twilio:10.7.2'
 
+	// Websocket
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+	// Tomcat - websocket 모듈 의존성 추가
+	implementation 'org.apache.tomcat.embed:tomcat-embed-websocket'
+
+
+	//Google Gloud Speech
+	implementation 'com.google.cloud:google-cloud-speech:4.39.0'
+
+	//Json Parsing
+	implementation 'org.json:json:20231013'
+
+	// Springdoc OpenAPI UI
+	implementation 'org.springdoc:springdoc-openapi-ui:1.6.11'
+
+	// Swagger annotations
+	implementation 'io.swagger.core.v3:swagger-annotations:2.2.10'
 }
 
 tasks.named('test') {

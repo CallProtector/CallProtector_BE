@@ -36,3 +36,6 @@ twilio:
     token: ${TWILIO_AUTH_TOKEN}
   phone:
     number: ${TWILIO_PHONE_NUMBER}
+  api:
+    key: ${TWILIO_API_KEY}
+    secret: ${TWILIO_API_SECRET}
