@@ -1,6 +1,7 @@
 package callprotector.spring.config;
 
 import callprotector.spring.client.FastClient;
+import callprotector.spring.web.dto.response.AbuseResponseDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.gax.rpc.ClientStream;
@@ -8,6 +9,7 @@ import com.google.api.gax.rpc.ResponseObserver;
 import com.google.api.gax.rpc.StreamController;
 import com.google.cloud.speech.v1.*;
 import com.google.protobuf.ByteString;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
@@ -20,11 +22,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+@RequiredArgsConstructor
 @Component
 @Slf4j
 public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
 
     private final ObjectMapper mapper = new ObjectMapper();
+    private final FastClient fastClient;
 
     private static class STTContext {
         SpeechClient client;
@@ -32,6 +36,8 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         long lastSendTime = System.currentTimeMillis();
         StringBuilder transcriptBuilder = new StringBuilder();
+
+        WebSocketSession session; // ✅ 프론트에 전송하려면 세션 저장 필요
     }
 
     private final Map<String, STTContext> inboundMap = new ConcurrentHashMap<>();
@@ -52,8 +58,9 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
         String base64 = json.get("media").get("payload").asText();
         byte[] audio = Base64.getDecoder().decode(base64);
 
-        STTContext ctx = getOrCreateContext(session.getId(), track);
+        STTContext ctx = getOrCreateContext(session.getId(), track, session);
         ctx.buffer.write(audio);
+        ctx.session = session;
 
         long now = System.currentTimeMillis();
         if (now - ctx.lastSendTime >= 200) {
@@ -63,16 +70,16 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                     .build());
             ctx.buffer.reset();
             ctx.lastSendTime = now;
-            //log.info("📤 전송: {} ({} bytes)", track, chunk.length);
         }
     }
 
-    private STTContext getOrCreateContext(String sessionId, String track) throws IOException {
+    private STTContext getOrCreateContext(String sessionId, String track, WebSocketSession session) throws IOException {
         Map<String, STTContext> targetMap = "inbound".equals(track) ? inboundMap : outboundMap;
 
         return targetMap.computeIfAbsent(sessionId, id -> {
             try {
                 STTContext ctx = new STTContext();
+                ctx.session = session;
                 ctx.client = SpeechClient.create();
 
                 RecognitionConfig config = RecognitionConfig.newBuilder()
@@ -98,8 +105,28 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                                 boolean isFinal = result.getIsFinal();
                                 log.info("💬 [{}][{}] {}", isFinal ? "최종" : "중간", track.equals("inbound") ? "고객" : "상담원", transcript);
 
-                                if (isFinal) {
-                                    ctx.transcriptBuilder.append(transcript).append(" ");
+                                try {
+                                    // 🧠 욕설 판별
+                                    var analysis = fastClient.sendTextToFastAPI(transcript);
+
+                                    // 📤 실시간 응답 전달
+                                    String json = mapper.writeValueAsString(Map.of(
+                                            "type", track,
+                                            "text", transcript,
+                                            "isFinal", isFinal,
+                                            "abuse", analysis.isAbuse(),
+                                            "abuseType", analysis.getType()
+                                    ));
+
+                                    ctx.session.sendMessage(new TextMessage(json));
+
+                                    // ✅ 최종 결과만 누적 저장
+                                    if (isFinal) {
+                                        ctx.transcriptBuilder.append(transcript).append(" ");
+                                    }
+
+                                } catch (Exception e) {
+                                    log.error("❌ FastAPI 전송 오류", e);
                                 }
                             }
                         }
@@ -149,6 +176,15 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                 String finalTranscript = ctx.transcriptBuilder.toString().trim();
                 if (!finalTranscript.isEmpty()) {
                     log.info("📝 [{}] 전체 텍스트: {}", label.equals("inbound") ? "고객" : "상담원", finalTranscript);
+
+                    try {
+                        AbuseResponseDTO.AbuseFilterDTO result = fastClient.sendTextToFastAPI(finalTranscript);
+                        log.info("⚠️ [{}] 욕설 탐지 결과 → isAbuse: {}, type: {}",
+                                label.equals("inbound") ? "고객" : "상담원",
+                                result.isAbuse(), result.getType());
+                    } catch (Exception e) {
+                        log.error("🚨 [{}] 욕설 분석 실패", label, e);
+                    }
                 }
 
             } catch (Exception e) {
