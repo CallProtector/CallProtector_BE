@@ -18,4 +18,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
         registry.addHandler(twilioMediaStreamsHandler, "/ws/audio")
                 .setAllowedOrigins("*"); // 실제 서비스에서는 도메인 제한 필요
     }
+
+
 }
