@@ -63,7 +63,9 @@ public class WebSecurityConfig
                                             "/ws/**",
                                             "/token/**",
                                             "/twilio/voice",
-                                            "/popup.html")
+                                            "/popup.html",
+                                            "/call-session/**",
+                                            "/abuse/**")
                                     .permitAll()
                                     .anyRequest().authenticated()
                     )
