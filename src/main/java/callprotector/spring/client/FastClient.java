@@ -2,6 +2,10 @@ package callprotector.spring.client;
 
 import callprotector.spring.web.dto.response.AbuseResponseDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -13,6 +17,7 @@ import java.util.Map;
 // - 일반적으로 Flask, 외부 API 서버, DB 외부 서비스, Microservice 등과 통신할 때 사용
 // - 통신 로직을 서비스에서 분리하여 **비즈니스 로직(Service)**이 더 깔끔하게 유지됨
 
+@Slf4j // 자동 로깅 라이브러리
 @Component // Spring이 FlaskClient 객체를 자동으로 생성해서 관리하도록 만드는 것 (이 클래스를 Spring Bean으로 등록해라!!)
 @RequiredArgsConstructor // Component랑 RequiredArgsConstructor랑 같이 쓰면, @Autowired 주입 없이도 사용 가능
 // 왜 필요해? -> Spring에서 FlaskClient를 new로 만들지 않고, """Spring 내부에서 생성·주입 관리하도록""" 하기 위함
@@ -24,16 +29,30 @@ public class FastClient { // Service는 비즈니스 로직만 전담하고, Cli
     private final String FASTAPI_URL = "http://localhost:8000/filter-abuse";
 
     public AbuseResponseDTO.AbuseFilterDTO sendTextToFastAPI(String text) {
-        Map<String, String> request = Map.of("text", text);
+        // 1. 요청 헤더 설정 (Content-Type: application/json)
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, String> requestBody = Map.of("text", text);
+        HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestBody, headers);
 
         // Spring의 RestTemplate: 외부 HTTP 서버에 요청을 보내는 도구
         // postForEntity = POST요청을 보내고, 응답을 ResponseEntity로 받겠다.
         ResponseEntity<AbuseResponseDTO.AbuseFilterDTO> response = restTemplate.postForEntity(
                 FASTAPI_URL, // 요청 보낼 URL
-                request, // 요청 본문 (JSON으로 변환됨)
+                entity, // 요청 본문 (JSON으로 변환됨)
                 AbuseResponseDTO.AbuseFilterDTO.class // 응답 받을 DTO 클래스
         );
-        return response.getBody();
+
+        AbuseResponseDTO.AbuseFilterDTO result = response.getBody();
+        if (result == null) {
+            log.warn("⚠️ FastAPI 응답이 null입니다.");
+            return null;
+        }
+        log.info("🚨 욕설 분석 결과: abuse={}, detected={}, type={}",
+                result.isAbuse(), result.isDetected(), result.getType());
+
+        return result;
 
     }
 

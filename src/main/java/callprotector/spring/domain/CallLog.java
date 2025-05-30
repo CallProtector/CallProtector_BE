@@ -19,19 +19,25 @@ public class CallLog extends BaseEntity {
     @JoinColumn(name = "call_session_id")
     private CallSession callSession;
 
+    @Setter
     @Column(nullable = false, length = 20)
     private String audio_url;
 
     // 크기가 큰 ERD-TEXT 속성은 크기 설정 안 함
+    @Setter
     @Column(nullable = false)
     private String script;
 
-    @Column(nullable = false)
-    private Integer abuse_cnt;
+    @Setter
+    @Column(name = "abuse_cnt")
+    private Integer abuseCnt;
 
-    private Boolean abuse_detect;
+    @Setter
+    @Column(name = "abuse_detect")
+    private Boolean abuseDetect;
 
     // 크기가 큰 ERD-TEXT 속성은 크기 설정 안 함
+    @Setter
     @Column(nullable = false)
     private String summary;
 
