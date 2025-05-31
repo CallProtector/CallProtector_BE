@@ -17,6 +17,10 @@ public class CallSession extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 날짜 기반 세션 코드 (예: 20250531-0001)
+    @Column(nullable = false, unique = true, length = 20)
+    private String callSessionCode;
+
     @ManyToOne(fetch = FetchType.LAZY) // 지연로딩
     @JoinColumn(name ="user_id")
     private User user;
