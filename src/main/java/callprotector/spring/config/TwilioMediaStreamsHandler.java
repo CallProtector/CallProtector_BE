@@ -1,6 +1,9 @@
 package callprotector.spring.config;
 
 import callprotector.spring.client.FastClient;
+import callprotector.spring.service.CallLogService.CallLogService;
+import callprotector.spring.service.CallSessionService.CallSessionService;
+import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.AbuseResponseDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,6 +32,8 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final FastClient fastClient;
+    private final CallSessionService callSessionService;
+    private final CallLogService callLogService;
 
     private static class STTContext {
         SpeechClient client;
@@ -38,6 +43,7 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
         StringBuilder transcriptBuilder = new StringBuilder();
 
         WebSocketSession session; // ✅ 프론트에 전송하려면 세션 저장 필요
+        Long callSessionId; // chj - 되돌릴 수 없을때 코드 지우기 위한 표시
     }
 
     private final Map<String, STTContext> inboundMap = new ConcurrentHashMap<>();
@@ -80,6 +86,12 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
             try {
                 STTContext ctx = new STTContext();
                 ctx.session = session;
+
+
+                // chj - ⭐ CallSession 강제 생성
+                Long callSessionId = callSessionService.createCallSession("ch5i_hj15@naver.com", new CallSessionRequestDTO.CallSessionMakeDTO(0L, "자동 세션"));
+                ctx.callSessionId = callSessionId;
+
                 ctx.client = SpeechClient.create();
 
                 RecognitionConfig config = RecognitionConfig.newBuilder()
@@ -118,7 +130,13 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                                             "abuseType", analysis.getType()
                                     ));
 
-                                    ctx.session.sendMessage(new TextMessage(json));
+                                    // WebSocket으로 보내는 부분만 try
+                                    try {
+                                        ctx.session.sendMessage(new TextMessage(json));
+                                    } catch (Exception e) {
+                                        log.warn("⚠️ WebSocket 전송 실패 (무시): {}", e.getMessage());
+                                    }
+
 
                                     // ✅ 최종 결과만 누적 저장
                                     if (isFinal) {
@@ -174,6 +192,10 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                 log.info("✅ [{}] STT 스트림 종료 완료", label);
 
                 String finalTranscript = ctx.transcriptBuilder.toString().trim();
+                // 💡 강제 저장 보완
+                if (finalTranscript.isEmpty() && ctx.transcriptBuilder.length() > 0) {
+                    finalTranscript = ctx.transcriptBuilder.toString().trim();
+                }
                 if (!finalTranscript.isEmpty()) {
                     log.info("📝 [{}] 전체 텍스트: {}", label.equals("inbound") ? "고객" : "상담원", finalTranscript);
 
@@ -182,9 +204,19 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                         log.info("⚠️ [{}] 욕설 탐지 결과 → isAbuse: {}, type: {}",
                                 label.equals("inbound") ? "고객" : "상담원",
                                 result.isAbuse(), result.getType());
+
+                        // chj ✅ DB 저장
+                        callLogService.saveFinalTranscript(
+                                ctx.callSessionId,
+                                label,
+                                finalTranscript,
+                                result.isAbuse(),
+                                result.getType()
+                        );
                     } catch (Exception e) {
                         log.error("🚨 [{}] 욕설 분석 실패", label, e);
-                    }
+                        // ✅ DB 저장
+                               }
                 }
 
             } catch (Exception e) {

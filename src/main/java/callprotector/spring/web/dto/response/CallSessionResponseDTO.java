@@ -13,6 +13,7 @@ public class CallSessionResponseDTO {
     @AllArgsConstructor
     public static class CallSessionMakeDTO{
         private Long sessionId;
+        private String callSessionCode;
     }
 
 }

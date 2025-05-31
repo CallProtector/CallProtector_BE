@@ -1,7 +1,9 @@
 package callprotector.spring.service.CallLogService;
 
 import callprotector.spring.domain.CallLog;
+import callprotector.spring.domain.CallSession;
 import callprotector.spring.repository.CallLogRepository;
+import callprotector.spring.repository.CallSessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,23 +14,25 @@ import java.util.Optional;
 public class CallLogServiceImpl implements CallLogService{
 
     private final CallLogRepository callLogRepository;
+    private final CallSessionRepository callSessionRepository;
 
     @Override
-    public void saveFinalTranscript(Long callSessionId, String script, boolean isAbuse, String abuseType) {
-        Optional<CallLog> optionalCallLog = callLogRepository.findByCallSession_Id(callSessionId);
+    public void saveFinalTranscript(Long callSessionId, String label, String script, boolean isAbuse, String abuseType) {
+        CallSession callSession = callSessionRepository.findById(callSessionId)
+                .orElseThrow(() -> new IllegalArgumentException("CallSession not found: " + callSessionId));
 
-        if (optionalCallLog.isPresent()) {
-            CallLog callLog = optionalCallLog.get();
-            callLog.setScript(script);
-            callLog.setAbuseDetect(isAbuse);
-            callLog.setAbuseCnt(isAbuse? 1:0);  // abuse count 계산 방식은 필요 시 변경
-            // callLog.setAbuseType(abuseType); // abuseType 욕설만 하니까 일단 보류
-            callLogRepository.save(callLog);
-        } else {
-            throw new IllegalArgumentException("CallLog not found for sessionId: " + callSessionId);
-        }
+        String audioUrl = label.equals("inbound") ? "customer.wav" : "agent.wav";
 
+        CallLog newLog = CallLog.builder()
+                .callSession(callSession)
+                .audio_url(audioUrl)
+                .summary("자동 요약 예정")
+                .script(script)
+                .abuseDetect(isAbuse)
+                .abuseCnt(isAbuse ? 1 : 0)
+                .build();
 
-
+        callLogRepository.save(newLog);
     }
+
 }
