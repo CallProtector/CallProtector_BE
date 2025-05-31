@@ -20,7 +20,6 @@ public class CallLog extends BaseEntity {
     private CallSession callSession;
 
     @Setter
-    @Column(nullable = false, length = 20)
     private String audio_url;
 
     // 크기가 큰 ERD-TEXT 속성은 크기 설정 안 함
@@ -38,7 +37,6 @@ public class CallLog extends BaseEntity {
 
     // 크기가 큰 ERD-TEXT 속성은 크기 설정 안 함
     @Setter
-    @Column(nullable = false)
     private String summary;
 
 }
