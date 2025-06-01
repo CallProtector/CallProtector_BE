@@ -1,6 +1,8 @@
 package callprotector.spring.service.CallLogService;
 
-public interface CallLogService {
+import callprotector.spring.domain.enums.CallTrack;
 
-    public void saveFinalTranscript(Long callSessionId, String label, String script, boolean isAbuse, String abuseType);
+public interface CallLogService {
+    void saveFinalTranscript(Long callSessionId, CallTrack track, String script, boolean isAbuse, String abuseType);
+    void registerAbuse(Long callSessionId, CallTrack track);
 }
