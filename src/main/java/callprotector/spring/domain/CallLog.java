@@ -1,6 +1,7 @@
 package callprotector.spring.domain;
 
 import callprotector.spring.domain.common.BaseEntity;
+import callprotector.spring.domain.enums.CallTrack;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,6 +22,10 @@ public class CallLog extends BaseEntity {
 
     @Setter
     private String audio_url;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CallTrack track;
 
     // 크기가 큰 ERD-TEXT 속성은 크기 설정 안 함
     @Setter
