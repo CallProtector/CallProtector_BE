@@ -1,10 +1,10 @@
 package callprotector.spring.config;
 
 import callprotector.spring.client.FastClient;
+import callprotector.spring.domain.enums.CallTrack;
 import callprotector.spring.service.CallLogService.CallLogService;
 import callprotector.spring.service.CallSessionService.CallSessionService;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
-import callprotector.spring.web.dto.response.AbuseResponseDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.gax.rpc.ClientStream;
@@ -60,7 +60,9 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
 
         if (!json.has("event") || !"media".equals(json.get("event").asText())) return;
 
-        String track = json.get("media").get("track").asText();
+        String trackRaw = json.get("media").get("track").asText(); // "inbound" or "outbound"
+        CallTrack track = CallTrack.valueOf(trackRaw.toUpperCase());
+
         String base64 = json.get("media").get("payload").asText();
         byte[] audio = Base64.getDecoder().decode(base64);
 
@@ -79,17 +81,19 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
         }
     }
 
-    private STTContext getOrCreateContext(String sessionId, String track, WebSocketSession session) throws IOException {
-        Map<String, STTContext> targetMap = "inbound".equals(track) ? inboundMap : outboundMap;
+    private STTContext getOrCreateContext(String sessionId, CallTrack track, WebSocketSession session) throws IOException {
+        Map<String, STTContext> targetMap = (track == CallTrack.INBOUND) ? inboundMap : outboundMap;
 
         return targetMap.computeIfAbsent(sessionId, id -> {
             try {
                 STTContext ctx = new STTContext();
                 ctx.session = session;
 
-
                 // chj - ⭐ CallSession 강제 생성
-                Long callSessionId = callSessionService.createCallSession("ch5i_hj15@naver.com", new CallSessionRequestDTO.CallSessionMakeDTO(0L, "자동 세션"));
+                Long callSessionId = callSessionService.createCallSession(
+                        "dlthdal07@gmail.com", // TODO: 추후 사용자 이메일 동적으로 처리
+                        new CallSessionRequestDTO.CallSessionMakeDTO(0L, "자동 세션")
+                );
                 ctx.callSessionId = callSessionId;
 
                 ctx.client = SpeechClient.create();
@@ -115,7 +119,10 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                             if (result.getAlternativesCount() > 0) {
                                 String transcript = result.getAlternatives(0).getTranscript();
                                 boolean isFinal = result.getIsFinal();
-                                log.info("💬 [{}][{}] {}", isFinal ? "최종" : "중간", track.equals("inbound") ? "고객" : "상담원", transcript);
+
+                                log.info("💬 [{}][{}] {}", isFinal ? "최종" : "중간",
+                                        track == CallTrack.INBOUND ? "고객" : "상담원",
+                                        transcript);
 
                                 try {
                                     // 🧠 욕설 판별
@@ -123,7 +130,7 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
 
                                     // 📤 실시간 응답 전달
                                     String json = mapper.writeValueAsString(Map.of(
-                                            "type", track,
+                                            "type", track.name().toLowerCase(),
                                             "text", transcript,
                                             "isFinal", isFinal,
                                             "abuse", analysis.isAbuse(),
@@ -143,6 +150,11 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                                         ctx.transcriptBuilder.append(transcript).append(" ");
                                     }
 
+                                    // ✅ 최종 결과만 abuseCnt + 로그 저장
+                                    if (analysis.isAbuse() && track == CallTrack.INBOUND) {
+                                        callLogService.registerAbuse(ctx.callSessionId, track);
+                                    }
+
                                 } catch (Exception e) {
                                     log.error("❌ FastAPI 전송 오류", e);
                                 }
@@ -160,7 +172,9 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                 };
 
                 ctx.stream = ctx.client.streamingRecognizeCallable().splitCall(observer);
-                ctx.stream.send(StreamingRecognizeRequest.newBuilder().setStreamingConfig(streamingConfig).build());
+                ctx.stream.send(StreamingRecognizeRequest.newBuilder()
+                        .setStreamingConfig(streamingConfig)
+                        .build());
 
                 return ctx;
             } catch (IOException e) {
@@ -173,11 +187,11 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         log.info("✅ 연결 종료: {}", session.getId());
 
-        closeContext(inboundMap.remove(session.getId()), "inbound");
-        closeContext(outboundMap.remove(session.getId()), "outbound");
+        closeContext(inboundMap.remove(session.getId()), CallTrack.INBOUND);
+        closeContext(outboundMap.remove(session.getId()), CallTrack.OUTBOUND);
     }
 
-    private void closeContext(STTContext ctx, String label) {
+    private void closeContext(STTContext ctx, CallTrack track) {
         if (ctx != null) {
             try {
                 ctx.stream.closeSend();
@@ -189,7 +203,7 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                     ctx.client.shutdownNow();
                 }
 
-                log.info("✅ [{}] STT 스트림 종료 완료", label);
+                log.info("✅ [{}] STT 스트림 종료 완료", track);
 
                 String finalTranscript = ctx.transcriptBuilder.toString().trim();
                 // 💡 강제 저장 보완
@@ -197,30 +211,31 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                     finalTranscript = ctx.transcriptBuilder.toString().trim();
                 }
                 if (!finalTranscript.isEmpty()) {
-                    log.info("📝 [{}] 전체 텍스트: {}", label.equals("inbound") ? "고객" : "상담원", finalTranscript);
+                    log.info("📝 [{}] 전체 텍스트: {}", track == CallTrack.INBOUND ? "고객" : "상담원", finalTranscript);
 
                     try {
-                        AbuseResponseDTO.AbuseFilterDTO result = fastClient.sendTextToFastAPI(finalTranscript);
-                        log.info("⚠️ [{}] 욕설 탐지 결과 → isAbuse: {}, type: {}",
-                                label.equals("inbound") ? "고객" : "상담원",
+                        var result = fastClient.sendTextToFastAPI(finalTranscript);
+
+                        log.info("⚠️ [{}] 욕설 감지 결과 → isAbuse: {}, type: {}",
+                                track == CallTrack.INBOUND ? "고객" : "상담원",
                                 result.isAbuse(), result.getType());
 
                         // chj ✅ DB 저장
                         callLogService.saveFinalTranscript(
                                 ctx.callSessionId,
-                                label,
+                                track,
                                 finalTranscript,
                                 result.isAbuse(),
                                 result.getType()
                         );
+
                     } catch (Exception e) {
-                        log.error("🚨 [{}] 욕설 분석 실패", label, e);
-                        // ✅ DB 저장
-                               }
+                        log.error("🚨 [{}] 욕설 분석 실패", track, e);
+                    }
                 }
 
             } catch (Exception e) {
-                log.error("❌ [{}] STT 종료 중 오류", label, e);
+                log.error("❌ [{}] STT 종료 중 오류", track, e);
             }
         }
     }
