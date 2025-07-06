@@ -4,13 +4,63 @@
     <meta charset="UTF-8" />
     <title>Twilio 수신 테스트</title>
     <script src="https://sdk.twilio.com/js/client/v1.13/twilio.min.js"></script>
+    <style>
+        .log-line {
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            margin-bottom: 8px;
+            padding: 4px;
+            border-bottom: 1px solid #eee;
+        }
+        #log-area {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        #session-info {
+            margin: 10px 0;
+            font-weight: bold;
+            color: #333;
+        }
+        .final-summary {
+            margin-top: 10px;
+            padding: 10px;
+            border-top: 2px solid #aaa;
+            background: #f5f5f5;
+            white-space: pre-line;
+        }
+    </style>
 </head>
 <body>
 <h2>📞 브라우저 전화 수신 대기 중...</h2>
 <button id="accept-btn" style="display:none;">📞 전화 수락</button>
 
+<div id="session-info">🔒 세션 정보 수신 대기 중...</div>
+
+<h3>📝 실시간 STT 로그</h3>
+<div id="log-area"></div>
+
+
+<h3>📜 최종 전체 텍스트</h3>
+<div id="final-inbound"></div>
+<div id="final-outbound"></div>
+
 <script>
     let pendingConnection = null;
+    const ws = new WebSocket("wss://pet-pipefish-friendly.ngrok-free.app/ws/stt?userId=1");
+
+    const sessionInfoDiv = document.getElementById("session-info");
+    const logArea = document.getElementById("log-area");
+    const finalInboundDiv = document.getElementById("final-inbound");
+    const finalOutboundDiv = document.getElementById("final-outbound");
+
+    const lines = {}; // track + index 키 기반 저장
+    const trackState = {
+        INBOUND: { currentIndex: 0, finalReceived: false },
+        OUTBOUND: { currentIndex: 0, finalReceived: false }
+    };
 
     fetch('/token')
         .then(res => res.json())
@@ -20,15 +70,17 @@
 
             device.on('ready', () => {
                 console.log('✅ Device ready');
-
-                // 오디오 출력 장치를 명시적으로 설정
                 Twilio.Device.audio.speakerDevices.set('default');
+                console.log('Twilio.Device.audio on ready:', Twilio.Device.audio); // 추가
+
             });
 
             device.on('incoming', conn => {
                 console.log('📞 수신:', conn.parameters.From);
                 pendingConnection = conn;
                 document.getElementById("accept-btn").style.display = "inline";
+
+                // incoming 통화가 수락되기 전에 취소되었을 때 처리 필요
             });
 
             document.getElementById("accept-btn").addEventListener("click", () => {
@@ -51,6 +103,69 @@
                 document.getElementById("accept-btn").style.display = "none";
             });
         });
+
+    ws.onopen = () => console.log("🌐 WebSocket 연결됨");
+    ws.onmessage = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+
+            console.log("=== data 출력 ===");
+            console.log("Received WebSocket data:", data);
+
+            if (data.type === "sessionInfo") {
+                sessionInfoDiv.innerText = `🔑 세션 코드: ${data.sessionCode} | 생성 시각: ${data.createdAt} | 폭언 횟수: ${data.totalAbuseCnt}`;
+            } else if (data.type === "totalAbuseCntUpdate") {
+                sessionInfoDiv.innerText = sessionInfoDiv.innerText.replace(/폭언 횟수: .+/, `폭언 횟수: ${data.totalAbuseCnt}`);
+                console.log(`💡 폭언 횟수 업데이트됨: ${data.totalAbuseCnt} (세션 ID: ${data.callSessionId})`);
+            } else if (data.type === "finalTranscript") {
+                const isInbound = data.track === "INBOUND";
+                const targetDiv = isInbound ? finalInboundDiv : finalOutboundDiv;
+                const label = isInbound ? "👤 고객 전체 텍스트" : "💼 상담원 전체 텍스트";
+
+                const summaryHTML = `
+                    <div class="final-summary">
+                        <strong>${label}</strong><br>
+                        ${data.text}
+                    </div>
+                `;
+                targetDiv.innerHTML = summaryHTML;
+            } else if (data.type === "stt") {
+                const sttLogData = data.payload;
+
+                const track = sttLogData.track;
+                const script = sttLogData.script || data.text;
+                const isFinal = sttLogData.isFinal;
+                const abuseLabel = isFinal ? (sttLogData.isAbuse ? `🚫 ${sttLogData.abuseType}` : "✅ 정상") : "🟡 중간";
+
+                const label = track === "INBOUND" ? "👤 고객" : "💼 상담원";
+                const finalLabel = isFinal ? "🟢 최종" : "🟡 중간";
+
+                const html = `<div class="log-line">${label} | ${finalLabel} | ${abuseLabel}<br>🗣️ ${script}</div>`;
+
+                const state = trackState[track];
+                const key = `${track}-${state.currentIndex}`;
+
+                lines[key] = html;
+
+                if (isFinal) {
+                    state.finalReceived = true;
+                    state.currentIndex++;
+                }
+
+                logArea.innerHTML = Object.values(lines).join("");
+                logArea.scrollTop = logArea.scrollHeight;
+            } else {
+
+                console.warn("Unknown WebSocket message type received:", data.type, data);
+            }
+
+        } catch (e) {
+            console.error("⚠️ WebSocket 메시지 처리 오류:", e);
+        }
+    };
+
+    ws.onerror = err => console.error("❌ WebSocket 오류:", err);
+    ws.onclose = () => console.log("🔌 WebSocket 연결 종료");
 </script>
 </body>
 </html>
