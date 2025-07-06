@@ -13,6 +13,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class CallSession extends BaseEntity {
 
+    private static final Integer DEFAULT_ABUSE_COUNT = 0;
+    private static final Boolean DEFAULT_ABUSE_TAG = Boolean.FALSE;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,7 +31,8 @@ public class CallSession extends BaseEntity {
     @Column(nullable = false, length = 20)
     private String title;
 
-    private Boolean abuseTag;
+    @Builder.Default
+    private Boolean abuseTag = DEFAULT_ABUSE_TAG;
 
     // 통화 시작 시간은 (createdAt 으로 대체)
 
@@ -36,4 +40,22 @@ public class CallSession extends BaseEntity {
     @Column(nullable = true)
     private LocalDateTime endedAt;
 
+    @Column(name = "total_abuse_cnt")
+    @Builder.Default
+    private Integer totalAbuseCnt = DEFAULT_ABUSE_COUNT;
+
+    @Column(name = "twilio_call_sid", length = 34) // CA로 시작하는 34자리 문자열
+    private String twilioCallSid;
+
+    public void updateAbuseCnt() {
+        this.totalAbuseCnt = (this.totalAbuseCnt == null ? 0 : this.totalAbuseCnt) + 1;
+    }
+
+    public void updateEndedAt() {
+        this.endedAt = LocalDateTime.now();
+    }
+
+    public void updateAbuseTag() {
+        this.abuseTag = Boolean.TRUE;
+    }
 }
