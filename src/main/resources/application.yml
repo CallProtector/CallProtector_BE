@@ -28,7 +28,9 @@ spring:
           starttls:
             enable: true
           auth: true
-
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
 twilio:
   account:
     sid: ${TWILIO_ACCOUNT_SID}

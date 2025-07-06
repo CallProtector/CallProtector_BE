@@ -44,4 +44,11 @@ public class CallLog extends BaseEntity {
     @Setter
     private String summary;
 
+    public void updateScript(String script) {
+        this.script = script;
+    }
+    public void updateSummary(String summary) {
+        this.summary = summary;
+    }
+
 }
