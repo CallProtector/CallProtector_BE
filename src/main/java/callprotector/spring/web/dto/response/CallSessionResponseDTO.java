@@ -16,4 +16,22 @@ public class CallSessionResponseDTO {
         private String callSessionCode;
     }
 
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CallSessionInfoDTO {
+        private String callSessionCode;
+        private String createdAt;
+        private Integer totalAbuseCnt;
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CallSessionTotalAbuseCntDTO {
+        private Long sessionId;
+        private Integer totalAbuseCnt;
+    }
 }
