@@ -27,35 +27,6 @@ public class CallLogServiceImpl implements CallLogService{
     private final AbuseTypeLogRepository abuseTypeLogRepository;
     private final CallSessionService callSessionService;
 
-    // @Override
-    // @Transactional
-    // public void registerAbuse(Long callSessionId, CallTrack track) {
-    //     if (track != CallTrack.INBOUND) return; // 상담원은 기록 X
-    //
-    //     CallSession session = callSessionRepository.findById(callSessionId)
-    //             .orElseThrow(() -> new IllegalArgumentException("CallSession not found: " + callSessionId));
-    //
-    //     CallLog log = callLogRepository.findByCallSessionAndTrack(callSessionId, track)
-    //             .orElseGet(() -> {
-    //                 CallLog newLog = CallLog.builder()
-    //                         .callSession(session)
-    //                         .audio_url("customer.wav")
-    //                         .script("")
-    //                         .summary("자동 요약 예정")
-    //                         .abuseCnt(0)
-    //                         .abuseDetect(false)
-    //                         .track(track)
-    //                         .build();
-    //                 return callLogRepository.save(newLog);
-    //             });
-    //
-    //     log.setAbuseCnt((log.getAbuseCnt() == null ? 0 : log.getAbuseCnt()) + 1);
-    //     log.setAbuseDetect(true);
-    //     callLogRepository.save(log);
-    //
-    //     saveAbuseLogs(log);
-    // }
-
     @Override
     @Transactional
     public void saveFinalTranscript(final Long callSessionId, final CallTrack track, final String script, final boolean isAbuse, final String abuseType) {
@@ -108,7 +79,6 @@ public class CallLogServiceImpl implements CallLogService{
                 .build();
         abuseLogRepository.save(abuseLog);
 
-        // 설명 필요
         // AbuseType 정의 - 현재는 verbalAbuse만 Y
         AbuseType abuseType = AbuseType.builder()
                 .verbalAbuse("Y")
