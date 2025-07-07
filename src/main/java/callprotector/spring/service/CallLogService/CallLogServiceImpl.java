@@ -34,12 +34,7 @@ public class CallLogServiceImpl implements CallLogService{
         String audioUrl = track == CallTrack.INBOUND ? "customer.wav" : "agent.wav"; // 추후 변경 예정
         Integer sessionAbuseCnt = callSession.getTotalAbuseCnt();
 
-        Integer callLogAbuseCnt;
-        if (track == CallTrack.INBOUND) {
-            callLogAbuseCnt = sessionAbuseCnt;
-        } else {
-            callLogAbuseCnt = 0;
-        }
+        Integer callLogAbuseCnt = (track == CallTrack.INBOUND) ? sessionAbuseCnt : 0;
 
         CallLog callLog = callLogRepository.findByCallSessionAndTrack(callSession, track)
                 .orElseGet(() -> CallLog.builder()
@@ -53,11 +48,16 @@ public class CallLogServiceImpl implements CallLogService{
                         .build()
                 );
 
-         callLog.updateScript(script);
-         callLog.updateSummary("자동 요약 예정"); // AI 상담 요약 결과
+        callLog.updateScript(script);
+        callLog.updateSummary("자동 요약 예정"); // AI 상담 요약 결과
 
         callLogRepository.save(callLog);
-        log.info("callLog saved");
+        log.info("📌 CallLog 저장 완료: track = {}, isAbuse = {}, abuseType = {}", track, isAbuse, abuseType);
+
+        // 인바운드 발화이면서 욕설이 감지된 경우 abuse 로그 저장
+        if (isAbuse && track == CallTrack.INBOUND) {
+            saveAbuseLogs(callLog, abuseType);
+        }
     }
 
     @Override
@@ -72,26 +72,35 @@ public class CallLogServiceImpl implements CallLogService{
         // saveAbuseLogs(log);
     }
 
-    private void saveAbuseLogs(CallLog callLog) {
+    private void saveAbuseLogs(CallLog callLog, String abuseTypeStr) {
+        // 1. AbuseLog 생성
         AbuseLog abuseLog = AbuseLog.builder()
                 .callLog(callLog)
                 .detectedAt(LocalDateTime.now())
                 .build();
         abuseLogRepository.save(abuseLog);
 
-        // AbuseType 정의 - 현재는 verbalAbuse만 Y
+        // 2. AbuseType 생성 (3가지 유형 각각 처리)
         AbuseType abuseType = AbuseType.builder()
-                .verbalAbuse("Y")
-                .sexualHarass("N")
-                .threat("N")
+                .verbalAbuse(abuseTypeStr.contains("욕설") ? "Y" : "N")
+                .sexualHarass(abuseTypeStr.contains("성희롱") ? "Y" : "N")
+                .threat(abuseTypeStr.contains("협박") ? "Y" : "N")
                 .build();
         abuseTypeRepository.save(abuseType);
 
+        // 3. AbuseTypeLog로 연관 관계 저장
         AbuseTypeLog typeLog = AbuseTypeLog.builder()
                 .abuseLog(abuseLog)
                 .abuseType(abuseType)
                 .build();
         abuseTypeLogRepository.save(typeLog);
+
+        log.info("🚨 Abuse 유형 로그 저장 완료: [{}] → 욕설: {}, 성희롱: {}, 협박: {}",
+                abuseTypeStr,
+                abuseType.getVerbalAbuse(),
+                abuseType.getSexualHarass(),
+                abuseType.getThreat()
+        );
     }
 
 }
