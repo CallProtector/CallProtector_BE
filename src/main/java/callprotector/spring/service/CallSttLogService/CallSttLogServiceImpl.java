@@ -10,6 +10,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Set;
+import java.util.LinkedHashSet;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -41,5 +46,19 @@ public class CallSttLogServiceImpl implements CallSttLogService {
         }
 
         return savedSttLog;
+    }
+
+    @Override
+    public boolean hasAbuseInSession(Long callSessionId) {
+        return callSttLogRepository.existsByCallSessionIdAndIsAbuseTrue(callSessionId);
+    }
+
+    @Override
+    public String getAbuseTypesBySessionId(Long callSessionId) {
+        List<CallSttLog> abusiveLogs = callSttLogRepository.findByCallSessionIdAndIsAbuseTrue(callSessionId);
+        Set<String> uniqueTypes = abusiveLogs.stream()
+                .map(CallSttLog::getAbuseType)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        return String.join(",", uniqueTypes); // "욕설(강제차단),협박" 등
     }
 }

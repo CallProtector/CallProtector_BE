@@ -252,16 +252,24 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
 
                     if (track == CallTrack.INBOUND) {
                         try {
+                            boolean hasAbuseInSttLog = callSttLogService.hasAbuseInSession(ctx.callSessionId);
+
                             var inboundResult = fastClient.sendTextToFastAPI(finalTranscript);
                             log.info("⚠️ [{}] INBOUND 욕설 감지 결과 → isAbuse: {}, type: {}",
-                                CallTrack.INBOUND, inboundResult.isAbuse(), inboundResult.getType());
+                                    CallTrack.INBOUND, inboundResult.isAbuse(), inboundResult.getType());
+
+                            boolean finalAbuse = hasAbuseInSttLog || inboundResult.isAbuse();
+
+                            String finalAbuseType = hasAbuseInSttLog
+                                    ? callSttLogService.getAbuseTypesBySessionId(ctx.callSessionId)
+                                    : inboundResult.getType();
 
                             callLogService.saveFinalTranscript(
-                                ctx.callSessionId,
-                                track,
-                                finalTranscript,
-                                inboundResult.isAbuse(),
-                                inboundResult.getType()
+                                    ctx.callSessionId,
+                                    track,
+                                    finalTranscript,
+                                    finalAbuse,
+                                    finalAbuseType
                             );
 
                         } catch (Exception e) {
