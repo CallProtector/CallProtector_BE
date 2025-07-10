@@ -42,4 +42,9 @@ public class CallSttLogServiceImpl implements CallSttLogService {
 
         return savedSttLog;
     }
+
+    @Override
+    public boolean hasAbuseInSession(Long callSessionId) {
+        return callSttLogRepository.existsByCallSessionIdAndIsAbuseTrue(callSessionId);
+    }
 }
