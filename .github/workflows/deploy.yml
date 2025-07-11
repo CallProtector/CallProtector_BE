@@ -1,9 +1,8 @@
-# .github/workflows/deploy.yml
 name: Docker CI/CD
 
 on:
   push:
-    branches: [ "develop" ]  # default 브랜치
+    branches: [ "develop" ]
 
 jobs:
   build-and-deploy:
@@ -24,6 +23,9 @@ jobs:
 
       - name: Push Docker image
         run: docker push callprotect/backend-server:latest
+
+      - name: Create .env.prod from secret
+        run: echo "${{ secrets.ENV_PROD }}" > .env.prod
 
       - name: Copy .env.prod to EC2
         uses: appleboy/scp-action@v0.1.4
