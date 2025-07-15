@@ -162,13 +162,6 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                 STTContext ctx = new STTContext();
                 ctx.session = session;
 
-//                // chj - ⭐ CallSession 강제 생성
-//                Long callSessionId = callSessionService.createCallSession(
-//                        "dlthdal07@gmail.com", // TODO: 추후 사용자 이메일 동적으로 처리
-//                        new CallSessionRequestDTO.CallSessionMakeDTO(0L, "자동 세션")
-//                );
-//                ctx.callSessionId = callSessionId;
-
                 ctx.client = SpeechClient.create();
 
                 RecognitionConfig config = RecognitionConfig.newBuilder()
@@ -349,35 +342,6 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                 }
                 ctx.partialFinalTranscript = null;
             }
-//            // transcriptBuilder 누락 방지 → 저장
-//            String bufferedText = ctx.transcriptBuilder.toString().trim();
-//            if (!bufferedText.isEmpty()) {
-//                log.info("📝 [재시작 전] 임시 텍스트 저장: {}", bufferedText);
-//
-//                var result = fastClient.sendTextToFastAPI(bufferedText);
-//                CallSttLog savedLog = callSttLogService.saveTranscriptLog(
-//                        ctx.callSessionId,
-//                        track,
-//                        bufferedText,
-//                        true, // 강제로 final 처리
-//                        result.isAbuse(),
-//                        result.getType(),
-//                        0
-//                );
-//
-//                // 📤 웹소켓 전송
-//                if (ctx.userId != null) {
-//                    sttWebSocketHandler.sendToClient(ctx.userId, savedLog);
-//                } else {
-//                    log.warn("❗ WebSocket 사용자 세션(userId) 없음 → 재시작 전 로그 전송 실패");
-//                }
-//
-//                ctx.transcriptBuilder.setLength(0); // 누적 리셋
-//            }
-
-//            ctx.stream.closeSend();
-//            ctx.client.shutdownNow();
-//            ctx.client = SpeechClient.create();
 
             if (ctx.stream != null) {
                 ctx.stream.closeSend();
