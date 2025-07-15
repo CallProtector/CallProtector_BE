@@ -28,7 +28,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -163,13 +162,6 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                 STTContext ctx = new STTContext();
                 ctx.session = session;
 
-//                // chj - ⭐ CallSession 강제 생성
-//                Long callSessionId = callSessionService.createCallSession(
-//                        "dlthdal07@gmail.com", // TODO: 추후 사용자 이메일 동적으로 처리
-//                        new CallSessionRequestDTO.CallSessionMakeDTO(0L, "자동 세션")
-//                );
-//                ctx.callSessionId = callSessionId;
-
                 ctx.client = SpeechClient.create();
 
                 RecognitionConfig config = RecognitionConfig.newBuilder()
@@ -275,20 +267,20 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                     } else {
                         log.info("ℹ️ [{}] 상담원 발화는 욕설 분석을 건너뜁니다.", track);
                         callLogService.saveFinalTranscript(
-                            ctx.callSessionId,
-                            track,
-                            finalTranscript,
-                            NOT_ABUSIVE,
-                            ABUSIVE_TYPE_NORMAL
+                                ctx.callSessionId,
+                                track,
+                                finalTranscript,
+                                NOT_ABUSIVE,
+                                ABUSIVE_TYPE_NORMAL
                         );
 
                     }
 
                     if (ctx.userId != null) {
                         sttWebSocketHandler.sendSttToClient(ctx.userId, Map.of(
-                            "type", "finalTranscript",
-                            "track", track.name(),
-                            "text", finalTranscript
+                                "type", "finalTranscript",
+                                "track", track.name(),
+                                "text", finalTranscript
                         ));
                     }
                 }
@@ -311,7 +303,7 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
             // ✅ 마지막 중간 텍스트 강제 처리
             if (ctx.partialFinalTranscript != null && !ctx.partialFinalTranscript.trim().isEmpty()) {
                 String forcedFinal = ctx.partialFinalTranscript.trim();
-                log.info("💡 [강제 final] 중간 결과를 final로 처리: {}", forcedFinal);
+                log.info("💡 [강제 최종] 중간 결과를 최종으로 처리: {}", forcedFinal);
 
                 try {
                     boolean isDuplicate = forcedFinal.equals(ctx.lastSavedFinalTranscript)
