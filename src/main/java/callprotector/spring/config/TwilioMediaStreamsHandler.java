@@ -1,6 +1,7 @@
 package callprotector.spring.config;
 
-import callprotector.spring.client.FastClient;import callprotector.spring.domain.CallSession;
+import callprotector.spring.client.FastClient;
+import callprotector.spring.domain.CallSession;
 import callprotector.spring.domain.CallSttLog;
 import callprotector.spring.domain.enums.CallTrack;
 import callprotector.spring.service.CallLogService.CallLogService;
@@ -59,6 +60,7 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
         CallSession callSession;
         Long userId;
         String partialFinalTranscript;
+        String lastSavedFinalTranscript;
     }
 
     private final Map<String, STTContext> inboundMap = new ConcurrentHashMap<>();
@@ -138,25 +140,7 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
 
         // 10초마다 stream 재시작 + 재시작 전 마지막 중간 텍스트 -> 강제 최종 텍스트로 처리
         if (track == CallTrack.INBOUND && now - ctx.lastStreamStartTime >= STREAM_RESTART_INTERVAL_MS) {
-            if (ctx.partialFinalTranscript != null && !ctx.partialFinalTranscript.trim().isEmpty()) {
-
-                try {
-                    var analysis = fastClient.sendTextToFastAPI(ctx.partialFinalTranscript);
-                    CallSttLog savedLog = callSttLogService.saveTranscriptLog(
-                            ctx.callSessionId, track, ctx.partialFinalTranscript,
-                            true, analysis.isAbuse(), analysis.getType());
-                    CallSttLogResponseDTO response = new CallSttLogResponseDTO(DATA_TYPE_STT, savedLog);
-                    if (ctx.userId != null) sttWebSocketHandler.sendSttToClient(ctx.userId, response);
-                    ctx.transcriptBuilder.append(ctx.partialFinalTranscript).append(" ");
-                    ctx.partialFinalTranscript = null;
-                    if (analysis.isAbuse() && track == CallTrack.INBOUND)
-                        // callLogService.registerAbuse(ctx.callSessionId, track);
-                        callLogService.updateAbuse(ctx.callSession, track);
-                } catch (Exception e) {
-                    log.warn("❗ 마지막 중간 텍스트 처리 실패", e);
-                }
-            }
-            ctx.buffer.reset(); // ✅ 재시작 전 buffer 비우기
+            ctx.buffer.reset();
             restartStream(ctx, track, session.getId());
         }
 
@@ -236,17 +220,28 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
 
                 String finalTranscript = ctx.transcriptBuilder.toString().trim();
 
-                // 최종 텍스트 누락 방지
+                // ✅ 최종 텍스트 누락 방지 + 중복 제거
                 if (ctx.partialFinalTranscript != null && !ctx.partialFinalTranscript.trim().isEmpty()) {
                     String fallback = ctx.partialFinalTranscript.trim();
-                    log.info("💡 [종료시 처리] 누락 가능 중간 텍스트 처리: {}", fallback);
-                    finalTranscript += " " + fallback;
+
+                    if (track == CallTrack.INBOUND && fallback.equals(ctx.lastSavedFinalTranscript)) {
+                        log.debug("⏭️ [종료시 중복 제거] 동일한 partialFinalTranscript 생략: {}", fallback);
+                    } else {
+                        log.info("💡 [종료시 처리] 누락 가능 중간 텍스트 처리: {}", fallback);
+                        finalTranscript += " " + fallback;
+
+                        // ✅ INBOUND인 경우 기록해 중복 방지
+                        if (track == CallTrack.INBOUND) {
+                            ctx.lastSavedFinalTranscript = fallback;
+                        }
+                    }
                 }
 
                 // 💡 강제 저장 보완
                 if (finalTranscript.isEmpty() && ctx.transcriptBuilder.length() > 0) {
                     finalTranscript = ctx.transcriptBuilder.toString().trim();
                 }
+
                 if (!finalTranscript.isEmpty()) {
                     log.info("📝 [{}] 전체 텍스트: {}", track == CallTrack.INBOUND ? "고객" : "상담원", finalTranscript);
 
@@ -279,19 +274,20 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                     } else {
                         log.info("ℹ️ [{}] 상담원 발화는 욕설 분석을 건너뜁니다.", track);
                         callLogService.saveFinalTranscript(
-                            ctx.callSessionId,
-                            track,
-                            finalTranscript,
-                            NOT_ABUSIVE,
-                            ABUSIVE_TYPE_NORMAL
+                                ctx.callSessionId,
+                                track,
+                                finalTranscript,
+                                NOT_ABUSIVE,
+                                ABUSIVE_TYPE_NORMAL
                         );
 
                     }
+
                     if (ctx.userId != null) {
                         sttWebSocketHandler.sendSttToClient(ctx.userId, Map.of(
-                            "type", "finalTranscript",
-                            "track", track.name(),
-                            "text", finalTranscript
+                                "type", "finalTranscript",
+                                "track", track.name(),
+                                "text", finalTranscript
                         ));
                     }
                 }
@@ -311,26 +307,41 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
         try {
             ctx.buffer.reset();
 
-            // ✅ [하이브리드 처리] 마지막 중간 텍스트 강제 처리
+            // ✅ 마지막 중간 텍스트 강제 처리
             if (ctx.partialFinalTranscript != null && !ctx.partialFinalTranscript.trim().isEmpty()) {
                 String forcedFinal = ctx.partialFinalTranscript.trim();
-                log.info("💡 [강제 final] 중간 결과를 final로 처리: {}", forcedFinal);
+                log.info("💡 [강제 최종] 중간 결과를 최종으로 처리: {}", forcedFinal);
+
                 try {
-                    var result = fastClient.sendTextToFastAPI(forcedFinal);
-                    CallSttLog savedLog = callSttLogService.saveTranscriptLog(
-                            ctx.callSessionId,
-                            track,
-                            forcedFinal,
-                            true,
-                            result.isAbuse(),
-                            result.getType()
+                    boolean isDuplicate = forcedFinal.equals(ctx.lastSavedFinalTranscript)
+                            || ctx.transcriptBuilder.toString().contains(forcedFinal);
 
-                    );
+                    if (track == CallTrack.INBOUND && isDuplicate) {
+                        log.debug("⏭️ [중복 제거] 강제 저장 생략: {}", forcedFinal);
+                    } else {
+                        var result = fastClient.sendTextToFastAPI(forcedFinal);
+                        CallSttLog savedLog = callSttLogService.saveTranscriptLog(
+                                ctx.callSessionId,
+                                track,
+                                forcedFinal,
+                                true,
+                                result.isAbuse(),
+                                result.getType()
+                        );
 
-                    ctx.transcriptBuilder.append(forcedFinal).append(" ");
-                    CallSttLogResponseDTO forcedResponse = new CallSttLogResponseDTO(DATA_TYPE_STT, savedLog);
-                    if (ctx.userId != null) {
-                        sttWebSocketHandler.sendSttToClient(ctx.userId, forcedResponse);
+                        if (track == CallTrack.INBOUND) {
+                            ctx.transcriptBuilder.append(forcedFinal).append(" ");
+                            ctx.lastSavedFinalTranscript = forcedFinal;
+                        }
+
+                        CallSttLogResponseDTO forcedResponse = new CallSttLogResponseDTO(DATA_TYPE_STT, savedLog);
+                        if (ctx.userId != null) {
+                            sttWebSocketHandler.sendSttToClient(ctx.userId, forcedResponse);
+                        }
+
+                        if (result.isAbuse() && track == CallTrack.INBOUND) {
+                            callLogService.updateAbuse(ctx.callSession, track);
+                        }
                     }
 
                 } catch (Exception e) {
@@ -415,31 +426,45 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                                 transcript);
 
                         try {
-                            if(isFinal &&  track == CallTrack.INBOUND) {
-                                var analysis = fastClient.sendTextToFastAPI(transcript);
+                            if (isFinal && track == CallTrack.INBOUND) {
+                                String trimmedTranscript = transcript.trim();
 
-                                CallSttLog savedLog = callSttLogService.saveTranscriptLog(
-                                        ctx.callSessionId,
-                                        track,
-                                        transcript,
-                                        true,
-                                        analysis.isAbuse(),
-                                        analysis.getType()
-                                        );
+                                // ✅ 중복 방지: 이전 저장값과 동일한 경우 저장 생략
+                                if (trimmedTranscript.equals(ctx.lastSavedFinalTranscript)) {
+                                    log.debug("⏭️ [중복 제거] 동일한 최종 텍스트 무시됨: {}", trimmedTranscript);
+                                } else {
+                                    var analysis = fastClient.sendTextToFastAPI(trimmedTranscript);
 
-                                ctx.transcriptBuilder.append(transcript).append(" ");
-                                CallSttLogResponseDTO finalResponse = new CallSttLogResponseDTO(DATA_TYPE_STT, savedLog);
-                                if (ctx.userId != null) {
-                                    sttWebSocketHandler.sendSttToClient(ctx.userId, finalResponse);
+                                    CallSttLog savedLog = callSttLogService.saveTranscriptLog(
+                                            ctx.callSessionId,
+                                            track,
+                                            trimmedTranscript,
+                                            true,
+                                            analysis.isAbuse(),
+                                            analysis.getType()
+                                    );
+
+                                    // ✅ transcriptBuilder 중복 누적 방지
+                                    if (!trimmedTranscript.equals(ctx.lastSavedFinalTranscript)) {
+                                        ctx.transcriptBuilder.append(trimmedTranscript).append(" ");
+                                        ctx.lastSavedFinalTranscript = trimmedTranscript;
+                                    }
+
+                                    CallSttLogResponseDTO finalResponse = new CallSttLogResponseDTO(DATA_TYPE_STT, savedLog);
+
+                                    if (ctx.userId != null) {
+                                        sttWebSocketHandler.sendSttToClient(ctx.userId, finalResponse);
+                                    }
+
+                                    if (analysis.isAbuse()) {
+                                        // callLogService.registerAbuse(ctx.callSessionId, track);
+                                        log.info("🍀 고객 발화 필터링됨");
+                                        callLogService.updateAbuse(ctx.callSession, track);
+                                    }
                                 }
 
                                 ctx.partialFinalTranscript = null;
 
-                                if (analysis.isAbuse()) {
-                                    // callLogService.registerAbuse(ctx.callSessionId, track);
-                                    log.info("🍀 고객 발화 필터링됨");
-                                    callLogService.updateAbuse(ctx.callSession, track);
-                                }
                             } else {
                                 CallSttLog interimLog = CallSttLog.builder()
                                         .callSessionId(ctx.callSessionId)
@@ -459,7 +484,6 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
 
                                 ctx.partialFinalTranscript = transcript;
                             }
-
 
                         } catch (Exception e) {
                             log.error("❌ FastAPI 전송 오류", e);
