@@ -22,14 +22,13 @@ public class AbuseType extends BaseEntity {
     @OneToMany(mappedBy = "abuseType", cascade = CascadeType.ALL)
     private List<AbuseTypeLog> abuseTypeLogList = new ArrayList<>();
 
-    @Column(nullable = false, length = 8)
-    private String verbalAbuse;
+    @Column(nullable = false)
+    private boolean verbalAbuse;
 
-    @Column(nullable = false, length = 8)
-    private String sexualHarass;
+    @Column(nullable = false)
+    private boolean sexualHarass;
 
-    @Column(nullable = false, length = 8)
-    private String threat;
-
+    @Column(nullable = false)
+    private boolean threat;
 
 }
