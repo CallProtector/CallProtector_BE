@@ -145,7 +145,7 @@ public class CallSessionServiceImpl implements CallSessionService {
 
     private String formatCreatedAt(LocalDateTime createdAt) {
         String datePart = createdAt.format(DateTimeFormatter.ofPattern("M.d", Locale.KOREA));
-        String timePart = createdAt.format(DateTimeFormatter.ofPattern("H:m", Locale.KOREA));
+        String timePart = createdAt.format(DateTimeFormatter.ofPattern("HH:mm", Locale.KOREA));
         String dayKor = getKoreanDayOfWeek(createdAt.getDayOfWeek());
 
         return String.format("%s (%s) %s", datePart, dayKor, timePart);
