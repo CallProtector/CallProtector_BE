@@ -152,16 +152,16 @@ public class CallSessionServiceImpl implements CallSessionService {
     }
 
     private String getKoreanDayOfWeek(DayOfWeek dayOfWeek) {
-        switch (dayOfWeek) {
-            case MONDAY: return "월";
-            case TUESDAY: return "화";
-            case WEDNESDAY: return "수";
-            case THURSDAY: return "목";
-            case FRIDAY: return "금";
-            case SATURDAY: return "토";
-            case SUNDAY: return "일";
-            default: return "";
-        }
+		return switch (dayOfWeek) {
+			case MONDAY -> "월";
+			case TUESDAY -> "화";
+			case WEDNESDAY -> "수";
+			case THURSDAY -> "목";
+			case FRIDAY -> "금";
+			case SATURDAY -> "토";
+			case SUNDAY -> "일";
+			default -> "";
+		};
     }
 
 
