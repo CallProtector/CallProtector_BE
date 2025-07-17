@@ -1,5 +1,6 @@
 package callprotector.spring.service.CallSttLogService;
 
+import callprotector.spring.apiPayload.exception.handler.CallSttLogNotFoundException;
 import callprotector.spring.domain.CallSttLog;
 import callprotector.spring.domain.enums.CallTrack;
 import callprotector.spring.repository.CallSttLogRepository;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CallSttLogServiceImpl implements CallSttLogService {
+    private static final boolean IS_FINAL = true;
     private final CallSttLogRepository callSttLogRepository;
     private final CallSessionService callSessionService;
 
@@ -60,5 +62,14 @@ public class CallSttLogServiceImpl implements CallSttLogService {
                 .map(CallSttLog::getAbuseType)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         return String.join(",", uniqueTypes); // "욕설(강제차단),협박" 등
+    }
+
+    @Override
+    public List<CallSttLog> getAllBySessionId(Long callSessionId) {
+        List<CallSttLog> sttList = callSttLogRepository.findByCallSessionIdAndIsFinalOrderByTimestampAsc(callSessionId, IS_FINAL);
+        if (sttList.isEmpty()) {
+            throw new CallSttLogNotFoundException();
+        }
+        return sttList;
     }
 }
