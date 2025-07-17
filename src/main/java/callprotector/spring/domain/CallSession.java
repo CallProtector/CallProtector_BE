@@ -28,8 +28,8 @@ public class CallSession extends BaseEntity {
     @JoinColumn(name ="user_id")
     private User user;
 
-    @Column(nullable = false, length = 20)
-    private String title;
+    @Column(length = 50)
+    private String callerNumber;
 
     @Builder.Default
     private Boolean abuseTag = DEFAULT_ABUSE_TAG;
