@@ -160,7 +160,6 @@ public class CallSessionServiceImpl implements CallSessionService {
 			case FRIDAY -> "금";
 			case SATURDAY -> "토";
 			case SUNDAY -> "일";
-			default -> "";
 		};
     }
 
