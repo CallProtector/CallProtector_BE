@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/token")
+@RequestMapping("/api/token")
 public class TwilioVoiceTokenController {
 
 
