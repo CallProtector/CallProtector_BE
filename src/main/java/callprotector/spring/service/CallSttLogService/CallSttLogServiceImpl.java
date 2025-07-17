@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 public class CallSttLogServiceImpl implements CallSttLogService {
     private static final boolean IS_FINAL = true;
     private final CallSttLogRepository callSttLogRepository;
-    private final CallSessionService callSessionService;
 
     @Override
     @Transactional
@@ -42,10 +41,10 @@ public class CallSttLogServiceImpl implements CallSttLogService {
         log.info("MongoDB - CallSttLog 저장 완료: id={}", savedSttLog.getId());
 
         // 폭언 감지 시 CallSession 객체의 totalAbuseCnt 증가
-        if (isAbuse) {
-            log.info("STT 결과 욕설 감지 - (isAbuse={}) / CallSession total_abuse_cnt 업데이트 시도 - CallSessionId={}", isAbuse, callSessionId);
-            callSessionService.incrementTotalAbuseCnt(callSessionId);
-        }
+        // if (isAbuse) {
+        //     log.info("STT 결과 욕설 감지 - (isAbuse={}) / CallSession total_abuse_cnt 업데이트 시도 - CallSessionId={}", isAbuse, callSessionId);
+        //     callSessionService.incrementTotalAbuseCnt(callSessionId);
+        // }
 
         return savedSttLog;
     }
