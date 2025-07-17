@@ -1,10 +1,13 @@
 package callprotector.spring.service.CallSessionService;
 
+import callprotector.spring.apiPayload.exception.handler.CallSessionNotFoundException;
 import callprotector.spring.config.SttWebSocketHandler;
 import callprotector.spring.domain.CallSession;
+import callprotector.spring.domain.CallSttLog;
 import callprotector.spring.domain.User;
 import callprotector.spring.repository.CallSessionRepository;
 import callprotector.spring.repository.UserRepository;
+import callprotector.spring.service.CallSttLogService.CallSttLogService;
 import callprotector.spring.service.util.CallSessionCodeGenerator;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
@@ -17,8 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.exception.ApiException;
@@ -32,6 +37,7 @@ public class CallSessionServiceImpl implements CallSessionService {
     private final UserRepository userRepository;
     private final CallSessionCodeGenerator codeGenerator;
     private final SttWebSocketHandler sttWebSocketHandler;
+    private final CallSttLogService callSttLogService;
 
     @Override
     @Transactional
@@ -146,6 +152,24 @@ public class CallSessionServiceImpl implements CallSessionService {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public CallSessionResponseDTO.CallSessionDetailResponseDTO getCallSessionDetail(final Long callSessionId) {
+        // sessionInfo
+        CallSession callSession = findCallSessionById(callSessionId);
+        CallSessionResponseDTO.CallSessionInfoDTO sessionInfoDTO = mapToSessionInfoDTO(callSession);
+
+        // scriptHistory
+        List<CallSttLog> scriptLogs = callSttLogService.getAllBySessionId(callSessionId);
+        List<CallSessionResponseDTO.CallSessionScriptDTO> sessionScriptDTO = mapToScriptDTO(scriptLogs);
+
+        // TODO: aiSummary 추가
+        return CallSessionResponseDTO.CallSessionDetailResponseDTO.builder()
+            .sessionInfo(sessionInfoDTO)
+            .scriptHistory(sessionScriptDTO)
+            .build();
+    }
+
     private String formatCreatedAt(LocalDateTime createdAt) {
         String datePart = createdAt.format(DateTimeFormatter.ofPattern("M.d", Locale.KOREA));
         String timePart = createdAt.format(DateTimeFormatter.ofPattern("HH:mm", Locale.KOREA));
@@ -181,4 +205,33 @@ public class CallSessionServiceImpl implements CallSessionService {
         return rawNumber;
     }
 
+    private CallSession findCallSessionById(final Long callSessionId) {
+        return callSessionRepository.findById(callSessionId).orElseThrow(CallSessionNotFoundException::new);
+    }
+
+    private CallSessionResponseDTO.CallSessionInfoDTO mapToSessionInfoDTO(CallSession callSession) {
+        return CallSessionResponseDTO.CallSessionInfoDTO.builder()
+            .callSessionCode(callSession.getCallSessionCode())
+            .createdAt(formatCreatedAt(callSession.getCreatedAt()))
+            .totalAbuseCnt(callSession.getTotalAbuseCnt())
+            .build();
+    }
+
+
+    private List<CallSessionResponseDTO.CallSessionScriptDTO> mapToScriptDTO(List<CallSttLog> scriptLogs) {
+
+        return scriptLogs.stream()
+            .map(log -> {
+                return CallSessionResponseDTO.CallSessionScriptDTO.builder()
+                    .id(log.getId())
+                    .callSessionId(log.getCallSessionId())
+                    .speaker(log.getTrack().toString())
+                    .text(log.getScript())
+                    .isAbuse(log.getIsAbuse())
+                    .abuseType(log.getAbuseType())
+                    .timestamp(log.getTimestamp())
+                    .build();
+            })
+            .collect(Collectors.toList());
+    }
 }
