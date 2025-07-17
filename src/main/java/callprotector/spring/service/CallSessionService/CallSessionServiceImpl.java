@@ -43,11 +43,14 @@ public class CallSessionServiceImpl implements CallSessionService {
         // 세션 코드 생성
         String sessionCode = codeGenerator.generateTodayCallSessionCode();
 
+        String rawNumber = dto.getCallerNumber();
+        String formattedNumber = formatKoreanPhoneNumber(rawNumber);
+
         CallSession session = CallSession.builder()
-                .callSessionCode(sessionCode) // 추가
+                .callSessionCode(sessionCode)
                 .user(user)
-                .title(dto.getTitle())
                 .twilioCallSid(dto.getTwilioCallSid())
+                .callerNumber(formattedNumber)
                 .build();
         callSessionRepository.save(session);
         return session.getId();
@@ -163,5 +166,19 @@ public class CallSessionServiceImpl implements CallSessionService {
 		};
     }
 
+    // 발신번호 포맷팅 함수
+    private String formatKoreanPhoneNumber(String rawNumber) {
+        if (rawNumber == null || rawNumber.isBlank()) return null;
+
+        // +82로 시작하는 국제번호 처리
+        if (rawNumber.startsWith("+82")) {
+            String local = rawNumber.substring(3);
+            if (local.startsWith("10") && local.length() == 10) {
+                return "010-" + local.substring(2, 6) + "-" + local.substring(6);
+            }
+        }
+
+        return rawNumber;
+    }
 
 }
