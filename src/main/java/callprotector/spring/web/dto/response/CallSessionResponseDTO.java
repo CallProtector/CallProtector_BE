@@ -1,5 +1,8 @@
 package callprotector.spring.web.dto.response;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -33,5 +36,29 @@ public class CallSessionResponseDTO {
     public static class CallSessionTotalAbuseCntDTO {
         private Long sessionId;
         private Integer totalAbuseCnt;
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CallSessionScriptDTO {
+        private String id;
+        private Long callSessionId;
+        private String speaker;
+        private String text;
+        private Boolean isAbuse;
+        private String abuseType;
+        private LocalDateTime timestamp;
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CallSessionDetailResponseDTO {
+        private CallSessionInfoDTO sessionInfo; // 내부 DTO 사용
+        private List<CallSessionScriptDTO> scriptHistory;
+        // private String aiSummary;
     }
 }
