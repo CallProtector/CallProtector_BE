@@ -89,7 +89,7 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                 // callSession 객체 생성
                 Long callSessionId = callSessionService.createCallSession(
                         "dlthdal07@gmail.com", // TODO: 사용자 이메일 동적 처리
-                        new CallSessionRequestDTO.CallSessionMakeDTO(userId, "자동 세션", twilioCallSid)
+                        new CallSessionRequestDTO.CallSessionMakeDTO(userId, twilioCallSid, null) // TODO: callerNumber 추출 구현 필요
                 );
 
                 // callSessionId로 callSession 객체 조회
