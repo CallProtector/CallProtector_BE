@@ -19,13 +19,17 @@ public class CallSessionController {
 
     private final CallSessionService callSessionService;
 
-    @Operation(summary = "콜세션 API", description = "만들어 놓긴 했는데, 사용 안 하는 API입니다.")
+    @Operation(summary = "CallSession 생성", description = "Twilio 수신 시 콜세션을 생성하고 발신번호를 저장합니다.")
     @PostMapping
-    public ApiResponse<CallSessionResponseDTO.CallSessionMakeDTO> createCallSession(@AuthenticationPrincipal String email, @RequestBody CallSessionRequestDTO.CallSessionMakeDTO dto){
+    public ApiResponse<CallSessionResponseDTO.CallSessionMakeDTO> createCallSession(
+            @AuthenticationPrincipal String email,
+            @RequestBody CallSessionRequestDTO.CallSessionMakeDTO dto) {
         Long sessionId = callSessionService.createCallSession(email, dto);
         return ApiResponse.onSuccess(CallSessionResponseDTO.CallSessionMakeDTO.builder()
                 .sessionId(sessionId)
                 .build());
+
+
     }
 
 }
