@@ -4,8 +4,6 @@ import callprotector.spring.domain.CallSession;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
 
-import java.util.List;
-
 public interface CallSessionService {
     Long createCallSession(String email, CallSessionRequestDTO.CallSessionMakeDTO dto );
     CallSessionResponseDTO.CallSessionInfoDTO getCallSessionInfo(Long callSessionId);
