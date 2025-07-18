@@ -1,0 +1,11 @@
+package callprotector.spring.repository;
+
+import callprotector.spring.domain.CallSession;
+import org.springframework.data.domain.Sort;
+
+import java.util.List;
+
+public interface CallSessionRepositoryCustom {
+    List<CallSession> findFirstPage(String sortBy, int limit, Sort.Direction direction);
+    List<CallSession> findByCursor(String sortBy, Object cursorValue, int limit, Sort.Direction direction);
+}

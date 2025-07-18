@@ -82,4 +82,14 @@ public class CallSessionResponseDTO {
                     .build();
         }
     }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class CallSessionPagingDTO {
+        private List<CallSessionListDTO> sessions;
+        private Long nextCursorId;
+        private boolean hasNext;
+    }
 }

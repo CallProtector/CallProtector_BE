@@ -208,14 +208,30 @@ public class CallSessionServiceImpl implements CallSessionService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CallSessionResponseDTO.CallSessionListDTO> getCallSessions(String sortBy, String order) {
+    public CallSessionResponseDTO.CallSessionPagingDTO getCallSessions(String sortBy, String order, Long cursorId, int size) {
         Sort.Direction direction = order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
 
-        List<CallSession> sessions = callSessionRepository.findAll(Sort.by(direction, sortBy));
+        List<CallSession> sessions;
 
-        return sessions.stream()
+        if (cursorId == null) {
+            sessions = callSessionRepository.findFirstPage(sortBy, size + 1, direction);
+        } else {
+            sessions = callSessionRepository.findByCursor(sortBy, cursorId, size + 1, direction);
+        }
+
+        boolean hasNext = sessions.size() > size;
+        Long nextCursorId = hasNext ? sessions.get(size - 1).getId() : null;
+
+        List<CallSessionResponseDTO.CallSessionListDTO> resultList = sessions.stream()
+                .limit(size)
                 .map(CallSessionResponseDTO.CallSessionListDTO::fromEntity)
                 .collect(Collectors.toList());
+
+        return CallSessionResponseDTO.CallSessionPagingDTO.builder()
+                .sessions(resultList)
+                .hasNext(hasNext)
+                .nextCursorId(nextCursorId)
+                .build();
     }
 
     private CallSession findCallSessionById(final Long callSessionId) {

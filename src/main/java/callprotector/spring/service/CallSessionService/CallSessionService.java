@@ -13,6 +13,6 @@ public interface CallSessionService {
     void incrementTotalAbuseCnt(Long callSessionId);
     void forceTerminateCall(CallSession callSession);
 
-    List<CallSessionResponseDTO.CallSessionListDTO> getCallSessions(String sortBy, String order);
+    CallSessionResponseDTO.CallSessionPagingDTO getCallSessions(String sortBy, String order, Long cursorId, int size);
     CallSessionResponseDTO.CallSessionDetailResponseDTO getCallSessionDetail(Long callSessionId);
 }
