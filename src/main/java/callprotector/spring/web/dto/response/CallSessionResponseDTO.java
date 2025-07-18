@@ -72,13 +72,15 @@ public class CallSessionResponseDTO {
         private String callSessionCode;
         private String callerNumber;
         private LocalDateTime createdAt;
+        private String category;
 
-        public static CallSessionListDTO fromEntity(CallSession session) {
+        public static CallSessionListDTO fromEntity(CallSession session, String category) {
             return CallSessionListDTO.builder()
                     .id(session.getId())
                     .callSessionCode(session.getCallSessionCode())
                     .callerNumber(session.getCallerNumber())
                     .createdAt(session.getCreatedAt())
+                    .category(category)
                     .build();
         }
     }
