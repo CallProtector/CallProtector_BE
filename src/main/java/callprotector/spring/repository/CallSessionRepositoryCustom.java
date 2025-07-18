@@ -8,4 +8,6 @@ import java.util.List;
 public interface CallSessionRepositoryCustom {
     List<CallSession> findFirstPage(String sortBy, int limit, Sort.Direction direction);
     List<CallSession> findByCursor(String sortBy, Object cursorValue, int limit, Sort.Direction direction);
+
+    List<CallSession> findSessionsByAbuseCategory(String category, Long cursorId, int limit, Sort.Direction direction);
 }
