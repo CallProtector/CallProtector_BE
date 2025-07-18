@@ -1,6 +1,6 @@
 package callprotector.spring.service.CallSessionService;
 
-import callprotector.spring.apiPayload.exception.handler.CallSessionNotFoundException;
+import callprotector.spring.apiPayload.exception.handler.*;
 import callprotector.spring.config.SttWebSocketHandler;
 import callprotector.spring.domain.*;
 import callprotector.spring.domain.mapping.AbuseTypeLog;
@@ -236,6 +236,8 @@ public class CallSessionServiceImpl implements CallSessionService {
 
     @Override
     public CallSessionResponseDTO.CallSessionPagingDTO getSessionsByAbuseCategory(String category, Long cursorId, int size, String order) {
+        validateAbuseCategory(category);
+
         Sort.Direction direction = order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
 
         List<CallSession> sessions = callSessionRepository.findSessionsByAbuseCategory(category, cursorId, size + 1, direction);
@@ -258,8 +260,16 @@ public class CallSessionServiceImpl implements CallSessionService {
                 .build();
     }
 
+    private void validateAbuseCategory(String category) {
+        List<String> valid = List.of("verbalAbuse", "sexualHarass", "threat");
+        if (!valid.contains(category)) {
+            throw new InvalidCategoryFilterException();
+        }
+    }
+
     private String getAbuseCategoryForSession(CallSession session) {
         List<CallLog> callLogs = callLogRepository.findByCallSession(session);
+
         for (CallLog callLog : callLogs) {
             List<AbuseLog> abuseLogs = abuseLogRepository.findByCallLog(callLog);
             for (AbuseLog abuseLog : abuseLogs) {
