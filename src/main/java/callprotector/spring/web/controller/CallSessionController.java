@@ -30,22 +30,25 @@ public class CallSessionController {
                 .build());
     }
 
-    @Operation(summary = "상담 내역 조회 API", description = "커서 기반 정렬 및 페이지네이션으로 상담 내역을 조회합니다.")
+    @Operation(summary = "상담 내역 조회 API", description = "카테고리별 상담 내역을 페이지네이션 방식으로 조회합니다.")
     @GetMapping("")
     public ApiResponse<CallSessionResponseDTO.CallSessionPagingDTO> getCallSessions(
-            @Parameter(description = "정렬 기준 필드 (예: createdAt)")
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-
-            @Parameter(description = "정렬 순서: 최신순(desc), 오래된순(asc)")
-            @RequestParam(defaultValue = "desc") String order,
-
-            @Parameter(description = "현재 페이지의 기준이 되는 마지막 callSession id")
+            @Parameter(description = "현재 페이지의 기준이 되는 마지막 CallSession ID")
             @RequestParam(required = false) Long cursorId,
 
             @Parameter(description = "가져올 데이터 개수")
-            @RequestParam(defaultValue = "5") int size
+            @RequestParam(defaultValue = "5") int size,
+
+            @Parameter(description = "정렬 순서 (desc, asc)")
+            @RequestParam(defaultValue = "desc") String order,
+
+            @Parameter(description = "폭언 카테고리 (verbalAbuse, sexualHarass, threat)")
+            @RequestParam(required = false) String category
     ) {
-        return ApiResponse.onSuccess(callSessionService.getCallSessions(sortBy, order, cursorId, size));
+        if (category != null) {
+            return ApiResponse.onSuccess(callSessionService.getSessionsByAbuseCategory(category, cursorId, size, order));
+        }
+        return ApiResponse.onSuccess(callSessionService.getCallSessions("id", order, cursorId, size));
     }
 
     @Operation(summary = "callSession 상세 조회", description = "상담 내역 상세 조회 시 callSession을 조회합니다.")
