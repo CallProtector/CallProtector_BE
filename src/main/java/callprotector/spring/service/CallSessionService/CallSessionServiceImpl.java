@@ -14,6 +14,7 @@ import callprotector.spring.web.dto.response.CallSessionResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -203,6 +204,18 @@ public class CallSessionServiceImpl implements CallSessionService {
         }
 
         return rawNumber;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CallSessionResponseDTO.CallSessionListDTO> getCallSessions(String sortBy, String order) {
+        Sort.Direction direction = order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+        List<CallSession> sessions = callSessionRepository.findAll(Sort.by(direction, sortBy));
+
+        return sessions.stream()
+                .map(CallSessionResponseDTO.CallSessionListDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     private CallSession findCallSessionById(final Long callSessionId) {
