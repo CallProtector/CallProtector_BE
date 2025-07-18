@@ -2,11 +2,9 @@ package callprotector.spring.service.CallSessionService;
 
 import callprotector.spring.apiPayload.exception.handler.CallSessionNotFoundException;
 import callprotector.spring.config.SttWebSocketHandler;
-import callprotector.spring.domain.CallSession;
-import callprotector.spring.domain.CallSttLog;
-import callprotector.spring.domain.User;
-import callprotector.spring.repository.CallSessionRepository;
-import callprotector.spring.repository.UserRepository;
+import callprotector.spring.domain.*;
+import callprotector.spring.domain.mapping.AbuseTypeLog;
+import callprotector.spring.repository.*;
 import callprotector.spring.service.CallSttLogService.CallSttLogService;
 import callprotector.spring.service.util.CallSessionCodeGenerator;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
@@ -39,6 +37,9 @@ public class CallSessionServiceImpl implements CallSessionService {
     private final CallSessionCodeGenerator codeGenerator;
     private final SttWebSocketHandler sttWebSocketHandler;
     private final CallSttLogService callSttLogService;
+    private final AbuseLogRepository abuseLogRepository;
+    private final AbuseTypeLogRepository abuseTypeLogRepository;
+    private final CallLogRepository callLogRepository;
 
     @Override
     @Transactional
@@ -211,20 +212,19 @@ public class CallSessionServiceImpl implements CallSessionService {
     public CallSessionResponseDTO.CallSessionPagingDTO getCallSessions(String sortBy, String order, Long cursorId, int size) {
         Sort.Direction direction = order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
 
-        List<CallSession> sessions;
-
-        if (cursorId == null) {
-            sessions = callSessionRepository.findFirstPage(sortBy, size + 1, direction);
-        } else {
-            sessions = callSessionRepository.findByCursor(sortBy, cursorId, size + 1, direction);
-        }
+        List<CallSession> sessions = (cursorId == null)
+                ? callSessionRepository.findFirstPage(sortBy, size + 1, direction)
+                : callSessionRepository.findByCursor(sortBy, cursorId, size + 1, direction);
 
         boolean hasNext = sessions.size() > size;
         Long nextCursorId = hasNext ? sessions.get(size - 1).getId() : null;
 
         List<CallSessionResponseDTO.CallSessionListDTO> resultList = sessions.stream()
                 .limit(size)
-                .map(CallSessionResponseDTO.CallSessionListDTO::fromEntity)
+                .map(session -> {
+                    String category = getAbuseCategoryForSession(session);
+                    return CallSessionResponseDTO.CallSessionListDTO.fromEntity(session, category);
+                })
                 .collect(Collectors.toList());
 
         return CallSessionResponseDTO.CallSessionPagingDTO.builder()
@@ -232,6 +232,47 @@ public class CallSessionServiceImpl implements CallSessionService {
                 .hasNext(hasNext)
                 .nextCursorId(nextCursorId)
                 .build();
+    }
+
+    @Override
+    public CallSessionResponseDTO.CallSessionPagingDTO getSessionsByAbuseCategory(String category, Long cursorId, int size, String order) {
+        Sort.Direction direction = order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+        List<CallSession> sessions = callSessionRepository.findSessionsByAbuseCategory(category, cursorId, size + 1, direction);
+
+        boolean hasNext = sessions.size() > size;
+        Long nextCursorId = hasNext ? sessions.get(size - 1).getId() : null;
+
+        List<CallSessionResponseDTO.CallSessionListDTO> resultList = sessions.stream()
+                .limit(size)
+                .map(session -> {
+                    String resolvedCategory = getAbuseCategoryForSession(session);
+                    return CallSessionResponseDTO.CallSessionListDTO.fromEntity(session, resolvedCategory);
+                })
+                .collect(Collectors.toList());
+
+        return CallSessionResponseDTO.CallSessionPagingDTO.builder()
+                .sessions(resultList)
+                .hasNext(hasNext)
+                .nextCursorId(nextCursorId)
+                .build();
+    }
+
+    private String getAbuseCategoryForSession(CallSession session) {
+        List<CallLog> callLogs = callLogRepository.findByCallSession(session);
+        for (CallLog callLog : callLogs) {
+            List<AbuseLog> abuseLogs = abuseLogRepository.findByCallLog(callLog);
+            for (AbuseLog abuseLog : abuseLogs) {
+                List<AbuseTypeLog> typeLogs = abuseTypeLogRepository.findByAbuseLog(abuseLog);
+                for (AbuseTypeLog typeLog : typeLogs) {
+                    AbuseType type = typeLog.getAbuseType();
+                    if (type.isVerbalAbuse()) return "폭언";
+                    if (type.isSexualHarass()) return "성희롱";
+                    if (type.isThreat()) return "협박";
+                }
+            }
+        }
+        return "전체";
     }
 
     private CallSession findCallSessionById(final Long callSessionId) {

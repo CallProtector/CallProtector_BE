@@ -14,5 +14,6 @@ public interface CallSessionService {
     void forceTerminateCall(CallSession callSession);
 
     CallSessionResponseDTO.CallSessionPagingDTO getCallSessions(String sortBy, String order, Long cursorId, int size);
+    CallSessionResponseDTO.CallSessionPagingDTO getSessionsByAbuseCategory(String category, Long cursorId, int size, String order);
     CallSessionResponseDTO.CallSessionDetailResponseDTO getCallSessionDetail(Long callSessionId);
 }
