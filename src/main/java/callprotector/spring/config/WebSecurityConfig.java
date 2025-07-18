@@ -65,7 +65,9 @@ public class WebSecurityConfig
                                             "/twilio/voice",
                                             "/popup.html",
                                             "/call-session/**",
-                                            "/abuse/**")
+                                            "/abuse/**",
+                                            "/api/sessions/**"
+                                        )
                                     .permitAll()
                                     .anyRequest().authenticated()
                     )

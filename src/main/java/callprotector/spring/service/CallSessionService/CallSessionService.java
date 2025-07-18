@@ -10,4 +10,5 @@ public interface CallSessionService {
     CallSession getCallSession(Long callSessionId);
     void incrementTotalAbuseCnt(Long callSessionId);
     void forceTerminateCall(CallSession callSession);
+    CallSessionResponseDTO.CallSessionDetailResponseDTO getCallSessionDetail(Long callSessionId);
 }

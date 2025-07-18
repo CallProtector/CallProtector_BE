@@ -332,6 +332,11 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                             sttWebSocketHandler.sendSttToClient(ctx.userId, forcedResponse);
                         }
 
+                        if (result.isAbuse() && track == CallTrack.INBOUND) { // INBOUND 트랙만 욕설 처리
+                            log.info("STT 결과 욕설 감지 - (isAbuse={}) / CallSession total_abuse_cnt 업데이트 시도 - CallSessionId={}", result.isAbuse(), ctx.callSessionId);
+                            callSessionService.incrementTotalAbuseCnt(ctx.callSessionId);
+                        }
+
                         if (result.isAbuse() && track == CallTrack.INBOUND) {
                             callLogService.updateAbuse(ctx.callSession, track);
                         }
@@ -422,6 +427,8 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
 
                                     if (analysis.isAbuse()) {
                                         // callLogService.registerAbuse(ctx.callSessionId, track);
+                                        log.info("STT 결과 욕설 감지 - (isAbuse={}) / CallSession total_abuse_cnt 업데이트 시도 - CallSessionId={}", analysis.isAbuse(), ctx.callSessionId);
+                                        callSessionService.incrementTotalAbuseCnt(ctx.callSessionId);
                                         log.info("🍀 고객 발화 필터링됨");
                                         callLogService.updateAbuse(ctx.callSession, track);
                                     }
