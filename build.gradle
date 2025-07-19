@@ -64,11 +64,6 @@ dependencies {
 	//Json Parsing
 	implementation 'org.json:json:20231013'
 
-
-
-	// Swagger annotations
-	implementation 'io.swagger.core.v3:swagger-annotations:2.2.10'
-
 	//Datebase - STT
 	implementation('org.springframework.boot:spring-boot-starter-data-mongodb') {
 		exclude group: 'org.mongodb', module: 'mongodb-driver-sync'
