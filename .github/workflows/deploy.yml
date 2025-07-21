@@ -35,6 +35,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: ".env.prod"
           target: "/home/ubuntu/"
+          debug: true
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1
