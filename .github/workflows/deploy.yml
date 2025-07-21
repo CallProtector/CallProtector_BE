@@ -43,6 +43,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            mkdir -p /home/ubuntu/credentials/
             docker pull callprotect/backend-server:latest
             docker stop my-app || true && docker rm my-app || true
             docker run -d \
@@ -50,4 +51,6 @@ jobs:
               --restart always \
               --env-file /home/ubuntu/.env.prod \
               -p 8080:8080 \
+              -v /home/ubuntu/credentials/callprotector-stt-key.json:/app/credentials/google-sa-key.json \
+              -e GOOGLE_APPLICATION_CREDENTIALS="/app/credentials/google-sa-key.json" \
               callprotect/backend-server:latest
