@@ -75,6 +75,10 @@ dependencies {
 	implementation 'org.mongodb:mongodb-driver-sync:5.3.1'
 	implementation 'org.mongodb:mongodb-driver-core:5.3.1'
 	implementation 'org.mongodb:bson:5.3.1'
+
+	// Twilio Media Stream - 데이터 전송
+	implementation 'com.google.protobuf:protobuf-java:4.31.1'
+
 }
 
 tasks.named('test') {
