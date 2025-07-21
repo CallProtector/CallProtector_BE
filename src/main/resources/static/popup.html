@@ -62,10 +62,10 @@
         OUTBOUND: { currentIndex: 0, finalReceived: false }
     };
 
-    fetch('/token')
+    fetch('/api/token')
         .then(res => res.json())
         .then(data => {
-            const accessToken = data.twilioAccessToken;
+            const accessToken = data.result.twilioAccessToken;
             const device = new Twilio.Device(accessToken, { debug: true });
 
             device.on('ready', () => {
