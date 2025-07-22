@@ -1,24 +1,28 @@
 package callprotector.spring.service.CallSessionService;
 
+import callprotector.spring.apiPayload.exception.handler.*;
 import callprotector.spring.config.SttWebSocketHandler;
-import callprotector.spring.domain.CallSession;
-import callprotector.spring.domain.User;
-import callprotector.spring.repository.CallSessionRepository;
-import callprotector.spring.repository.UserRepository;
+import callprotector.spring.domain.*;
+import callprotector.spring.domain.mapping.AbuseTypeLog;
+import callprotector.spring.repository.*;
+import callprotector.spring.service.CallSttLogService.CallSttLogService;
 import callprotector.spring.service.util.CallSessionCodeGenerator;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.exception.ApiException;
@@ -32,6 +36,10 @@ public class CallSessionServiceImpl implements CallSessionService {
     private final UserRepository userRepository;
     private final CallSessionCodeGenerator codeGenerator;
     private final SttWebSocketHandler sttWebSocketHandler;
+    private final CallSttLogService callSttLogService;
+    private final AbuseLogRepository abuseLogRepository;
+    private final AbuseTypeLogRepository abuseTypeLogRepository;
+    private final CallLogRepository callLogRepository;
 
     @Override
     @Transactional
@@ -43,11 +51,14 @@ public class CallSessionServiceImpl implements CallSessionService {
         // 세션 코드 생성
         String sessionCode = codeGenerator.generateTodayCallSessionCode();
 
+        String rawNumber = dto.getCallerNumber();
+        String formattedNumber = formatKoreanPhoneNumber(rawNumber);
+
         CallSession session = CallSession.builder()
-                .callSessionCode(sessionCode) // 추가
+                .callSessionCode(sessionCode)
                 .user(user)
-                .title(dto.getTitle())
                 .twilioCallSid(dto.getTwilioCallSid())
+                .callerNumber(formattedNumber)
                 .build();
         callSessionRepository.save(session);
         return session.getId();
@@ -143,6 +154,24 @@ public class CallSessionServiceImpl implements CallSessionService {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public CallSessionResponseDTO.CallSessionDetailResponseDTO getCallSessionDetail(final Long callSessionId) {
+        // sessionInfo
+        CallSession callSession = findCallSessionById(callSessionId);
+        CallSessionResponseDTO.CallSessionInfoDTO sessionInfoDTO = mapToSessionInfoDTO(callSession);
+
+        // scriptHistory
+        List<CallSttLog> scriptLogs = callSttLogService.getAllBySessionId(callSessionId);
+        List<CallSessionResponseDTO.CallSessionScriptDTO> sessionScriptDTO = mapToScriptDTO(scriptLogs);
+
+        // TODO: aiSummary 추가
+        return CallSessionResponseDTO.CallSessionDetailResponseDTO.builder()
+            .sessionInfo(sessionInfoDTO)
+            .scriptHistory(sessionScriptDTO)
+            .build();
+    }
+
     private String formatCreatedAt(LocalDateTime createdAt) {
         String datePart = createdAt.format(DateTimeFormatter.ofPattern("M.d", Locale.KOREA));
         String timePart = createdAt.format(DateTimeFormatter.ofPattern("HH:mm", Locale.KOREA));
@@ -163,5 +192,126 @@ public class CallSessionServiceImpl implements CallSessionService {
 		};
     }
 
+    // 발신번호 포맷팅 함수
+    private String formatKoreanPhoneNumber(String rawNumber) {
+        if (rawNumber == null || rawNumber.isBlank()) return null;
 
+        // +82로 시작하는 국제번호 처리
+        if (rawNumber.startsWith("+82")) {
+            String local = rawNumber.substring(3);
+            if (local.startsWith("10") && local.length() == 10) {
+                return "010-" + local.substring(2, 6) + "-" + local.substring(6);
+            }
+        }
+
+        return rawNumber;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CallSessionResponseDTO.CallSessionPagingDTO getCallSessions(String sortBy, String order, Long cursorId, int size) {
+        Sort.Direction direction = order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+        List<CallSession> sessions = (cursorId == null)
+                ? callSessionRepository.findFirstPage(sortBy, size + 1, direction)
+                : callSessionRepository.findByCursor(sortBy, cursorId, size + 1, direction);
+
+        boolean hasNext = sessions.size() > size;
+        Long nextCursorId = hasNext ? sessions.get(size - 1).getId() : null;
+
+        List<CallSessionResponseDTO.CallSessionListDTO> resultList = sessions.stream()
+                .limit(size)
+                .map(session -> {
+                    String category = getAbuseCategoryForSession(session);
+                    return CallSessionResponseDTO.CallSessionListDTO.fromEntity(session, category);
+                })
+                .collect(Collectors.toList());
+
+        return CallSessionResponseDTO.CallSessionPagingDTO.builder()
+                .sessions(resultList)
+                .hasNext(hasNext)
+                .nextCursorId(nextCursorId)
+                .build();
+    }
+
+    @Override
+    public CallSessionResponseDTO.CallSessionPagingDTO getSessionsByAbuseCategory(String category, Long cursorId, int size, String order) {
+        validateAbuseCategory(category);
+
+        Sort.Direction direction = order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+        List<CallSession> sessions = callSessionRepository.findSessionsByAbuseCategory(category, cursorId, size + 1, direction);
+
+        boolean hasNext = sessions.size() > size;
+        Long nextCursorId = hasNext ? sessions.get(size - 1).getId() : null;
+
+        List<CallSessionResponseDTO.CallSessionListDTO> resultList = sessions.stream()
+                .limit(size)
+                .map(session -> {
+                    String resolvedCategory = getAbuseCategoryForSession(session);
+                    return CallSessionResponseDTO.CallSessionListDTO.fromEntity(session, resolvedCategory);
+                })
+                .collect(Collectors.toList());
+
+        return CallSessionResponseDTO.CallSessionPagingDTO.builder()
+                .sessions(resultList)
+                .hasNext(hasNext)
+                .nextCursorId(nextCursorId)
+                .build();
+    }
+
+    private void validateAbuseCategory(String category) {
+        List<String> valid = List.of("verbalAbuse", "sexualHarass", "threat");
+        if (!valid.contains(category)) {
+            throw new InvalidCategoryFilterException();
+        }
+    }
+
+    private String getAbuseCategoryForSession(CallSession session) {
+        List<CallLog> callLogs = callLogRepository.findByCallSession(session);
+
+        for (CallLog callLog : callLogs) {
+            List<AbuseLog> abuseLogs = abuseLogRepository.findByCallLog(callLog);
+            for (AbuseLog abuseLog : abuseLogs) {
+                List<AbuseTypeLog> typeLogs = abuseTypeLogRepository.findByAbuseLog(abuseLog);
+                for (AbuseTypeLog typeLog : typeLogs) {
+                    AbuseType type = typeLog.getAbuseType();
+                    if (type.isVerbalAbuse()) return "폭언";
+                    if (type.isSexualHarass()) return "성희롱";
+                    if (type.isThreat()) return "협박";
+                }
+            }
+        }
+        return "전체";
+    }
+
+    private CallSession findCallSessionById(final Long callSessionId) {
+        return callSessionRepository.findById(callSessionId).orElseThrow(CallSessionNotFoundException::new);
+    }
+
+    private CallSessionResponseDTO.CallSessionInfoDTO mapToSessionInfoDTO(CallSession callSession) {
+        return CallSessionResponseDTO.CallSessionInfoDTO.builder()
+            .callSessionCode(callSession.getCallSessionCode())
+            .createdAt(formatCreatedAt(callSession.getCreatedAt()))
+            .totalAbuseCnt(callSession.getTotalAbuseCnt())
+            .build();
+    }
+
+
+    private List<CallSessionResponseDTO.CallSessionScriptDTO> mapToScriptDTO(List<CallSttLog> scriptLogs) {
+
+        return scriptLogs.stream()
+            .map(log -> {
+                return CallSessionResponseDTO.CallSessionScriptDTO.builder()
+                    .id(log.getId())
+                    .callSessionId(log.getCallSessionId())
+                    .speaker(log.getTrack().toString())
+                    .text(log.getScript())
+                    .isAbuse(log.getIsAbuse())
+                    .abuseType(log.getAbuseType())
+                    .timestamp(log.getTimestamp())
+                    .build();
+            })
+            .collect(Collectors.toList());
+    }
 }

@@ -11,16 +11,22 @@ import org.springframework.http.HttpStatus;
 public enum ErrorStatus implements BaseErrorCode {
 
     // 일반적인 응답
-    _INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON500", "서버 에러, 관리자에게 문의 바랍니다."),
-    _BAD_REQUEST(HttpStatus.BAD_REQUEST,"COMMON400","잘못된 요청입니다."),
-    _UNAUTHORIZED(HttpStatus.UNAUTHORIZED,"COMMON401","인증이 필요합니다."),
-    _FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON403", "금지된 요청입니다."),
+    _INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON5000", "서버 에러, 관리자에게 문의 바랍니다."),
+    _BAD_REQUEST(HttpStatus.BAD_REQUEST,"COMMON4000","잘못된 요청입니다."),
+    _UNAUTHORIZED(HttpStatus.UNAUTHORIZED,"COMMON4010","인증이 필요합니다."),
+    _FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON4030", "금지된 요청입니다."),
 
     // User 관련 에러
-    USER_NOT_FOUND(HttpStatus.BAD_REQUEST, "USER4001", "사용자가 없습니다."),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER4041", "사용자가 없습니다."),
 
-    // 임시 에러
-    TEMP_EXCEPTION(HttpStatus.BAD_REQUEST, "TEMP4001", "테스트 에러 입니다.");
+    // Call Session 관련 에러
+    CALL_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "CALLSESSION4041", "call session이 존재하지 않습니다."),
+
+    // Call Stt Log 관련 에러
+    CALL_STT_LOG_NOT_FOUND(HttpStatus.NOT_FOUND, "CALLSTTLOG4041", "조건에 맞는 STT LOG가 존재하지 않습니다."),
+
+    // 폭언 카테고리 관련 에러
+    INVALID_CATEGORY_FILTER(HttpStatus.BAD_REQUEST, "CATEGORY4001", "유효하지 않은 카테고리입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

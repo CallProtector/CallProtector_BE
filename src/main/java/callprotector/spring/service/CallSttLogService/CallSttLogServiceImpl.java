@@ -1,5 +1,6 @@
 package callprotector.spring.service.CallSttLogService;
 
+import callprotector.spring.apiPayload.exception.handler.CallSttLogNotFoundException;
 import callprotector.spring.domain.CallSttLog;
 import callprotector.spring.domain.enums.CallTrack;
 import callprotector.spring.repository.CallSttLogRepository;
@@ -19,8 +20,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CallSttLogServiceImpl implements CallSttLogService {
+    private static final boolean IS_FINAL = true;
     private final CallSttLogRepository callSttLogRepository;
-    private final CallSessionService callSessionService;
 
     @Override
     @Transactional
@@ -40,10 +41,10 @@ public class CallSttLogServiceImpl implements CallSttLogService {
         log.info("MongoDB - CallSttLog 저장 완료: id={}", savedSttLog.getId());
 
         // 폭언 감지 시 CallSession 객체의 totalAbuseCnt 증가
-        if (isAbuse) {
-            log.info("STT 결과 욕설 감지 - (isAbuse={}) / CallSession total_abuse_cnt 업데이트 시도 - CallSessionId={}", isAbuse, callSessionId);
-            callSessionService.incrementTotalAbuseCnt(callSessionId);
-        }
+        // if (isAbuse) {
+        //     log.info("STT 결과 욕설 감지 - (isAbuse={}) / CallSession total_abuse_cnt 업데이트 시도 - CallSessionId={}", isAbuse, callSessionId);
+        //     callSessionService.incrementTotalAbuseCnt(callSessionId);
+        // }
 
         return savedSttLog;
     }
@@ -60,5 +61,14 @@ public class CallSttLogServiceImpl implements CallSttLogService {
                 .map(CallSttLog::getAbuseType)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         return String.join(",", uniqueTypes); // "욕설(강제차단),협박" 등
+    }
+
+    @Override
+    public List<CallSttLog> getAllBySessionId(Long callSessionId) {
+        List<CallSttLog> sttList = callSttLogRepository.findByCallSessionIdAndIsFinalOrderByTimestampAsc(callSessionId, IS_FINAL);
+        if (sttList.isEmpty()) {
+            throw new CallSttLogNotFoundException();
+        }
+        return sttList;
     }
 }

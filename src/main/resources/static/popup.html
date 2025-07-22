@@ -49,7 +49,7 @@
 
 <script>
     let pendingConnection = null;
-    const ws = new WebSocket("wss://pet-pipefish-friendly.ngrok-free.app/ws/stt?userId=1");
+    const ws = new WebSocket("wss://callprotect.site/ws/stt?userId=1");
 
     const sessionInfoDiv = document.getElementById("session-info");
     const logArea = document.getElementById("log-area");
@@ -62,10 +62,10 @@
         OUTBOUND: { currentIndex: 0, finalReceived: false }
     };
 
-    fetch('/token')
+    fetch('/api/token')
         .then(res => res.json())
         .then(data => {
-            const accessToken = data.twilioAccessToken;
+            const accessToken = data.result.twilioAccessToken;
             const device = new Twilio.Device(accessToken, { debug: true });
 
             device.on('ready', () => {

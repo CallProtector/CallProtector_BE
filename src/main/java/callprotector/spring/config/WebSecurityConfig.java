@@ -65,11 +65,13 @@ public class WebSecurityConfig
                                             "/api/webhook/**",
                                             "/twiml",
                                             "/ws/**",
-                                            "/token/**",
+                                            "/api/token/**",
                                             "/twilio/voice",
                                             "/popup.html",
                                             "/call-session/**",
-                                            "/abuse/**")
+                                            "/abuse/**",
+                                            "/api/sessions/**"
+                                        )
                                     .permitAll()
                                     .anyRequest().authenticated()
                     )

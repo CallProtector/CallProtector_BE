@@ -1,16 +1,23 @@
 package callprotector.spring.domain;
 
+import java.time.LocalDateTime;
+
 import callprotector.spring.domain.enums.CallTrack;
 import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 @Document(collection = "call_stt_log")
 @Getter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class CallSttLog {
     @Id
     private String id;
@@ -36,14 +43,7 @@ public class CallSttLog {
     @Field("abuse_cnt")
     private Integer abuseCnt;
 
-    @Builder
-    public CallSttLog(Long callSessionId, CallTrack track, String script, Boolean isFinal, Boolean isAbuse, String abuseType, Integer abuseCnt ) {
-        this.callSessionId = callSessionId;
-        this.track = track;
-        this.script = script;
-        this.isFinal = isFinal;
-        this.isAbuse = isAbuse;
-        this.abuseType = abuseType;
-        this.abuseCnt = abuseCnt;
-    }
+    @CreatedDate
+    @Field("created_at")
+    private LocalDateTime timestamp;
 }

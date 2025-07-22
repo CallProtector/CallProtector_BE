@@ -13,8 +13,8 @@ public class CallSessionRequestDTO {
     @AllArgsConstructor
     public static class CallSessionMakeDTO{
         private Long userId;      // 사용자 ID
-        private String title;     // 상담 제목
         private String twilioCallSid; // Twilio Call SID
+        private String callerNumber;    // 발신번호
     }
 
 }

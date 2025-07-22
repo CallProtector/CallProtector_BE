@@ -24,7 +24,7 @@ public class TwilioWebhookController {
         VoiceResponse response = new VoiceResponse.Builder() // 사전 안내 멘트 추가 예정
                 .start(new Start.Builder()
                         .stream(new Stream.Builder()
-                                .url("wss://pet-pipefish-friendly.ngrok-free.app/ws/audio")
+                                .url("wss://callprotect.site/ws/audio")
                                 .track(Stream.Track.BOTH_TRACKS)
                                 .parameter(new com.twilio.twiml.voice.Parameter.Builder()
                                         .name("userId")

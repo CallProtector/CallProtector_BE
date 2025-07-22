@@ -64,11 +64,6 @@ dependencies {
 	//Json Parsing
 	implementation 'org.json:json:20231013'
 
-
-
-	// Swagger annotations
-	implementation 'io.swagger.core.v3:swagger-annotations:2.2.10'
-
 	//Datebase - STT
 	implementation('org.springframework.boot:spring-boot-starter-data-mongodb') {
 		exclude group: 'org.mongodb', module: 'mongodb-driver-sync'
@@ -80,6 +75,10 @@ dependencies {
 	implementation 'org.mongodb:mongodb-driver-sync:5.3.1'
 	implementation 'org.mongodb:mongodb-driver-core:5.3.1'
 	implementation 'org.mongodb:bson:5.3.1'
+
+	// Twilio Media Stream - 데이터 전송
+	implementation 'com.google.protobuf:protobuf-java:4.31.1'
+
 }
 
 tasks.named('test') {
