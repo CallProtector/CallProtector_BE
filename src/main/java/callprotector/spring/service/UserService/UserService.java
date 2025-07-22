@@ -10,5 +10,6 @@ public interface UserService {
 
     public UserResponseDTO.checkEmailDTO checkEmail(final String email);
 
+    public void verifyEmail(String token);
 
 }

@@ -15,7 +15,7 @@ spring:
         format_sql: true
         use_sql_comments: true
         hbm2ddl:
-          auto: update
+          auto: create
         default_batch_fetch_size: 1000
   mail:
     host: smtp.gmail.com
@@ -25,9 +25,10 @@ spring:
     properties:
       mail:
         smtp:
+          auth: true
           starttls:
             enable: true
-          auth: true
+
   data:
     mongodb:
       uri: ${MONGODB_URI}

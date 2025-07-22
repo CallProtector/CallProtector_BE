@@ -1,9 +1,14 @@
 package callprotector.spring.web.controller;
 
 import callprotector.spring.apiPayload.ApiResponse;
+import callprotector.spring.domain.User;
+import callprotector.spring.domain.VerificationToken;
+import callprotector.spring.repository.UserRepository;
+import callprotector.spring.repository.VerificationTokenRepository;
 import callprotector.spring.service.UserService.UserService;
 import callprotector.spring.web.dto.request.UserRequestDTO;
 import callprotector.spring.web.dto.response.UserResponseDTO;
+import com.google.common.base.Optional;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final UserService userService;
+
 
     // 회원가입 API
     @Operation(summary = "회원가입 API", description = "회원가입 API입니다.")
@@ -40,6 +46,13 @@ public class AuthController {
         UserResponseDTO.checkEmailDTO result = userService.checkEmail(email);
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/auth/verify-email")
+    public ApiResponse<String> verifyEmail(@RequestParam("token") String token) {
+        userService.verifyEmail(token);
+        return ApiResponse.onSuccess("이메일 인증이 완료되었습니다.");
+    }
+
 
 
 

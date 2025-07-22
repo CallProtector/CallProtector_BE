@@ -57,4 +57,13 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<LegalBotQuery> legalBotQueries = new ArrayList<>();
 
+    // 회원가입 시, 이메일 인증용 필드 추가
+    @Column(nullable = false)
+    private boolean isVerified = false;
+
+    public void verify() {
+        this.isVerified = true;
+    }
+
+
 }
