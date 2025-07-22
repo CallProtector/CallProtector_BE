@@ -14,7 +14,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -29,33 +31,70 @@ public class UserServiceImpl implements UserService{
     private final VerificationTokenRepository tokenRepository;
     private final EmailService emailService;
 
+    // 이메일 인증 코드 발송
+    @Override
+    @Transactional
+    public void sendVerificationCode(String email) {
+        // 이미 가입된 이메일인지 확인
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isPresent()) {
+            throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+        }
+
+        String code = String.format("%06d", new Random().nextInt(999999));
+        VerificationToken token = VerificationToken.create(email, code);
+        tokenRepository.save(token);
+
+        emailService.sendVerificationEmail(email, code);
+    }
+
+    // 인증 코드 검증
+    @Override
+    @Transactional
+    public void verifyCode(String email, String code) {
+        VerificationToken token = tokenRepository.findTopByEmailOrderByExpiresAtDesc(email)
+                .orElseThrow(() -> new IllegalArgumentException("인증 요청이 없습니다."));
+
+        if (token.isExpired()) {
+            throw new IllegalArgumentException("인증 코드가 만료되었습니다.");
+        }
+
+        if (!token.getCode().equals(code)) {
+            throw new IllegalArgumentException("인증 코드가 올바르지 않습니다.");
+        }
+
+        // ✅ 인증 성공 처리
+        token.markVerified(); // verified = true 로 표시
+    }
+
+
     // 회원가입
     @Override
     public UserResponseDTO.SignupDTO create(UserRequestDTO.SignupDTO dto) {
-        // 비밀번호 유효성 검사
+        // 1. 비밀번호 유효성 검사
         if (!PasswordValidator.isValid(dto.getPassword())) {
             throw new IllegalArgumentException("비밀번호는 8~16자이며, 영문, 숫자, 특수문자를 모두 포함해야 합니다.");
         }
 
+        // 2. 이메일 인증 완료 여부 확인
+        VerificationToken token = tokenRepository.findTopByEmailOrderByExpiresAtDesc(dto.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("이메일 인증이 필요합니다."));
 
-        // 아직 에러처리.. 중복처리는 하지 않았어요. 정말 기본만 !
+        if (!token.isVerified()) {
+            throw new IllegalArgumentException("이메일 인증이 완료되지 않았습니다.");
+        }
+
+        // 3. User 저장
         User user = User.builder()
                 .name(dto.getName())
                 .email(dto.getEmail())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .phoneNumber(Long.valueOf(dto.getPhone()))
                 .build();
-        // 2. 저장
+
         User savedUser = userRepository.save(user);
 
-        // 3. 이메일 인증 토큰 생성 및 저장
-        VerificationToken token = VerificationToken.createToken(savedUser);
-        tokenRepository.save(token);
-
-        // 4. 인증 이메일 발송
-        emailService.sendVerificationEmail(savedUser.getEmail(), token.getToken());
-
-        // 5. 응답
+        // 4. 응답 반환
         return UserResponseDTO.SignupDTO.builder()
                 .id(savedUser.getId())
                 .build();
@@ -65,51 +104,15 @@ public class UserServiceImpl implements UserService{
     @Override
     public UserResponseDTO.LoginDTO login(UserRequestDTO.LoginDTO dto) {
         final Optional<User> user = userRepository.findByEmail(dto.getEmail());
-        if (!user.get().isVerified()) {
-            throw new IllegalArgumentException("이메일 인증이 완료되지 않았습니다.");
-        }
-        if (user.isPresent() && passwordEncoder.matches(dto.getPassword(), user.get().getPassword())){
-            return UserResponseDTO.LoginDTO.builder().token(tokenProvider.create(user.get()))
-                    .id(user.get().getId()).build();
-        } else {
+
+        if (user.isEmpty() || !passwordEncoder.matches(dto.getPassword(), user.get().getPassword())) {
             throw new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다.");
         }
+
+        return UserResponseDTO.LoginDTO.builder()
+                .token(tokenProvider.create(user.get()))
+                .id(user.get().getId())
+                .build();
     }
 
-    @Override
-    public UserResponseDTO.checkEmailDTO checkEmail(String email) {
-        final Optional<User> user = userRepository.findByEmail(email);
-        if(user.isEmpty()){
-            return UserResponseDTO.checkEmailDTO.builder().available(true).build();
-        } else {
-            return UserResponseDTO.checkEmailDTO.builder().available(false).build();
-        }
-    }
-
-    @Transactional
-    @Override
-    public void verifyEmail(String token) {
-        Optional<VerificationToken> optionalToken = tokenRepository.findByToken(token);
-
-        if (optionalToken.isEmpty()) {
-            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
-        }
-
-        VerificationToken verificationToken = optionalToken.get();
-
-        // 토큰 만료 검사 주석 처리
-//        if (verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-//            throw new IllegalArgumentException("토큰이 만료되었습니다.");
-//        }
-
-
-        User user = verificationToken.getUser();
-
-        if (user.isVerified()) {
-            throw new IllegalArgumentException("이미 인증된 사용자입니다.");
-        }
-
-        user.verify();
-        userRepository.save(user);
-    }
 }

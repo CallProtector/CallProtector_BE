@@ -66,11 +66,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 
-    // (07/17) 이메일 인증 경로는 필터링 제외
+    // 필터 예외 처리
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        log.info("📛 [shouldNotFilter] path = {}", path);
-        return path.startsWith("/users/auth/verify-email");
+        return path.startsWith("/users/auth/verify-code") || path.startsWith("/users/auth/signup");
     }
 }
