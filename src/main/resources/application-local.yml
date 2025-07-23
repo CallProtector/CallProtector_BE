@@ -25,9 +25,10 @@ spring:
     properties:
       mail:
         smtp:
+          auth: true
           starttls:
             enable: true
-          auth: true
+
   data:
     mongodb:
       uri: ${MONGODB_URI}

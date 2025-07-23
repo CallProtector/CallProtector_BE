@@ -52,6 +52,7 @@ public class CallLogServiceImpl implements CallLogService{
         if (isAbuse && track == CallTrack.INBOUND) {
             abuseService.saveAbuseLogs(callLog, abuseType);
         }
+        log.info("callLog saved");
     }
 
     @Override

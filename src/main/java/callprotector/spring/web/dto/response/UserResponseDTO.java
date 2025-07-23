@@ -23,13 +23,5 @@ public class UserResponseDTO {
         Long id;
     }
 
-    @Builder
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class checkEmailDTO{
-        boolean available;
-    }
 
 }

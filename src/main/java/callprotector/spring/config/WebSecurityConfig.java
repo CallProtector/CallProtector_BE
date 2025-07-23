@@ -51,7 +51,11 @@ public class WebSecurityConfig
                             authorizeRequests
                                     .requestMatchers(
                                             "/health",
-                                            "/users/auth/**",
+                                            "/api/auth/**", // 전체 인증 관련 요청 허용
+                                            "/api/auth/send-code",   // 인증 없이 접근 허용
+                                            "/api/auth/verify-code", // 인증 코드 확인도 포함
+                                            "/api/auth/signup",
+                                            "/api/auth/login",
                                             "/school/**",
                                             "/v3/api-docs/**",
                                             "/swagger-ui/**",
@@ -88,6 +92,7 @@ public class WebSecurityConfig
 
     }
 
+    // 인증되지 않은 요청에 대한 EntryPoint 처리
     private final AuthenticationEntryPoint unauthorizedEntryPoint =
             (request, response, authException) -> {
 

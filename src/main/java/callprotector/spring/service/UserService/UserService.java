@@ -8,7 +8,8 @@ public interface UserService {
     public UserResponseDTO.SignupDTO create(final UserRequestDTO.SignupDTO dto);
     public UserResponseDTO.LoginDTO login(final UserRequestDTO.LoginDTO dto);
 
-    public UserResponseDTO.checkEmailDTO checkEmail(final String email);
+    public void sendVerificationCode(String email);
 
+    public void verifyCode(String email, String code);
 
 }
