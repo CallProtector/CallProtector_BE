@@ -24,61 +24,55 @@ repositories {
 }
 
 dependencies {
+	// 기본 Spring Boot
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'com.mysql:mysql-connector-j'
-	annotationProcessor 'org.projectlombok:lombok'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+	// 테스트
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-	// 회원가입 & 로그인 위해 추가
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	// spring-security
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	// JJWT 라이브러리 (JWT 구현체) 3종 세트
-	implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.2' // 인터페이스 정의
-	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.2' // 실제 구현체
-	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.2' // JSON 변환기 (Claims ↔ JSON 직렬화용)
+	// DB
+	runtimeOnly 'com.mysql:mysql-connector-j'
 
-	// 이메일 인증
-	implementation 'org.springframework.boot:spring-boot-starter-mail'
-
-	// // Springdoc OpenAPI UI ++) OpenAPI 2.x 대응: springdoc (2.x만 유지)
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
-
-
-	// 최신 Twilio Core SDK
-	implementation 'com.twilio.sdk:twilio:10.7.2'
-
-	// Websocket
-	implementation 'org.springframework.boot:spring-boot-starter-websocket'
-
-	// Tomcat - websocket 모듈 의존성 추가
-	implementation 'org.apache.tomcat.embed:tomcat-embed-websocket'
-
-
-	//Google Gloud Speech
-	implementation 'com.google.cloud:google-cloud-speech:4.39.0'
-
-	//Json Parsing
-	implementation 'org.json:json:20231013'
-
-	//Datebase - STT
+	// MongoDB (Google Speech-to-Text 로그 저장용)
 	implementation('org.springframework.boot:spring-boot-starter-data-mongodb') {
 		exclude group: 'org.mongodb', module: 'mongodb-driver-sync'
 		exclude group: 'org.mongodb', module: 'mongodb-driver-core'
 		exclude group: 'org.mongodb', module: 'bson'
 	}
-
-
 	implementation 'org.mongodb:mongodb-driver-sync:5.3.1'
 	implementation 'org.mongodb:mongodb-driver-core:5.3.1'
 	implementation 'org.mongodb:bson:5.3.1'
 
-	// Twilio Media Stream - 데이터 전송
+	// JWT (로그인 토큰)
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.2'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.2'
+
+	// 문서화 (Swagger → SpringDoc)
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+
+	// WebSocket
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation 'org.apache.tomcat.embed:tomcat-embed-websocket'
+
+	// Twilio
+	implementation 'com.twilio.sdk:twilio:10.7.2'
 	implementation 'com.google.protobuf:protobuf-java:4.31.1'
 
+	// Google Cloud Speech-to-Text
+	implementation 'com.google.cloud:google-cloud-speech:4.39.0'
+
+	// JSON 파싱
+	implementation 'org.json:json:20231013'
+
+	// Lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
 }
 
 tasks.named('test') {
