@@ -28,9 +28,11 @@ spring:
           auth: true
           starttls:
             enable: true
+
   data:
     mongodb:
       uri: ${MONGODB_URI}
+
 twilio:
   account:
     sid: ${TWILIO_ACCOUNT_SID}
@@ -39,3 +41,7 @@ twilio:
   api:
     key: ${TWILIO_API_KEY}
     secret: ${TWILIO_API_SECRET}
+
+openai:
+  model: gpt-4o
+  secret-key: ${OPENAI_API_KEY}
