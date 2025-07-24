@@ -1,6 +1,7 @@
 package callprotector.spring.web.controller;
 
 import callprotector.spring.apiPayload.ApiResponse;
+import callprotector.spring.service.CallLogService.CallLogService;
 import callprotector.spring.service.CallSessionService.CallSessionService;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class CallSessionController {
 
     private final CallSessionService callSessionService;
+    private final CallLogService callLogService;
 
     @Operation(summary = "CallSession 생성", description = "Twilio 수신 시 콜세션을 생성하고 발신번호를 저장합니다.")
     @PostMapping("")
@@ -59,6 +61,16 @@ public class CallSessionController {
     ) {
         CallSessionResponseDTO.CallSessionDetailResponseDTO response = callSessionService.getCallSessionDetail(id);
         return ApiResponse.onSuccess(response);
+    }
+
+    @Operation(
+            summary = "AI 상담 요약 생성 API",
+            description = "CallSession ID를 기반으로 고객과 상담원의 통화 내용을 요약하여 CallSession의 summary 필드에 저장합니다."
+    )
+    @PostMapping("/{sessionId}/summary")
+    public ApiResponse<String> generateSummary(@PathVariable Long sessionId) {
+        String summary = callLogService.generateAiSummary(sessionId);
+        return ApiResponse.onSuccess(summary);
     }
 
 }
