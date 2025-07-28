@@ -56,6 +56,9 @@ public class CallSession extends BaseEntity {
 
     private LocalDateTime summaryGeneratedAt;
 
+    @Column(name= "summary_gemini", length = 2000)
+    private String summaryGemini;
+
     public void updateAbuseCnt() {
         this.totalAbuseCnt = (this.totalAbuseCnt == null ? 0 : this.totalAbuseCnt) + 1;
     }
@@ -66,5 +69,9 @@ public class CallSession extends BaseEntity {
 
     public void updateAbuseTag() {
         this.abuseTag = Boolean.TRUE;
+    }
+
+    public void updateSummaryGemini(String summaryGemini) {
+        this.summaryGemini = summaryGemini;
     }
 }
