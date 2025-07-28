@@ -70,7 +70,8 @@ public class WebSecurityConfig
                                             "/popup.html",
                                             "/call-session/**",
                                             "/abuse/**",
-                                            "/api/sessions/**"
+                                            "/api/sessions/**",
+                                             "/filter-abuse"
                                         )
                                     .permitAll()
                                     .anyRequest().authenticated()
