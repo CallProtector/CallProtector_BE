@@ -26,7 +26,7 @@ public class FastClient { // Service는 비즈니스 로직만 전담하고, Cli
 
     private final RestTemplate restTemplate; // final 필드에 대해 자동으로 생성자 만들어 줌
 
-    private static final String FASTAPI_URL = "https://callprotect.site/filter-abuse";
+    private static final String FASTAPI_URL = "http://localhost:8080/filter-abuse";
 
     public AbuseResponseDTO.AbuseFilterDTO sendTextToFastAPI(String text) {
         // 1. 요청 헤더 설정 (Content-Type: application/json)
