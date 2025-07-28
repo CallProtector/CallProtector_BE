@@ -1,11 +1,13 @@
 package callprotector.spring.service.CallSessionService;
 
+import callprotector.spring.apiPayload.code.status.ErrorStatus;
 import callprotector.spring.apiPayload.exception.handler.*;
 import callprotector.spring.config.SttWebSocketHandler;
 import callprotector.spring.domain.*;
 import callprotector.spring.domain.mapping.AbuseTypeLog;
 import callprotector.spring.repository.*;
 import callprotector.spring.service.CallSttLogService.CallSttLogService;
+import callprotector.spring.service.GeminiService.GeminiService;
 import callprotector.spring.service.util.CallSessionCodeGenerator;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
@@ -40,6 +42,7 @@ public class CallSessionServiceImpl implements CallSessionService {
     private final AbuseLogRepository abuseLogRepository;
     private final AbuseTypeLogRepository abuseTypeLogRepository;
     private final CallLogRepository callLogRepository;
+    private final GeminiService geminiService;
 
     @Override
     @Transactional
@@ -165,10 +168,12 @@ public class CallSessionServiceImpl implements CallSessionService {
         List<CallSttLog> scriptLogs = callSttLogService.getAllBySessionId(callSessionId);
         List<CallSessionResponseDTO.CallSessionScriptDTO> sessionScriptDTO = mapToScriptDTO(scriptLogs);
 
-        // TODO: aiSummary 추가
+        // aiSummary - Gemini
+        String aiSummary = callSession.getSummaryGemini();
         return CallSessionResponseDTO.CallSessionDetailResponseDTO.builder()
             .sessionInfo(sessionInfoDTO)
             .scriptHistory(sessionScriptDTO)
+            .aiSummary(aiSummary)
             .build();
     }
 
@@ -258,6 +263,67 @@ public class CallSessionServiceImpl implements CallSessionService {
                 .hasNext(hasNext)
                 .nextCursorId(nextCursorId)
                 .build();
+    }
+
+    @Override
+    public String generateGeminiSummary(Long callSessionId) {
+        CallSession session = findCallSessionById(callSessionId);
+
+        // 중복 생성 방지
+        if (session.getSummaryGemini() != null && !session.getSummaryGemini().isBlank()) {
+            log.info("CallSession (ID: {})에 이미 요약 완료. Gemini api 호출 없이 기존 요약 내용 반환", callSessionId);
+            return session.getSummaryGemini();
+        }
+
+        String summaryText;
+
+        try {
+            // 전체 스크립트 조회
+            List<CallSttLog> scriptLogs = callSttLogService.getAllBySessionId(callSessionId);
+
+            if (scriptLogs.isEmpty()) {
+                log.warn("CallSession (ID: {})에 최종 STT 로그가 없어 요약을 생성할 수 없습니다.", callSessionId);
+                throw new CallSessionSummaryGenerationException(ErrorStatus.CANT_SUMMARY_CALL_STT_LOG);
+            }
+
+            // 하나의 전체 스크립트로 가공
+            String fullConversation = scriptLogs.stream()
+                .map(log -> {
+                    String speaker = log.getTrack().toString().equals("INBOUND") ? "고객" : "상담원";
+                    return String.format("[%s]: %s", speaker, log.getScript());
+                })
+                .collect(Collectors.joining("\n"));
+
+            boolean hasMeaningfulScript = scriptLogs.stream()
+                .anyMatch(log -> log.getScript() != null && !log.getScript().trim().isEmpty());
+
+            if (!hasMeaningfulScript) {
+                log.warn("CallSession (ID: {})에 의미 있는 대화 내용이 없어 요약을 생성할 수 없습니다.", callSessionId);
+                throw new CallSessionSummaryGenerationException(ErrorStatus.CALL_STT_LOG_NO_MEANINGFUL_CONTENT);
+            }
+
+            summaryText = geminiService.summarizeCallScript(fullConversation);
+            log.info("CallSession (ID: {}) 요약 생성 완료.", callSessionId);
+
+            session.updateSummaryGemini(summaryText);
+            log.info("summaryGemini: {}", summaryText);
+            callSessionRepository.save(session);
+            return summaryText;
+
+        } catch (Exception e) {
+            log.error("CallSession (ID: {}) 요약 생성 중 오류 발생: {}", callSessionId, e.getMessage(), e);
+            throw new CallSessionSummaryGenerationException(ErrorStatus.SUMMARY_AI_GEMINI_API_ERROR);
+        }
+    }
+
+    @Override
+    public CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummary(Long callSessionId) {
+        String summaryText = generateGeminiSummary(callSessionId);
+
+        return CallSessionResponseDTO.CallSessionSummaryResponseDTO.builder()
+            .id(callSessionId)
+            .summaryText(summaryText)
+            .build();
     }
 
     private void validateAbuseCategory(String category) {
