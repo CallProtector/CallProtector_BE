@@ -56,7 +56,6 @@ public class WebSecurityConfig
                                             "/api/auth/verify-code", // 인증 코드 확인도 포함
                                             "/api/auth/signup",
                                             "/api/auth/login",
-                                            "/school/**",
                                             "/v3/api-docs/**",
                                             "/swagger-ui/**",
                                             "/swagger-resources/**",
