@@ -100,7 +100,7 @@ public class CallSessionResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CallSessionSummaryResponseDTO {
-        private Long id;
+        private Long callSessionId;
         private String summaryText;
     }
 }
