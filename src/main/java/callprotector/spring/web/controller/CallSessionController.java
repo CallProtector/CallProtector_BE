@@ -73,4 +73,14 @@ public class CallSessionController {
         return ApiResponse.onSuccess(summary);
     }
 
+    @Operation(
+        summary = "AI 상담 요약 생성 API - Gemini 2.5 flash",
+        description = "CallSession ID를 기반으로 고객과 상담원의 통화 내용을 요약하여 CallSession의 summary_gemini 필드에 저장합니다."
+    )
+    @PostMapping("/{sessionId}/summary-gemini")
+    public ApiResponse<CallSessionResponseDTO.CallSessionSummaryResponseDTO> generateSummaryGemini(@PathVariable Long sessionId) {
+        CallSessionResponseDTO.CallSessionSummaryResponseDTO response = callSessionService.createCallSessionSummary(sessionId);
+        return ApiResponse.onSuccess(response);
+    }
+
 }
