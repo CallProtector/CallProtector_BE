@@ -60,7 +60,7 @@ public class CallSessionResponseDTO {
     public static class CallSessionDetailResponseDTO {
         private CallSessionInfoDTO sessionInfo; // 내부 DTO 사용
         private List<CallSessionScriptDTO> scriptHistory;
-        // private String aiSummary;
+        private String aiSummary;
     }
 
     @Getter
@@ -93,5 +93,14 @@ public class CallSessionResponseDTO {
         private List<CallSessionListDTO> sessions;
         private Long nextCursorId;
         private boolean hasNext;
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CallSessionSummaryResponseDTO {
+        private Long id;
+        private String summaryText;
     }
 }
