@@ -45,3 +45,9 @@ twilio:
 openai:
   model: gpt-4o
   secret-key: ${OPENAI_API_KEY}
+gcp:
+  project:
+    id: call-protector
+  location:
+    id: us-central1
+
