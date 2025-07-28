@@ -27,8 +27,24 @@ dependencies {
 	// 기본 Spring Boot
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	compileOnly 'org.projectlombok:lombok'
+	runtimeOnly 'com.mysql:mysql-connector-j'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// 회원가입 & 로그인 위해 추가
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// spring-security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// JJWT 라이브러리 (JWT 구현체) 3종 세트
+	implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.2' // 인터페이스 정의
+	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.2' // 실제 구현체
+	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.2' // JSON 변환기 (Claims ↔ JSON 직렬화용)
+
+	// 이메일 인증
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 
 	// 테스트
@@ -73,6 +89,14 @@ dependencies {
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
+
+	// Google Cloud Vertex AI - Gemini 2.5 flash
+	implementation platform('com.google.cloud:libraries-bom:26.34.0')
+	implementation 'com.google.cloud:google-cloud-vertexai'
+
+	// Jackson JSR310 Datatype (Java 8 Date/Time API support)
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
 }
 
 tasks.named('test') {
