@@ -395,48 +395,66 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                                 transcript);
 
                         try {
-                            if (isFinal && track == CallTrack.INBOUND) {
+                            if (isFinal) {
                                 String trimmedTranscript = transcript.trim();
 
                                 // ✅ 중복 방지: 이전 저장값과 동일한 경우 저장 생략
-                                if (trimmedTranscript.equals(ctx.lastSavedFinalTranscript)) {
+                                if (track == CallTrack.INBOUND && trimmedTranscript.equals(ctx.lastSavedFinalTranscript)) {
                                     log.debug("⏭️ [중복 제거] 동일한 최종 텍스트 무시됨: {}", trimmedTranscript);
-                                } else {
+                                    continue;
+                                }
+
+                                boolean isAbuse = false;
+                                String abuseType = ABUSIVE_TYPE_NORMAL;
+
+                                if(track == CallTrack.INBOUND) {
                                     var analysis = fastClient.sendTextToFastAPI(trimmedTranscript);
+                                    isAbuse = analysis.isAbuse();
+                                    abuseType = analysis.getType();
+                                    if (isAbuse) {
+                                        log.info("[{}] INBOUND 욕설 감지 결과 → isAbuse: {}, type: {}", CallTrack.INBOUND, isAbuse, abuseType);
+                                    }
+                                } else {
+                                    log.info("[{}] 상담원 발화는 욕설 분석을 건너뜀", track);
 
-                                    CallSttLog savedLog = callSttLogService.saveTranscriptLog(
-                                            ctx.callSessionId,
-                                            track,
-                                            trimmedTranscript,
-                                            true,
-                                            analysis.isAbuse(),
-                                            analysis.getType()
-                                    );
+                                }
 
-                                    // ✅ transcriptBuilder 중복 누적 방지
+                                CallSttLog savedLog = callSttLogService.saveTranscriptLog(
+                                    ctx.callSessionId,
+                                    track,
+                                    trimmedTranscript,
+                                    true,
+                                    isAbuse,
+                                    abuseType
+                                );
+                                log.info("MongoDB에 CallSttLog 저장 완료: callSessionId={}, track={}, script={}", ctx.callSessionId, track, trimmedTranscript);
+
+
+                                if (track == CallTrack.INBOUND) {
+                                    // transcriptBuilder 중복 누적 방지
                                     if (!trimmedTranscript.equals(ctx.lastSavedFinalTranscript)) {
                                         ctx.transcriptBuilder.append(trimmedTranscript).append(" ");
                                         ctx.lastSavedFinalTranscript = trimmedTranscript;
                                     }
 
-                                    CallSttLogResponseDTO finalResponse = new CallSttLogResponseDTO(DATA_TYPE_STT, savedLog);
-
-                                    if (ctx.userId != null) {
-                                        sttWebSocketHandler.sendSttToClient(ctx.userId, finalResponse);
-                                    }
-
-                                    if (analysis.isAbuse()) {
-                                        // callLogService.registerAbuse(ctx.callSessionId, track);
-                                        log.info("STT 결과 욕설 감지 - (isAbuse={}) / CallSession total_abuse_cnt 업데이트 시도 - CallSessionId={}", analysis.isAbuse(), ctx.callSessionId);
+                                    // 욕설 감지 시 total abuse cnt 업데이트
+                                    if (isAbuse) {
+                                        log.info("STT 결과 욕설 감지 - (isAbuse={}) / CallSession total_abuse_cnt 업데이트 시도 - CallSessionId={}", isAbuse, ctx.callSessionId);
                                         callSessionService.incrementTotalAbuseCnt(ctx.callSessionId);
                                         log.info("🍀 고객 발화 필터링됨");
                                         callLogService.updateAbuse(ctx.callSession, track);
                                     }
                                 }
 
+                                CallSttLogResponseDTO finalResponse = new CallSttLogResponseDTO(DATA_TYPE_STT, savedLog);
+
+                                if (ctx.userId != null) {
+                                    sttWebSocketHandler.sendSttToClient(ctx.userId, finalResponse);
+                                }
+
                                 ctx.partialFinalTranscript = null;
 
-                            } else {
+                            } else { // 중간 결과는 DB 저장 없이 뷰에만 보여줌
                                 CallSttLog interimLog = CallSttLog.builder()
                                         .callSessionId(ctx.callSessionId)
                                         .track(track)
