@@ -24,9 +24,14 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // Call Stt Log 관련 에러
     CALL_STT_LOG_NOT_FOUND(HttpStatus.NOT_FOUND, "CALLSTTLOG4041", "조건에 맞는 STT LOG가 존재하지 않습니다."),
+    CANT_SUMMARY_CALL_STT_LOG(HttpStatus.BAD_REQUEST, "CALLSTTLOG4001", "상담 내역 기록이 존재하지 않아 요약할 수 없습니다."),
+    CALL_STT_LOG_NO_MEANINGFUL_CONTENT(HttpStatus.BAD_REQUEST, "CALLSTTLOG4002", "의미 있는 대화 내용이 없어 상담 내역을 요약할 수 없습니다."),
 
     // 폭언 카테고리 관련 에러
-    INVALID_CATEGORY_FILTER(HttpStatus.BAD_REQUEST, "CATEGORY4001", "유효하지 않은 카테고리입니다.");
+    INVALID_CATEGORY_FILTER(HttpStatus.BAD_REQUEST, "CATEGORY4001", "유효하지 않은 카테고리입니다."),
+
+    // AI 상담 요약 관련 에러
+    SUMMARY_AI_GEMINI_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AISUMMARY5001", "요약 생성 중 기술적 오류가 발생하여 상담 내역을 요약할 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
