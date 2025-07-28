@@ -65,10 +65,14 @@ public class CallSttLogServiceImpl implements CallSttLogService {
 
     @Override
     public List<CallSttLog> getAllBySessionId(Long callSessionId) {
+        log.info("getAllBySessionId 호출: callSessionId={}, IS_FINAL={}", callSessionId, IS_FINAL);
+
         List<CallSttLog> sttList = callSttLogRepository.findByCallSessionIdAndIsFinalOrderByTimestampAsc(callSessionId, IS_FINAL);
-        if (sttList.isEmpty()) {
-            throw new CallSttLogNotFoundException();
-        }
+        log.info("DB 조회 결과 (sttList) 크기: {}", sttList.size());
+        // if (sttList.isEmpty()) {
+        //     log.warn("STT 로그를 찾을 수 없습니다: callSessionId={}, isFinal={}", callSessionId, IS_FINAL);
+        //     throw new CallSttLogNotFoundException();
+        // }
         return sttList;
     }
 }
