@@ -6,11 +6,14 @@ import callprotector.spring.domain.enums.CallTrack;
 import callprotector.spring.repository.*;
 import callprotector.spring.service.AbuseService.AbuseService;
 import callprotector.spring.service.CallSessionService.CallSessionService;
+import callprotector.spring.service.OpenAiService.OpenAiSummaryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -18,8 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class CallLogServiceImpl implements CallLogService{
 
     private final CallLogRepository callLogRepository;
+    private final CallSessionRepository callSessionRepository;
     private final CallSessionService callSessionService;
     private final AbuseService abuseService;
+    private final OpenAiSummaryService openAiSummaryService;
 
     @Override
     @Transactional
@@ -65,6 +70,31 @@ public class CallLogServiceImpl implements CallLogService{
         // callLogRepository.save(log);
         //
         // saveAbuseLogs(log);
+    }
+
+    @Override
+    @Transactional
+    public String generateAiSummary(Long callSessionId) {
+        CallSession session = callSessionService.getCallSession(callSessionId);
+
+        String inboundScript = callLogRepository.findByCallSessionAndTrack(session, CallTrack.INBOUND)
+                .map(CallLog::getScript)
+                .orElse("");
+
+        String outboundScript = callLogRepository.findByCallSessionAndTrack(session, CallTrack.OUTBOUND)
+                .map(CallLog::getScript)
+                .orElse("");
+
+
+        String summary = openAiSummaryService.summarize(inboundScript, outboundScript);
+
+        session.setSummary(summary);
+        session.setSummaryGenerated(true);
+        session.setSummaryGeneratedAt(LocalDateTime.now());
+
+        callSessionRepository.save(session);
+
+        return summary;
     }
 
 }

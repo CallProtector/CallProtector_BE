@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -46,6 +47,14 @@ public class CallSession extends BaseEntity {
 
     @Column(name = "twilio_call_sid", length = 34) // CA로 시작하는 34자리 문자열
     private String twilioCallSid;
+
+    // 상담 요약
+    @Column(length = 2000)
+    private String summary;
+
+    private Boolean summaryGenerated;
+
+    private LocalDateTime summaryGeneratedAt;
 
     public void updateAbuseCnt() {
         this.totalAbuseCnt = (this.totalAbuseCnt == null ? 0 : this.totalAbuseCnt) + 1;
