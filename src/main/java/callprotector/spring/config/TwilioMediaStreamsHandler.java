@@ -79,7 +79,7 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
         if (json.has("event") && "start".equals(json.get("event").asText())) {
             JsonNode customParams = json.path("start").path("customParameters");
             String userIdStr = customParams.path("userId").asText();
-
+            String callerNumber = customParams.path("callerNumber").asText();
             String twilioCallSid = json.path("start").path("callSid").asText();
 
             if (!userIdStr.isEmpty()) {
@@ -89,7 +89,7 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
                 // callSession 객체 생성
                 Long callSessionId = callSessionService.createCallSession(
                         "dlthdal07@gmail.com", // TODO: 사용자 이메일 동적 처리
-                        new CallSessionRequestDTO.CallSessionMakeDTO(userId, twilioCallSid, null) // TODO: callerNumber 추출 구현 필요
+                        new CallSessionRequestDTO.CallSessionMakeDTO(userId, twilioCallSid, callerNumber)
                 );
 
                 // callSessionId로 callSession 객체 조회
