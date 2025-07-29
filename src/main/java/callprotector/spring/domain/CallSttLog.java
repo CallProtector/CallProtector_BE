@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -18,6 +20,16 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@CompoundIndexes({
+    @CompoundIndex(
+        name = "idx_call_session_id_is_abuse",
+        def = "{'call_session_id': 1, 'is_abuse': 1}"
+    ),
+    @CompoundIndex(
+        name = "idx_call_session_id_is_final_created_at",
+        def = "{'call_session_id': 1, 'is_final': 1, 'created_at': 1}"
+    )
+})
 public class CallSttLog {
     @Id
     private String id;
