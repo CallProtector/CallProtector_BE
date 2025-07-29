@@ -18,6 +18,7 @@ public class TwilioWebhookController {
     @PostMapping(value = "/voice", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
     public String onIncomingCall(@RequestParam Map<String, String> params) {
         log.info("☆ Inbound Call From: {}", params.get("From"));
+        String callerNumber = params.get("From");
 
         String userId = "1"; // 추후 수정 필요(로그인한 상담원의 userId 가져오기)
 
@@ -29,6 +30,10 @@ public class TwilioWebhookController {
                                 .parameter(new com.twilio.twiml.voice.Parameter.Builder()
                                         .name("userId")
                                         .value(userId)
+                                        .build())
+                                .parameter(new com.twilio.twiml.voice.Parameter.Builder()
+                                        .name("callerNumber")
+                                        .value(callerNumber)
                                         .build())
                                 .build())
                         .build())
