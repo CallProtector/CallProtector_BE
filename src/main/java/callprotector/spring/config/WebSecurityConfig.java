@@ -51,7 +51,7 @@ public class WebSecurityConfig
                             authorizeRequests
                                     .requestMatchers(
                                             "/health",
-                                            "/api/auth/**", // 전체 인증 관련 요청 허용
+                                            "/api/auth/**",
                                             "/v3/api-docs/**",
                                             "/swagger-ui/**",
                                             "/swagger-resources/**",
