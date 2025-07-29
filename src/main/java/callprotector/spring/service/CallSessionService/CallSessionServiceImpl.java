@@ -321,7 +321,7 @@ public class CallSessionServiceImpl implements CallSessionService {
         String summaryText = generateGeminiSummary(callSessionId);
 
         return CallSessionResponseDTO.CallSessionSummaryResponseDTO.builder()
-            .id(callSessionId)
+            .callSessionId(callSessionId)
             .summaryText(summaryText)
             .build();
     }
