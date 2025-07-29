@@ -23,10 +23,10 @@ public class CallSttLog {
     private String id;
 
     @Field("call_session_id")
-    private Long callSessionId;     // RDB CallSession 연동용
+    private Long callSessionId;
 
     @Field("track")
-    private CallTrack track; // inbound, outbound
+    private CallTrack track;
 
     @Field("script")
     private String script;
