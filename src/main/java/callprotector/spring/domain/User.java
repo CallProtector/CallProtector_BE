@@ -6,7 +6,6 @@ import callprotector.spring.domain.common.BaseEntity;
 import callprotector.spring.domain.mapping.LegalBotQuery;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,7 +25,7 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 20)
     private String name;
 
-    @Column(nullable = false, length = 20, unique = true)
+    @Column(nullable = false, length = 200, unique = true)
     private String email;
 
     //@Column(nullable = false, length = 16) <- 에러 방지 위해, 일단 주석 : 당장 회원가입 시 사용하지 않기 때문에
@@ -46,7 +45,7 @@ public class User extends BaseEntity {
     private Long totalCall = 0L;
 
     @Column(nullable = false, length = 15)
-    private Long phoneNumber;
+    private String phoneNumber;
 
     //@LastModifiedDate <- 에러 방지 위해,  일단 주석
     private LocalDateTime updatedAt;

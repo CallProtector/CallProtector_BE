@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
 
@@ -89,7 +88,7 @@ public class UserServiceImpl implements UserService{
                 .name(dto.getName())
                 .email(dto.getEmail())
                 .password(passwordEncoder.encode(dto.getPassword()))
-                .phoneNumber(Long.valueOf(dto.getPhone()))
+                .phoneNumber(String.valueOf(dto.getPhone()))
                 .build();
 
         User savedUser = userRepository.save(user);

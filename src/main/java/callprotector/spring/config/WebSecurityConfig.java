@@ -51,11 +51,7 @@ public class WebSecurityConfig
                             authorizeRequests
                                     .requestMatchers(
                                             "/health",
-                                            "/api/auth/**", // 전체 인증 관련 요청 허용
-                                            "/api/auth/send-code",   // 인증 없이 접근 허용
-                                            "/api/auth/verify-code", // 인증 코드 확인도 포함
-                                            "/api/auth/signup",
-                                            "/api/auth/login",
+                                            "/api/auth/**",
                                             "/v3/api-docs/**",
                                             "/swagger-ui/**",
                                             "/swagger-resources/**",
