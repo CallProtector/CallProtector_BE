@@ -6,7 +6,6 @@ import callprotector.spring.domain.common.BaseEntity;
 import callprotector.spring.domain.mapping.LegalBotQuery;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
