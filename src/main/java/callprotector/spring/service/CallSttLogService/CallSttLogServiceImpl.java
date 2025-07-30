@@ -1,16 +1,16 @@
 package callprotector.spring.service.CallSttLogService;
 
-import callprotector.spring.apiPayload.exception.handler.CallSttLogNotFoundException;
 import callprotector.spring.domain.CallSttLog;
 import callprotector.spring.domain.enums.CallTrack;
 import callprotector.spring.repository.CallSttLogRepository;
-import callprotector.spring.service.CallSessionService.CallSessionService;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.LinkedHashSet;
@@ -22,11 +22,13 @@ import java.util.stream.Collectors;
 public class CallSttLogServiceImpl implements CallSttLogService {
     private static final boolean IS_FINAL = true;
     private final CallSttLogRepository callSttLogRepository;
+    private final ElasticsearchClient elasticsearchClient;
 
     @Override
     @Transactional
     public CallSttLog saveTranscriptLog(Long callSessionId, CallTrack track, String script, boolean isFinal, boolean isAbuse, String abuseType) {
         Integer abuseCnt = isAbuse ? 1 : 0;
+
         CallSttLog sttLog = CallSttLog.builder()
                 .callSessionId(callSessionId)
                 .track(track)
@@ -45,6 +47,18 @@ public class CallSttLogServiceImpl implements CallSttLogService {
         //     log.info("STT 결과 욕설 감지 - (isAbuse={}) / CallSession total_abuse_cnt 업데이트 시도 - CallSessionId={}", isAbuse, callSessionId);
         //     callSessionService.incrementTotalAbuseCnt(callSessionId);
         // }
+
+        // Elasticsearch 인덱싱
+        try {
+            elasticsearchClient.index(i -> i
+                    .index("call_stt_log")
+                    .id(savedSttLog.getId())
+                    .document(savedSttLog)
+            );
+            log.info("Elasticsearch - CallSttLog 인덱싱 완료: id={}", savedSttLog.getId());
+        } catch (IOException e) {
+            log.error("❌ Elasticsearch 인덱싱 실패 - id: {}", savedSttLog.getId(), e);
+        }
 
         return savedSttLog;
     }
