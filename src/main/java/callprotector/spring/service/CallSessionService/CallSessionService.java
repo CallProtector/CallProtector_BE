@@ -12,6 +12,7 @@ public interface CallSessionService {
     void forceTerminateCall(CallSession callSession);
     CallSessionResponseDTO.CallSessionPagingDTO getCallSessions(String sortBy, String order, Long cursorId, int size);
     CallSessionResponseDTO.CallSessionPagingDTO getSessionsByAbuseCategory(String category, Long cursorId, int size, String order);
+    CallSessionResponseDTO.CallSessionPagingDTO searchCallSessions(String keyword, String category, String order, Long cursorId, int size);
     CallSessionResponseDTO.CallSessionDetailResponseDTO getCallSessionDetail(Long callSessionId);
     String generateGeminiSummary(Long callSessionId);
     CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummary(Long callSessionId);
