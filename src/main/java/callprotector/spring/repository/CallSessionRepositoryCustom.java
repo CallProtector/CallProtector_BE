@@ -10,4 +10,5 @@ public interface CallSessionRepositoryCustom {
     List<CallSession> findByCursor(String sortBy, Object cursorValue, int limit, Sort.Direction direction);
 
     List<CallSession> findSessionsByAbuseCategory(String category, Long cursorId, int limit, Sort.Direction direction);
+    List<CallSession> findByIdsWithOrder(List<Long> ids, Sort.Direction direction);
 }
