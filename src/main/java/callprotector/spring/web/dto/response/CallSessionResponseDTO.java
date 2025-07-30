@@ -74,6 +74,8 @@ public class CallSessionResponseDTO {
         private LocalDateTime createdAt;
         private String category;
 
+        private String matchedScript;
+
         public static CallSessionListDTO fromEntity(CallSession session, String category) {
             return CallSessionListDTO.builder()
                     .id(session.getId())
@@ -81,6 +83,18 @@ public class CallSessionResponseDTO {
                     .callerNumber(session.getCallerNumber())
                     .createdAt(session.getCreatedAt())
                     .category(category)
+                    .build();
+        }
+
+        // 검색 사용 시 응답
+        public static CallSessionListDTO fromEntityWithScript(CallSession session, String category, String matchedScript) {
+            return CallSessionListDTO.builder()
+                    .id(session.getId())
+                    .callSessionCode(session.getCallSessionCode())
+                    .callerNumber(session.getCallerNumber())
+                    .createdAt(session.getCreatedAt())
+                    .category(category)
+                    .matchedScript(matchedScript)
                     .build();
         }
     }
