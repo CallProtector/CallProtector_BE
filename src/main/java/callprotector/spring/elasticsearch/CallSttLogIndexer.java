@@ -1,5 +1,6 @@
 package callprotector.spring.elasticsearch;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import callprotector.spring.domain.CallSttLog;
 import callprotector.spring.repository.CallSttLogRepository;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
