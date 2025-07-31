@@ -1,4 +1,4 @@
-package callprotector.spring.config;
+package callprotector.spring.handler;
 
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
