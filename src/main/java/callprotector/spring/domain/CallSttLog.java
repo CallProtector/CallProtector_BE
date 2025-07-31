@@ -3,6 +3,7 @@ package callprotector.spring.domain;
 import java.time.LocalDateTime;
 
 import callprotector.spring.domain.enums.CallTrack;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -57,5 +58,6 @@ public class CallSttLog {
 
     @CreatedDate
     @Field("created_at")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime timestamp;
 }

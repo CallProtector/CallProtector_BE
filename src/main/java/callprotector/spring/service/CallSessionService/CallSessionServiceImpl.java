@@ -21,9 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Locale;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.twilio.rest.api.v2010.account.Call;
@@ -42,6 +40,7 @@ public class CallSessionServiceImpl implements CallSessionService {
     private final AbuseLogRepository abuseLogRepository;
     private final AbuseTypeLogRepository abuseTypeLogRepository;
     private final CallLogRepository callLogRepository;
+    private final CallSttLogSearchRepository callSttLogSearchRepository;
     private final GeminiService geminiService;
 
     @Override
@@ -266,6 +265,52 @@ public class CallSessionServiceImpl implements CallSessionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public CallSessionResponseDTO.CallSessionPagingDTO searchCallSessions(String keyword, String category, String order, Long cursorId, int size) {
+        // Elasticsearch에서 CallSttLog 검색
+        List<CallSttLog> sttLogs = callSttLogSearchRepository.searchByKeywordAndFilters(keyword, category, order, cursorId, size + 1);
+
+        // callSessionId → script 매핑
+        Map<Long, String> sessionScriptMap = sttLogs.stream()
+                .collect(Collectors.toMap(
+                        CallSttLog::getCallSessionId,
+                        CallSttLog::getScript,
+                        (existing, replacement) -> existing // 중복 키 발생 시 첫 번째 script 유지
+                ));
+
+        // CallSession ID 추출
+        List<Long> sessionIds = new ArrayList<>(sessionScriptMap.keySet()).stream()
+                .limit(size + 1)
+                .toList();
+
+        // 세션 정렬 후 조회
+        Sort.Direction direction = order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        List<CallSession> sessions = callSessionRepository.findByIdsWithOrder(sessionIds, direction);
+
+        // DTO 변환
+        boolean hasNext = sessionIds.size() > size;
+        Long nextCursorId = hasNext ? sessionIds.get(size - 1) : null;
+
+        List<CallSessionResponseDTO.CallSessionListDTO> resultList = sessions.stream()
+                .limit(size)
+                .map(session -> {
+                    String resolvedCategory = getAbuseCategoryForSession(session);
+                    String fullScript = sessionScriptMap.get(session.getId());
+                    String matchedScript = extractSnippetAroundKeyword(fullScript, keyword, 15);
+                    return CallSessionResponseDTO.CallSessionListDTO.fromEntityWithScript(session, resolvedCategory, matchedScript);
+                })
+                .toList();
+
+        log.info("📌 keyword: {}, category: {}, order: {}, cursorId: {}, size: {}", keyword, category, order, cursorId, size); //추가
+
+        return CallSessionResponseDTO.CallSessionPagingDTO.builder()
+                .sessions(resultList)
+                .hasNext(hasNext)
+                .nextCursorId(nextCursorId)
+                .build();
+    }
+
+    @Override
     public String generateGeminiSummary(Long callSessionId) {
         CallSession session = findCallSessionById(callSessionId);
 
@@ -351,6 +396,19 @@ public class CallSessionServiceImpl implements CallSessionService {
         return "전체";
     }
 
+    // 검색어가 포함된 scrpit 일부만 추출하여 반환하는 함수
+    private String extractSnippetAroundKeyword(String script, String keyword, int contextLength) {
+        if (script == null || keyword == null || keyword.isBlank()) return null;
+
+        int index = script.indexOf(keyword);
+        if (index == -1) return null; // 검색어가 없으면 null 반환
+
+        int start = index;
+        int end = Math.min(script.length(), index + keyword.length() + contextLength);
+
+        return script.substring(start, end).replaceAll("\\s+", " ").trim();
+    }
+
     private CallSession findCallSessionById(final Long callSessionId) {
         return callSessionRepository.findById(callSessionId).orElseThrow(CallSessionNotFoundException::new);
     }
@@ -362,7 +420,6 @@ public class CallSessionServiceImpl implements CallSessionService {
             .totalAbuseCnt(callSession.getTotalAbuseCnt())
             .build();
     }
-
 
     private List<CallSessionResponseDTO.CallSessionScriptDTO> mapToScriptDTO(List<CallSttLog> scriptLogs) {
 

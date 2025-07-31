@@ -52,3 +52,7 @@ gcp:
     id: ${GCP_PROJECT_ID}
   location:
     id: ${GCP_LOCATION_ID}
+
+elasticsearch:
+  host: localhost
+  port: 9200

@@ -60,4 +60,15 @@ public class CallSessionRepositoryImpl implements CallSessionRepositoryCustom {
 
         return query.getResultList();
     }
+
+    @Override
+    public List<CallSession> findByIdsWithOrder(List<Long> ids, Sort.Direction direction) {
+        if (ids.isEmpty()) return List.of();
+
+        String jpql = "SELECT cs FROM CallSession cs WHERE cs.id IN :ids ORDER BY cs.createdAt " + (direction.isAscending() ? "ASC" : "DESC");
+
+        return em.createQuery(jpql, CallSession.class)
+                .setParameter("ids", ids)
+                .getResultList();
+    }
 }
