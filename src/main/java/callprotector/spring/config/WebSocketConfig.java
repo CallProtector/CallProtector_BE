@@ -1,5 +1,7 @@
 package callprotector.spring.config;
 
+import callprotector.spring.handler.SttWebSocketHandler;
+import callprotector.spring.handler.TwilioMediaStreamsHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
