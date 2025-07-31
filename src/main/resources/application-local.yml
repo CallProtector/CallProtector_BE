@@ -56,3 +56,4 @@ gcp:
 elasticsearch:
   host: localhost
   port: 9200
+  enabled: false
