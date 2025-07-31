@@ -2,7 +2,7 @@ package callprotector.spring.service.CallSessionService;
 
 import callprotector.spring.apiPayload.code.status.ErrorStatus;
 import callprotector.spring.apiPayload.exception.handler.*;
-import callprotector.spring.config.SttWebSocketHandler;
+import callprotector.spring.handler.SttWebSocketHandler;
 import callprotector.spring.domain.*;
 import callprotector.spring.domain.mapping.AbuseTypeLog;
 import callprotector.spring.repository.*;
