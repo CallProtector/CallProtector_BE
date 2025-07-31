@@ -1,4 +1,4 @@
-package callprotector.spring.config;
+package callprotector.spring.handler;
 
 import callprotector.spring.client.FastClient;
 import callprotector.spring.domain.CallSession;
