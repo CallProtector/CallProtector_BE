@@ -1,5 +1,6 @@
 package callprotector.spring.elasticsearch;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
