@@ -16,6 +16,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.elasticsearch.client.RestClient;
 
+// ElasticSearch 임시 비활성화용 어노테이션 추가
+@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true") 
 @Configuration
 @EnableConfigurationProperties(ElasticsearchConfig.ElasticsearchProperties.class)
 @RequiredArgsConstructor
