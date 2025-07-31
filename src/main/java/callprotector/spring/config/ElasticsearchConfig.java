@@ -1,5 +1,6 @@
 package callprotector.spring.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
