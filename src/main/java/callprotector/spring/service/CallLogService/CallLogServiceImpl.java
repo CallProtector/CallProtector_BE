@@ -62,7 +62,7 @@ public class CallLogServiceImpl implements CallLogService{
 
     @Override
     @Transactional
-    public void updateAbuse(CallSession callSession, CallTrack track) {
+    public void updateAbuse(Long callSessionId, CallTrack track) {
         if (track != CallTrack.INBOUND) return;
 
         // log.setAbuseCnt((log.getAbuseCnt() == null ? 0 : log.getAbuseCnt()) + 1);
