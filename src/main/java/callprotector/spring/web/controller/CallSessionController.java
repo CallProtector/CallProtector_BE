@@ -1,7 +1,6 @@
 package callprotector.spring.web.controller;
 
 import callprotector.spring.apiPayload.ApiResponse;
-import callprotector.spring.service.CallLogService.CallLogService;
 import callprotector.spring.service.CallSessionService.CallSessionService;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 public class CallSessionController {
 
     private final CallSessionService callSessionService;
-    private final CallLogService callLogService;
 
     @Operation(summary = "CallSession 생성", description = "Twilio 수신 시 콜세션을 생성하고 발신번호를 저장합니다.")
     @PostMapping("")
