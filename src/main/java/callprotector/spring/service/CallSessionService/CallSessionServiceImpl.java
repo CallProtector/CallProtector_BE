@@ -69,8 +69,7 @@ public class CallSessionServiceImpl implements CallSessionService {
     @Override
     @Transactional(readOnly = true)
     public CallSessionResponseDTO.CallSessionInfoDTO getCallSessionInfo(final Long callSessionId) {
-        CallSession callSession = callSessionRepository.findById(callSessionId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 CallSession이 존재하지 않습니다. ID: " + callSessionId));
+        CallSession callSession = findCallSessionById(callSessionId);
 
         String formattedCreatedAt = formatCreatedAt(callSession.getCreatedAt());
 
