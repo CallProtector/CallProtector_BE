@@ -1,12 +1,14 @@
 package callprotector.spring.web.dto.request;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 public class UserRequestDTO {
 
     @Builder
     @Getter
-    @Setter
     @NoArgsConstructor // 기본 생성자 초기화
     @AllArgsConstructor // 모든 필드 초기화
     // 회원가입 요청 DTO
@@ -20,7 +22,6 @@ public class UserRequestDTO {
 
     @Builder
     @Getter
-    @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     // 로그인 요청 DTO
