@@ -175,40 +175,7 @@ public class CallSessionServiceImpl implements CallSessionService {
             .build();
     }
 
-    private String formatCreatedAt(LocalDateTime createdAt) {
-        String datePart = createdAt.format(DateTimeFormatter.ofPattern("M.d", Locale.KOREA));
-        String timePart = createdAt.format(DateTimeFormatter.ofPattern("HH:mm", Locale.KOREA));
-        String dayKor = getKoreanDayOfWeek(createdAt.getDayOfWeek());
 
-        return String.format("%s (%s) %s", datePart, dayKor, timePart);
-    }
-
-    private String getKoreanDayOfWeek(DayOfWeek dayOfWeek) {
-		return switch (dayOfWeek) {
-			case MONDAY -> "월";
-			case TUESDAY -> "화";
-			case WEDNESDAY -> "수";
-			case THURSDAY -> "목";
-			case FRIDAY -> "금";
-			case SATURDAY -> "토";
-			case SUNDAY -> "일";
-		};
-    }
-
-    // 발신번호 포맷팅 함수
-    private String formatKoreanPhoneNumber(String rawNumber) {
-        if (rawNumber == null || rawNumber.isBlank()) return null;
-
-        // +82로 시작하는 국제번호 처리
-        if (rawNumber.startsWith("+82")) {
-            String local = rawNumber.substring(3);
-            if (local.startsWith("10") && local.length() == 10) {
-                return "010-" + local.substring(2, 6) + "-" + local.substring(6);
-            }
-        }
-
-        return rawNumber;
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -418,6 +385,41 @@ public class CallSessionServiceImpl implements CallSessionService {
 
     private CallSession findCallSessionById(final Long callSessionId) {
         return callSessionRepository.findById(callSessionId).orElseThrow(CallSessionNotFoundException::new);
+    }
+
+    private String formatCreatedAt(LocalDateTime createdAt) {
+        String datePart = createdAt.format(DateTimeFormatter.ofPattern("M.d", Locale.KOREA));
+        String timePart = createdAt.format(DateTimeFormatter.ofPattern("HH:mm", Locale.KOREA));
+        String dayKor = getKoreanDayOfWeek(createdAt.getDayOfWeek());
+
+        return String.format("%s (%s) %s", datePart, dayKor, timePart);
+    }
+
+    private String getKoreanDayOfWeek(DayOfWeek dayOfWeek) {
+        return switch (dayOfWeek) {
+            case MONDAY -> "월";
+            case TUESDAY -> "화";
+            case WEDNESDAY -> "수";
+            case THURSDAY -> "목";
+            case FRIDAY -> "금";
+            case SATURDAY -> "토";
+            case SUNDAY -> "일";
+        };
+    }
+
+    // 발신번호 포맷팅 함수
+    private String formatKoreanPhoneNumber(String rawNumber) {
+        if (rawNumber == null || rawNumber.isBlank()) return null;
+
+        // +82로 시작하는 국제번호 처리
+        if (rawNumber.startsWith("+82")) {
+            String local = rawNumber.substring(3);
+            if (local.startsWith("10") && local.length() == 10) {
+                return "010-" + local.substring(2, 6) + "-" + local.substring(6);
+            }
+        }
+
+        return rawNumber;
     }
 
     private CallSessionResponseDTO.CallSessionInfoDTO mapToSessionInfoDTO(CallSession callSession) {
