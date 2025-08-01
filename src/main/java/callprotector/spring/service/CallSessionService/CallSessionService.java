@@ -14,7 +14,12 @@ public interface CallSessionService {
     CallSessionResponseDTO.CallSessionPagingDTO getSessionsByAbuseCategory(String category, Long cursorId, int size, String order);
     CallSessionResponseDTO.CallSessionPagingDTO searchCallSessions(String keyword, String category, String order, Long cursorId, int size);
     CallSessionResponseDTO.CallSessionDetailResponseDTO getCallSessionDetail(Long callSessionId);
+
+    String generateSummaryByOpenAi(Long callSessionId);
+    CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummaryByOpenAi(Long callSessionId);
+
     String generateGeminiSummary(Long callSessionId);
     CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummary(Long callSessionId);
+
     void updateEndedAt(Long callSessionId);
 }

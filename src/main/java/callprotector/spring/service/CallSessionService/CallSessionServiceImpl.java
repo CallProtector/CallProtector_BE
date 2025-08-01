@@ -2,12 +2,14 @@ package callprotector.spring.service.CallSessionService;
 
 import callprotector.spring.apiPayload.code.status.ErrorStatus;
 import callprotector.spring.apiPayload.exception.handler.*;
+import callprotector.spring.domain.enums.CallTrack;
 import callprotector.spring.handler.SttWebSocketHandler;
 import callprotector.spring.domain.*;
 import callprotector.spring.domain.mapping.AbuseTypeLog;
 import callprotector.spring.repository.*;
 import callprotector.spring.service.CallSttLogService.CallSttLogService;
 import callprotector.spring.service.GeminiService.GeminiService;
+import callprotector.spring.service.OpenAiService.OpenAiSummaryService;
 import callprotector.spring.service.util.CallSessionCodeGenerator;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
@@ -41,6 +43,7 @@ public class CallSessionServiceImpl implements CallSessionService {
     private final AbuseTypeLogRepository abuseTypeLogRepository;
     private final CallLogRepository callLogRepository;
     private final CallSttLogSearchRepository callSttLogSearchRepository;
+    private final OpenAiSummaryService openAiSummaryService;
     private final GeminiService geminiService;
 
     @Override
@@ -274,6 +277,70 @@ public class CallSessionServiceImpl implements CallSessionService {
                 .sessions(resultList)
                 .hasNext(hasNext)
                 .nextCursorId(nextCursorId)
+                .build();
+    }
+
+
+    @Override
+    public String generateSummaryByOpenAi(Long callSessionId) {
+        CallSession session = findCallSessionById(callSessionId);
+
+        if (session.getSummary() != null && !session.getSummary().isBlank()) {
+            log.info("✅ 기존 요약 반환 - CallSession ID: {}", callSessionId);
+            return session.getSummary();
+        }
+
+        try {
+            List<CallSttLog> sttLogs = callSttLogService.getAllBySessionId(callSessionId);
+
+            if (sttLogs.isEmpty()) {
+                log.warn("⚠️ STT 로그 없음 - CallSession ID: {}", callSessionId);
+                throw new CallSessionSummaryGenerationException(ErrorStatus.CANT_SUMMARY_CALL_STT_LOG);
+            }
+
+            boolean hasMeaningfulScript = sttLogs.stream()
+                    .anyMatch(log -> log.getScript() != null && !log.getScript().trim().isEmpty());
+
+            if (!hasMeaningfulScript) {
+                log.warn("⚠️ 유효한 대화 내용 없음 - CallSession ID: {}", callSessionId);
+                throw new CallSessionSummaryGenerationException(ErrorStatus.CALL_STT_LOG_NO_MEANINGFUL_CONTENT);
+            }
+
+            String fullConversation = sttLogs.stream()
+                    .filter(log -> {
+                        String script = log.getScript();
+                        return script != null && !script.trim().isEmpty();
+                    })
+                    .map(log -> {
+                        String script = log.getScript().trim();
+                        String speaker = (log.getTrack() == CallTrack.INBOUND) ? "고객" : "상담원";
+                        return String.format("[%s]: %s", speaker, script);
+                    })
+                    .collect(Collectors.joining("\n"));
+
+            String summary = openAiSummaryService.summarize(fullConversation);
+            log.info("✅ 요약 생성 완료 - CallSession ID: {}", callSessionId);
+
+            session.updateSummary(summary);
+            session.updateSummaryGenerated(true);
+            session.updateSummaryGeneratedAt(LocalDateTime.now());
+            callSessionRepository.save(session);
+
+            return summary;
+
+        } catch (Exception e) {
+            log.error("❌ 요약 생성 중 오류 - CallSession ID: {}, 메시지: {}", callSessionId, e.getMessage(), e);
+            throw new CallSessionSummaryGenerationException(ErrorStatus.SUMMARY_AI_OPENAI_API_ERROR);
+        }
+    }
+
+    @Override
+    public CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummaryByOpenAi(Long callSessionId) {
+        String summaryText = generateSummaryByOpenAi(callSessionId);
+
+        return CallSessionResponseDTO.CallSessionSummaryResponseDTO.builder()
+                .callSessionId(callSessionId)
+                .summaryText(summaryText)
                 .build();
     }
 

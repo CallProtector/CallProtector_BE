@@ -27,7 +27,6 @@ public class CallLog extends BaseEntity {
     @Column(nullable = false)
     private CallTrack track;
 
-    // 크기가 큰 ERD-TEXT 속성은 크기 설정 안 함
     @Setter
     @Column(nullable = false)
     private String script;
