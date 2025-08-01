@@ -66,14 +66,28 @@ public class WebSecurityConfig
                                             "/call-session/**",
                                             "/abuse/**",
                                             "/api/sessions/**",
-                                             "/filter-abuse"
-                                        )
+                                             "/filter-abuse",
+                                            "/chatstream.html",  // ✅ HTML 직접 접근 허용**
+                                            "/api/chat/stream",   // ✅ SSE 엔드포인트 허용**
+                                            "/api/chat-session" // 테스트용 프론트 html 열기 위해 허용
+                                    )
                                     .permitAll()
                                     .anyRequest().authenticated()
                     )
-                    .exceptionHandling((exceptionConfig) ->
-                            exceptionConfig
-                                    .authenticationEntryPoint(unauthorizedEntryPoint)
+                    // ★ 인증/인가 실패 처리
+                    .exceptionHandling(exception -> exception
+                            // 인증 실패 (JWT 없거나 잘못된 경우 → 401)
+                            .authenticationEntryPoint(unauthorizedEntryPoint)
+                            // 인가 실패 (권한 부족 → 403)
+                            .accessDeniedHandler((request, response, accessDeniedException) -> {
+                                ApiResponse<?> apiResponse = new ApiResponse<>(false, "403", "접근 권한이 없습니다.", null);
+                                response.setCharacterEncoding("UTF-8");
+                                response.setStatus(HttpStatus.FORBIDDEN.value());
+                                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                                PrintWriter writer = response.getWriter();
+                                writer.write(new ObjectMapper().writeValueAsString(apiResponse));
+                                writer.flush();
+                            })
                     ); // 401 403 관련 예외처리
 
             http.addFilterAfter(

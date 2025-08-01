@@ -106,6 +106,9 @@ dependencies {
 	implementation 'org.glassfish:jakarta.json:2.0.1'
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
+	// WebFlux 의존성 추가
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
 }
 
 tasks.named('test') {

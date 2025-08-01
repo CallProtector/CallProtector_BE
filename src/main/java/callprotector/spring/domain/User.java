@@ -3,7 +3,6 @@ package callprotector.spring.domain;
 import callprotector.spring.domain.enums.Department;
 import callprotector.spring.domain.enums.Position;
 import callprotector.spring.domain.common.BaseEntity;
-import callprotector.spring.domain.mapping.LegalBotQuery;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -55,8 +54,7 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<ChatSession> chatSessions = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<LegalBotQuery> legalBotQueries = new ArrayList<>();
+
 
 
 

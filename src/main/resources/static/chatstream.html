@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>SSE Chat Stream</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.8; }
+        #typing-indicator {
+            font-weight: bold;
+            display: none;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<h2>악성 민원 대응 챗봇</h2>
+
+<input type="text" id="questionInput" placeholder="질문을 입력하세요" style="width: 400px; padding: 5px;">
+<button id="start">질문하기</button>
+
+<div id="response" style="margin-top:20px; white-space:pre-wrap; font-family:Arial; line-height:1.8;"></div>
+<div id="typing-indicator">GPT is typing<span id="dots"></span></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        let currentSessionId = null; // 세션 ID 저장 변수
+
+        document.getElementById("start").addEventListener("click", async () => {
+            const question = document.getElementById("questionInput").value.trim();
+            const responseDiv = document.getElementById("response");
+            const typingIndicator = document.getElementById("typing-indicator");
+            const dotsSpan = document.getElementById("dots");
+
+            responseDiv.innerHTML = "";
+            typingIndicator.style.display = "none";
+            dotsSpan.textContent = "";
+
+            if (!question) {
+                alert("질문을 입력해주세요!");
+                return;
+            }
+
+            // ✅ JWT 토큰 가져오기
+            const token = localStorage.getItem("accessToken");
+            if (!token) {
+                alert("JWT 토큰이 없습니다. 먼저 localStorage에 accessToken을 저장하세요.");
+                return;
+            }
+
+            // ✅ 최초 질문 시 세션 자동 생성 (JWT 인증 기반)
+            if (!currentSessionId) {
+                const sessionRes = await fetch("/api/chat-session", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token
+                    }
+                });
+
+                if (!sessionRes.ok) {
+                    alert("세션 생성 실패: " + sessionRes.status);
+                    return;
+                }
+
+                const sessionData = await sessionRes.json();
+                currentSessionId = sessionData.result.sessionId;
+                console.log("세션 생성 완료:", currentSessionId);
+            }
+
+            // ✅ SSE 요청 (세션 ID 포함)
+            const encodedQuestion = encodeURIComponent(question);
+            const eventSource = new EventSource(`/api/chat/stream?sessionId=${currentSessionId}&question=${encodedQuestion}`);
+
+            // GPT 타자 애니메이션 표시 시작
+            typingIndicator.style.display = "block";
+            let dotCount = 0;
+            const dotInterval = setInterval(() => {
+                dotCount = (dotCount + 1) % 4;
+                dotsSpan.textContent = ".".repeat(dotCount);
+            }, 500);
+
+            let buffer = "";
+            eventSource.onmessage = (event) => {
+                const chunk = event.data;
+
+                // 첫 응답 청크가 오면 타자 애니메이션 숨김
+                if (typingIndicator.style.display === "block") {
+                    typingIndicator.style.display = "none";
+                    clearInterval(dotInterval);
+                }
+
+                if (chunk === " ") {
+                    responseDiv.innerHTML += " ";
+                    return;
+                }
+
+                buffer += chunk;
+                const sentences = buffer.split(/([.?!:])/);
+                buffer = sentences.pop();
+
+                sentences.forEach((sentence) => {
+                    if (sentence.trim()) {
+                        if (/[.?!:]/.test(sentence)) {
+                            responseDiv.innerHTML += sentence + "<br><br>";
+                        } else {
+                            responseDiv.innerHTML += sentence + " ";
+                        }
+                    }
+                });
+            };
+
+            eventSource.onerror = () => {
+                console.log("⛔ SSE 연결 종료");
+                if (buffer.trim()) {
+                    responseDiv.innerHTML += buffer.trim();
+                }
+                typingIndicator.style.display = "none";
+                clearInterval(dotInterval);
+                eventSource.close();
+            };
+        });
+    });
+</script>
+
+</body>
+</html>
