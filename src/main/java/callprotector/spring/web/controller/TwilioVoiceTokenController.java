@@ -6,11 +6,14 @@ import callprotector.spring.web.dto.response.TwilioTokenResponseDTO;
 import com.twilio.jwt.accesstoken.AccessToken;
 import com.twilio.jwt.accesstoken.VoiceGrant;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/token")
@@ -43,7 +46,7 @@ public class TwilioVoiceTokenController {
                 .ttl(3600)
                 .build();
 
-        System.out.println("access token: " + token.toString());
+        log.info("access token: {}", token.toString());
 
         TwilioTokenResponseDTO twilioTokenResponseDTO = TwilioTokenResponseDTO.of(token.toJwt());
         return ApiResponse.onSuccess(twilioTokenResponseDTO);
