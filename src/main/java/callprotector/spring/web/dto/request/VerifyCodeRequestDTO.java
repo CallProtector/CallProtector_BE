@@ -1,11 +1,13 @@
 package callprotector.spring.web.dto.request;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 public class VerifyCodeRequestDTO {
     @Builder
     @Getter
-    @Setter
     @NoArgsConstructor // 기본 생성자 초기화
     @AllArgsConstructor // 모든 필드 초기화
     public static class VerifyCodeRequest {
