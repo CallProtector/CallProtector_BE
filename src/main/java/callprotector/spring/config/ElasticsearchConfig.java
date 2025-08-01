@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.apache.http.HttpHost;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -44,7 +43,6 @@ public class ElasticsearchConfig {
     }
 
     @Getter
-    @Setter
     @ConfigurationProperties(prefix = "elasticsearch")
     public static class ElasticsearchProperties {
         private String host;
