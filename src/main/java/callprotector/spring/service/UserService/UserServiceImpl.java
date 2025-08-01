@@ -9,7 +9,7 @@ import callprotector.spring.service.EmailService.EmailService;
 import callprotector.spring.service.util.PasswordValidator;
 import callprotector.spring.web.dto.request.UserRequestDTO;
 import callprotector.spring.web.dto.response.UserResponseDTO;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
