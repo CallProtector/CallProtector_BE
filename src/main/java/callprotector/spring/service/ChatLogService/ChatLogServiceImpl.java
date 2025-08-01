@@ -6,7 +6,7 @@ import callprotector.spring.repository.ChatLogRepository;
 import callprotector.spring.service.ChatSessionService.ChatSessionService;
 import callprotector.spring.web.dto.response.ChatLogResponseDTO;
 import callprotector.spring.web.dto.response.ChatbotResponseDTO;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -48,6 +48,7 @@ public class ChatLogServiceImpl implements ChatLogService {
 
 
     @Override
+    @Transactional(readOnly = true)
     public List<ChatLogResponseDTO.ChatLogResponse> getChatLogsBySession(Long sessionId) {
         return chatLogRepository.findAllByChatSessionId(sessionId).stream()
                 .map(log -> ChatLogResponseDTO.ChatLogResponse.builder()
