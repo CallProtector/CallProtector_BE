@@ -3,7 +3,11 @@ package callprotector.spring.domain;
 import callprotector.spring.domain.common.BaseEntity;
 import callprotector.spring.domain.enums.CallTrack;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
@@ -20,22 +24,18 @@ public class CallLog extends BaseEntity {
     @JoinColumn(name = "call_session_id")
     private CallSession callSession;
 
-    @Setter
     private String audio_url;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CallTrack track;
 
-    @Setter
     @Column(nullable = false)
     private String script;
 
-    @Setter
     @Column(name = "abuse_cnt")
     private Integer abuseCnt;
 
-    @Setter
     @Column(name = "abuse_detect")
     private Boolean abuseDetect;
 
