@@ -34,5 +34,9 @@ public class ChatSession extends BaseEntity {
     @OneToMany(mappedBy = "chatSession", cascade = CascadeType.ALL)
     private List<LegalBotQuery> legalBotQueries = new ArrayList<>();
 
+    @OneToMany(mappedBy = "chatSession", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatLog> chatLogs = new ArrayList<>();
+
+
 }
 
