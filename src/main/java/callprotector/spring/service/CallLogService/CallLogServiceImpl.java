@@ -86,9 +86,9 @@ public class CallLogServiceImpl implements CallLogService{
 
         String summary = openAiSummaryService.summarize(inboundScript, outboundScript);
 
-        session.setSummary(summary);
-        session.setSummaryGenerated(true);
-        session.setSummaryGeneratedAt(LocalDateTime.now());
+        session.updateSummary(summary);
+        session.updateSummaryGenerated(true);
+        session.updateSummaryGeneratedAt(LocalDateTime.now());
 
         callSessionRepository.save(session);
 
