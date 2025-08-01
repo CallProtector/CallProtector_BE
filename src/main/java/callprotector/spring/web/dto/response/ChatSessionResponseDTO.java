@@ -1,0 +1,19 @@
+package callprotector.spring.web.dto.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+public class ChatSessionResponseDTO {
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ChatSessionResponse{
+        private Long sessionId;
+        private String startTime;
+    }
+
+}
