@@ -7,6 +7,7 @@ import callprotector.spring.web.dto.response.ChatSessionResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -19,12 +20,14 @@ public class ChatSessionServiceImpl implements ChatSessionService{
 
 
     @Override
+    @Transactional(readOnly = true)
     public ChatSession getSessionById(Long sessionId) {
         return chatSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다."));
     }
 
     @Override
+    @Transactional
     public ChatSessionResponseDTO.ChatSessionResponse createSession(User user) {
         log.info("JWT 인증된 사용자 이메일: {}", user.getId());
 
