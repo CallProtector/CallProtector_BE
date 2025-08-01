@@ -66,6 +66,12 @@ public class UserServiceImpl implements UserService{
         token.markVerified(); // verified = true 로 표시
     }
 
+    @Override
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자"));
+    }
+
 
     // 회원가입
     @Override
