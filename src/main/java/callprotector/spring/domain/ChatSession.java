@@ -1,7 +1,6 @@
 package callprotector.spring.domain;
 
 import callprotector.spring.domain.common.BaseEntity;
-import callprotector.spring.domain.mapping.LegalBotQuery;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -31,8 +30,6 @@ public class ChatSession extends BaseEntity {
     @Column(nullable = false)
     private Integer status;
 
-    @OneToMany(mappedBy = "chatSession", cascade = CascadeType.ALL)
-    private List<LegalBotQuery> legalBotQueries = new ArrayList<>();
 
     @OneToMany(mappedBy = "chatSession", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChatLog> chatLogs = new ArrayList<>();

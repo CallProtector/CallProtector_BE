@@ -1,6 +1,6 @@
 package callprotector.spring.web.controller;
 
-import callprotector.spring.service.ChatbotService.ChatLogService;
+import callprotector.spring.service.ChatLogService.ChatLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
