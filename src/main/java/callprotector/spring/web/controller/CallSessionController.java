@@ -92,10 +92,12 @@ public class CallSessionController {
             summary = "AI 상담 요약 생성 API - OpenAI GPT",
             description = "CallSession ID를 기반으로 고객과 상담원의 통화 내용을 요약하여 CallSession의 summary 필드에 저장합니다."
     )
-    @PostMapping("/{sessionId}/summary")
-    public ApiResponse<String> generateSummary(@PathVariable Long sessionId) {
-        String summary = callLogService.generateAiSummary(sessionId);
-        return ApiResponse.onSuccess(summary);
+    @PostMapping("/{callSessionId}/summary-openai")
+    public ApiResponse<CallSessionResponseDTO.CallSessionSummaryResponseDTO> generateSummaryOpenAi(
+            @PathVariable("callSessionId") Long sessionId
+    ) {
+        CallSessionResponseDTO.CallSessionSummaryResponseDTO response = callSessionService.createCallSessionSummaryByOpenAi(sessionId);
+        return ApiResponse.onSuccess(response);
     }
 
     @Operation(
