@@ -370,6 +370,14 @@ public class CallSessionServiceImpl implements CallSessionService {
             .build();
     }
 
+    @Override
+    @Transactional
+    public void updateEndedAt(final Long callSessionId) {
+        CallSession session = findCallSessionById(callSessionId);
+        session.updateEndedAt();
+        log.info("CallSession (ID: {})의 endedAt 업데이트 완료 : {}", callSessionId, session.getEndedAt());
+    }
+
     private void validateAbuseCategory(String category) {
         List<String> valid = List.of("verbalAbuse", "sexualHarass", "threat");
         if (!valid.contains(category)) {
