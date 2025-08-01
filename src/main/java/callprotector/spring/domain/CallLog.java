@@ -40,15 +40,7 @@ public class CallLog extends BaseEntity {
     @Column(name = "abuse_detect")
     private Boolean abuseDetect;
 
-    // 크기가 큰 ERD-TEXT 속성은 크기 설정 안 함
-    @Setter
-    private String summary;
-
     public void updateScript(String script) {
         this.script = script;
     }
-    public void updateSummary(String summary) {
-        this.summary = summary;
-    }
-
 }
