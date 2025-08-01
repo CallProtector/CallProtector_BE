@@ -1,10 +1,14 @@
 package callprotector.spring.handler;
 
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
+import callprotector.spring.web.dto.response.CallSttLogResponseDTO;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -19,7 +23,7 @@ import java.util.function.Consumer;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class SttWebSocketHandler extends TextWebSocketHandler {
+public class SttWebSocketHandler extends TextWebSocketHandler implements ClientNotifier {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -27,8 +31,8 @@ public class SttWebSocketHandler extends TextWebSocketHandler {
     private final Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
     private final Map<String, Long> sessionIdToUserId = new ConcurrentHashMap<>();
 
-
-    @Override // 웹 소켓 연결시
+    // 웹 소켓 연결시
+    @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         log.info("✅ WebSocket 연결 시도됨: sessionId={}, uri={}", session.getId(), session.getUri());
 
@@ -49,18 +53,21 @@ public class SttWebSocketHandler extends TextWebSocketHandler {
         log.info("현재 세션에 접속중인 유저 목록 ======== {}", sessions.keySet());
     }
 
-    @Override // 데이터 통신시 (Client -> Server)
+    // 데이터 통신시 (Client -> Server)
+    @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         super.handleTextMessage(session, message);
     }
 
-    @Override // 웹소켓 통신 에러시
+    // 웹소켓 통신 에러시
+    @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
         log.error("웹소켓 전송 에러 발생 - sessionId: {}, error: {}", session.getId(), exception.getMessage());
         super.handleTransportError(session, exception);
     }
 
-    @Override // 웹 소켓 연결 종료시
+    // 웹 소켓 연결 종료시
+    @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         Long userId = sessionIdToUserId.remove(session.getId()); // ✅ 세션 ID로 찾음
         if (userId != null) {
@@ -71,13 +78,22 @@ public class SttWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    // STT 로그 데이터 전송
+    // STT 로그 데이터 전송 - Object
+    @Override
     public void sendSttToClient(Long userId, Object payload) {
         sendWebSocketMessage(userId, payload, json ->
             log.info("STT 로그 전송 완료 → userId={}, payload={}", userId, json));
     }
 
+    // STT 로그 데이터 전송 - DTO
+    @Override
+    public void sendSttToClient(Long userId, CallSttLogResponseDTO sttLogResponseDTO) {
+        sendWebSocketMessage(userId, sttLogResponseDTO, json ->
+            log.debug("STT 로그 전송 완료 → userId={}, payload={}", userId, json));
+    }
+
     // CallSession 정보 데이터 전송
+    @Override
     public void sendSessionInfoToClient(Long userId, CallSessionResponseDTO.CallSessionInfoDTO sessionInfo) {
         ObjectNode jsonPayload = objectMapper.createObjectNode();
         jsonPayload.put("type", "sessionInfo");
@@ -92,6 +108,7 @@ public class SttWebSocketHandler extends TextWebSocketHandler {
     }
 
     // CallSession - totalAbuseCnt 업데이트 정보 데이터 전송
+    @Override
     public void sendUpdateAbuseCntToClient(Long userId, CallSessionResponseDTO.CallSessionTotalAbuseCntDTO sessionTotalAbuseCnt) {
         ObjectNode jsonPayload = objectMapper.createObjectNode();
         jsonPayload.put("type", "totalAbuseCntUpdate");
@@ -102,6 +119,30 @@ public class SttWebSocketHandler extends TextWebSocketHandler {
             log.info("세션 totalAbuseCnt 업데이트 WebSocket 전송 대상 userId={}", userId);
             log.info("업데이트된 전송 내용: {}", json);
         });
+    }
+
+    // 특정 사용자 ID와 WebSocket 세션을 매핑하여 등록
+    @Override
+    public void registerUserSession(Long userId, WebSocketSession session) {
+        // 이미 해당 userId로 세션이 등록되어 있는지 확인 (다중 연결 방지)
+        if (sessions.containsKey(userId)) {
+            WebSocketSession existingSession = sessions.get(userId);
+            if (existingSession != null && existingSession.isOpen()) {
+                log.warn("이미 활성 세션이 존재합니다. 새 연결로 교체합니다. userId: {}, 기존 sessionId: {}, 새 sessionId: {}",
+                    userId, existingSession.getId(), session.getId());
+                try {
+                    existingSession.close(CloseStatus.SERVER_ERROR.withReason("새로운 STT 세션이 시작되었습니다."));
+                } catch (IOException e) {
+                    log.error("기존 세션 닫기 실패: {}", e.getMessage());
+                }
+                sessionIdToUserId.remove(existingSession.getId()); // 기존 매핑 제거
+            }
+        }
+
+        sessions.put(userId, session);
+        sessionIdToUserId.put(session.getId(), userId); // 세션 ID -> userId 매핑 업데이트
+        log.info("사용자 {}가 STT WebSocket 세션 {}에 등록되었습니다.", userId, session.getId());
+        log.info("현재 세션에 접속 중인 유저 목록: {}", sessions.keySet());
     }
 
     private Long getUserIdFromSession(WebSocketSession session) {
@@ -125,11 +166,11 @@ public class SttWebSocketHandler extends TextWebSocketHandler {
         WebSocketSession session = sessions.get(userId);
         if (session == null) {
             // 세션 자체가 없는 경우
-            throw new IllegalArgumentException("사용자 ID " + userId + "에 대한 WebSocket 세션을 찾을 수 없습니다."); // 한글 메시지
+            throw new IllegalArgumentException("사용자 ID " + userId + "에 대한 WebSocket 세션을 찾을 수 없습니다.");
         }
         if (!session.isOpen()) {
             // 세션은 존재하지만 현재 닫혀있는 경우
-            throw new IllegalStateException("사용자 ID " + userId + "의 WebSocket 세션이 닫혀 있습니다."); // 한글 메시지
+            throw new IllegalStateException("사용자 ID " + userId + "의 WebSocket 세션이 닫혀 있습니다.");
         }
         return session;
     }
