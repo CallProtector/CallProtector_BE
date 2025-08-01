@@ -58,6 +58,15 @@ public class TwilioMediaStreamProcessor {
 		log.info("Closing STTContexts for CallSessionId: {}", currentCallSessionId);
 		// sttContexts 맵에 저장된 모든 STTContext 인스턴스에 대해 closeStream() 호출
 		sttContexts.values().forEach(SttContext::closeStream);
+
+		// CallSession의 endedAt 필드 업데이트
+		if (currentCallSessionId == null) {
+			log.warn("CallSession ID가 null이므로, endedAt을 업데이트할 수 없습니다.");
+			return;
+		}
+
+		callSessionService.updateEndedAt(currentCallSessionId);
+
 		// 세션 관련 정보 초기화
 		currentUserId = null;
 		currentCallSessionId = null;
