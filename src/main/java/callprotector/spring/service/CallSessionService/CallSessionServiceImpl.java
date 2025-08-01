@@ -205,6 +205,7 @@ public class CallSessionServiceImpl implements CallSessionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CallSessionResponseDTO.CallSessionPagingDTO getSessionsByAbuseCategory(String category, Long cursorId, int size, String order) {
         validateAbuseCategory(category);
 
