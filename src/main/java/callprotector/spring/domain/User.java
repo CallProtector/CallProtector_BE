@@ -41,7 +41,8 @@ public class User extends BaseEntity {
     // @Column(nullable = false) <- 에러  방지 위해,  일단 주석
     private Position position;
 
-    //@Column(nullable = false) <- 에러 방지 위해,  일단 주석
+    @Column(nullable = false)
+    @Builder.Default
     private Long totalCall = 0L;
 
     @Column(nullable = false, length = 15)
@@ -50,6 +51,7 @@ public class User extends BaseEntity {
     //@LastModifiedDate <- 에러 방지 위해,  일단 주석
     private LocalDateTime updatedAt;
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<ChatSession> chatSessions = new ArrayList<>();
 
