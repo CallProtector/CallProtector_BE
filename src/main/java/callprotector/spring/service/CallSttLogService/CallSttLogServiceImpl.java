@@ -64,11 +64,13 @@ public class CallSttLogServiceImpl implements CallSttLogService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean hasAbuseInSession(Long callSessionId) {
         return callSttLogRepository.existsByCallSessionIdAndIsAbuseTrue(callSessionId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public String getAbuseTypesBySessionId(Long callSessionId) {
         List<CallSttLog> abusiveLogs = callSttLogRepository.findByCallSessionIdAndIsAbuseTrue(callSessionId);
         Set<String> uniqueTypes = abusiveLogs.stream()
@@ -78,6 +80,7 @@ public class CallSttLogServiceImpl implements CallSttLogService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CallSttLog> getAllBySessionId(Long callSessionId) {
         log.info("getAllBySessionId 호출: callSessionId={}, IS_FINAL={}", callSessionId, IS_FINAL);
 
