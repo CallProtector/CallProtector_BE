@@ -278,6 +278,7 @@ public class CallSessionServiceImpl implements CallSessionService {
     }
 
     @Override
+    @Transactional
     public String generateGeminiSummary(Long callSessionId) {
         CallSession session = findCallSessionById(callSessionId);
 
