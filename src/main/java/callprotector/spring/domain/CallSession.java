@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -73,5 +72,17 @@ public class CallSession extends BaseEntity {
 
     public void updateSummaryGemini(String summaryGemini) {
         this.summaryGemini = summaryGemini;
+    }
+
+    public void updateSummary(String summary) {
+        this.summary = summary;
+    }
+
+    public void updateSummaryGenerated(Boolean summaryGenerated) {
+        this.summaryGenerated = summaryGenerated;
+    }
+
+    public void updateSummaryGeneratedAt(LocalDateTime summaryGeneratedAt) {
+        this.summaryGeneratedAt = summaryGeneratedAt;
     }
 }
