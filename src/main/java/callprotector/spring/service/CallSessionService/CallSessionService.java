@@ -16,4 +16,5 @@ public interface CallSessionService {
     CallSessionResponseDTO.CallSessionDetailResponseDTO getCallSessionDetail(Long callSessionId);
     String generateGeminiSummary(Long callSessionId);
     CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummary(Long callSessionId);
+    void updateEndedAt(Long callSessionId);
 }
