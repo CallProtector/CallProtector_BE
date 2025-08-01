@@ -40,7 +40,6 @@ public class CallLogServiceImpl implements CallLogService{
                         .callSession(callSession)
                         .audio_url(audioUrl)
                         .script(script)
-                        .summary("AI 요약 예정") // default
                         .abuseCnt(callLogAbuseCnt)
                         .abuseDetect(isAbuse)
                         .track(track)
@@ -48,7 +47,6 @@ public class CallLogServiceImpl implements CallLogService{
                 );
 
         callLog.updateScript(script);
-        callLog.updateSummary("자동 요약 예정"); // AI 상담 요약 결과
 
         callLogRepository.save(callLog);
         log.info("📌 CallLog 저장 완료: track = {}, isAbuse = {}, abuseType = {}", track, isAbuse, abuseType);
