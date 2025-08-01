@@ -67,7 +67,6 @@ public class WebSecurityConfig
                                             "/abuse/**",
                                             "/api/sessions/**",
                                              "/filter-abuse",
-                                            "/api/sessions/**",
                                             "/chatstream.html",  // ✅ HTML 직접 접근 허용**
                                             "/api/chat/stream",   // ✅ SSE 엔드포인트 허용**
                                             "/api/chat-session" // 테스트용 프론트 html 열기 위해 허용
