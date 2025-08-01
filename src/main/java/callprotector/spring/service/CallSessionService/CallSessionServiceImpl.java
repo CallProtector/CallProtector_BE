@@ -330,6 +330,7 @@ public class CallSessionServiceImpl implements CallSessionService {
     }
 
     @Override
+    @Transactional
     public CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummary(Long callSessionId) {
         String summaryText = generateGeminiSummary(callSessionId);
 
