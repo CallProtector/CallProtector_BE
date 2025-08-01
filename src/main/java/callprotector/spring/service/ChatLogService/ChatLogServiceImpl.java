@@ -5,19 +5,14 @@ import callprotector.spring.domain.ChatSession;
 import callprotector.spring.repository.ChatLogRepository;
 import callprotector.spring.service.ChatSessionService.ChatSessionService;
 import callprotector.spring.web.dto.response.ChatLogResponseDTO;
-import callprotector.spring.web.dto.response.ChatbotResponseDTO;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
