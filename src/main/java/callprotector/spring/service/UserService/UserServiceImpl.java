@@ -67,6 +67,7 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자"));
@@ -75,6 +76,7 @@ public class UserServiceImpl implements UserService{
 
     // 회원가입
     @Override
+    @Transactional
     public UserResponseDTO.SignupDTO create(UserRequestDTO.SignupDTO dto) {
         // 1. 비밀번호 유효성 검사
         if (!PasswordValidator.isValid(dto.getPassword())) {
@@ -107,6 +109,7 @@ public class UserServiceImpl implements UserService{
 
     // 로그인
     @Override
+    @Transactional(readOnly = true)
     public UserResponseDTO.LoginDTO login(UserRequestDTO.LoginDTO dto) {
         final Optional<User> user = userRepository.findByEmail(dto.getEmail());
 
