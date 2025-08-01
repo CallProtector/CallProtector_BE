@@ -70,7 +70,7 @@ public class WebSecurityConfig
                                             "/api/sessions/**",
                                             "/chatstream.html",  // ✅ HTML 직접 접근 허용**
                                             "/api/chat/stream",   // ✅ SSE 엔드포인트 허용**
-                                            "/api/chat-session" // 임시 프론트html 테스트 위해 허용
+                                            "/api/chat-session" // 테스트용 프론트 html 열기 위해 허용
                                     )
                                     .permitAll()
                                     .anyRequest().authenticated()
