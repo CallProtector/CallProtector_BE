@@ -15,11 +15,11 @@ public interface CallSessionService {
     CallSessionResponseDTO.CallSessionPagingDTO searchCallSessions(String keyword, String category, String order, Long cursorId, int size);
     CallSessionResponseDTO.CallSessionDetailResponseDTO getUserCallSessionDetail(Long callSessionId, Long userId);
 
-    String generateSummaryByOpenAi(Long callSessionId);
-    CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummaryByOpenAi(Long callSessionId);
+    String generateSummaryByOpenAi(Long callSessionId, Long userId);
+    CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummaryByOpenAi(Long callSessionId, Long userId);
 
-    String generateGeminiSummary(Long callSessionId, Long userId);
-    CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummary(Long callSessionId, Long userId);
+    String generateSummaryByGemini(Long callSessionId, Long userId);
+    CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummaryByGemini(Long callSessionId, Long userId);
 
     void updateEndedAt(Long callSessionId);
 }
