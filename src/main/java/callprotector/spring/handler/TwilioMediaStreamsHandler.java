@@ -7,6 +7,7 @@ import callprotector.spring.service.CallSttLogService.CallSttLogService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import callprotector.spring.service.UserService.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,6 +28,7 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
     private final CallSessionService callSessionService;
     private final CallLogService callLogService;
     private final CallSttLogService callSttLogService;
+    private final UserService userService;
     private final ClientNotifier sttWebSocketHandler;
 
     private final Map<String, TwilioMediaStreamProcessor> activeProcessors = new ConcurrentHashMap<>();
@@ -42,6 +44,7 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
             this.callSessionService,
             this.callLogService,
             this.callSttLogService,
+            this.userService,
             this.sttWebSocketHandler
         );
         activeProcessors.put(session.getId(), processor);
