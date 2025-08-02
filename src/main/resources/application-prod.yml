@@ -42,6 +42,9 @@ twilio:
   api:
     key: ${TWILIO_API_KEY}
     secret: ${TWILIO_API_SECRET}
+  twiml:
+    app:
+      sid: ${TWILIO_TWIML_APP_SID}
 
 openai:
   model: gpt-4o
