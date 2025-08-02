@@ -283,8 +283,9 @@ public class CallSessionServiceImpl implements CallSessionService {
 
 
     @Override
-    public String generateSummaryByOpenAi(Long callSessionId) {
-        CallSession session = findCallSessionById(callSessionId);
+    public String generateSummaryByOpenAi(Long callSessionId,  Long userId) {
+        CallSession session = findCallSessionByIdAndUserId(callSessionId, userId);
+
 
         if (session.getSummary() != null && !session.getSummary().isBlank()) {
             log.info("✅ 기존 요약 반환 - CallSession ID: {}", callSessionId);
@@ -336,8 +337,8 @@ public class CallSessionServiceImpl implements CallSessionService {
     }
 
     @Override
-    public CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummaryByOpenAi(Long callSessionId) {
-        String summaryText = generateSummaryByOpenAi(callSessionId);
+    public CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummaryByOpenAi(Long callSessionId, Long userId) {
+        String summaryText = generateSummaryByOpenAi(callSessionId, userId);
 
         return CallSessionResponseDTO.CallSessionSummaryResponseDTO.builder()
                 .callSessionId(callSessionId)
@@ -347,7 +348,7 @@ public class CallSessionServiceImpl implements CallSessionService {
 
     @Override
     @Transactional
-    public String generateGeminiSummary(Long callSessionId, Long userId) {
+    public String generateSummaryByGemini(Long callSessionId, Long userId) {
         CallSession session = findCallSessionByIdAndUserId(callSessionId, userId);
 
         // 중복 생성 방지
@@ -399,8 +400,8 @@ public class CallSessionServiceImpl implements CallSessionService {
 
     @Override
     @Transactional
-    public CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummary(Long callSessionId, Long userId) {
-        String summaryText = generateGeminiSummary(callSessionId, userId);
+    public CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummaryByGemini(Long callSessionId, Long userId) {
+        String summaryText = generateSummaryByGemini(callSessionId, userId);
 
         return CallSessionResponseDTO.CallSessionSummaryResponseDTO.builder()
             .callSessionId(callSessionId)
