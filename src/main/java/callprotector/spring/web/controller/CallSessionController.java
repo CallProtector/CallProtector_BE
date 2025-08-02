@@ -102,8 +102,7 @@ public class CallSessionController {
         @PathVariable("callSessionId") Long sessionId,
         @UserId Long userId
     ) {
-        // TODO: 상담 요약 시, 해당 유저의 상담 내역을 조회하여 요약하도록 처리
-        CallSessionResponseDTO.CallSessionSummaryResponseDTO response = callSessionService.createCallSessionSummaryByOpenAi(sessionId);
+        CallSessionResponseDTO.CallSessionSummaryResponseDTO response = callSessionService.createCallSessionSummaryByOpenAi(sessionId, userId);
         return ApiResponse.onSuccess(response);
     }
 
@@ -116,7 +115,7 @@ public class CallSessionController {
         @PathVariable("callSessionId") Long sessionId,
         @UserId Long userId
     ) {
-        CallSessionResponseDTO.CallSessionSummaryResponseDTO response = callSessionService.createCallSessionSummary(sessionId, userId);
+        CallSessionResponseDTO.CallSessionSummaryResponseDTO response = callSessionService.createCallSessionSummaryByGemini(sessionId, userId);
         return ApiResponse.onSuccess(response);
     }
 
