@@ -25,6 +25,7 @@ public class TokenProvider {
         return Jwts.builder()
                 .signWith(key, SignatureAlgorithm.HS512) // signWith 파라미터 순서 변경
                 .setSubject(user.getEmail())
+                .claim("userId", user.getId())
                 .setIssuer("callprotector web")
                 .setIssuedAt(new Date())
                 .setExpiration(expiryDate)
@@ -38,5 +39,15 @@ public class TokenProvider {
                 .parseClaimsJws(token)
                 .getBody();
         return claims.getSubject();
+    }
+
+    public Long validateAndGetUserId(String token) {
+        Claims claims = Jwts.parserBuilder()
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
+
+        return claims.get("userId", Long.class);
     }
 }
