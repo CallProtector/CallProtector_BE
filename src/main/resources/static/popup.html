@@ -62,47 +62,68 @@
         OUTBOUND: { currentIndex: 0, finalReceived: false }
     };
 
-    fetch('/api/token')
-        .then(res => res.json())
-        .then(data => {
-            const accessToken = data.result.twilioAccessToken;
-            const device = new Twilio.Device(accessToken, { debug: true });
-
-            device.on('ready', () => {
-                console.log('✅ Device ready');
-                Twilio.Device.audio.speakerDevices.set('default');
-                console.log('Twilio.Device.audio on ready:', Twilio.Device.audio); // 추가
-
-            });
-
-            device.on('incoming', conn => {
-                console.log('📞 수신:', conn.parameters.From);
-                pendingConnection = conn;
-                document.getElementById("accept-btn").style.display = "inline";
-
-                // incoming 통화가 수락되기 전에 취소되었을 때 처리 필요
-            });
-
-            document.getElementById("accept-btn").addEventListener("click", () => {
-                if (pendingConnection) {
-                    pendingConnection.accept();
-                    console.log("✅ 수신 수락됨");
-                    pendingConnection = null;
+    const jwtToken = localStorage.getItem('jwtToken'); // 브라우저 로컬 스토리지에 jwtToken : <token> 이 저장되어 있어야 함
+    if (!jwtToken) {
+        console.error("🚨 JWT 토큰이 localStorage에 없습니다. 로그인 후 다시 시도해주세요.");
+        sessionInfoDiv.innerText = "🚨 로그인 필요: JWT 토큰 없음";
+        // 토큰이 없으면 Twilio Device 초기화 시도를 하지 않습니다.
+    } else {
+        fetch('/api/token', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${jwtToken}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        })
+            .then(res => {
+                if (!res.ok) {
+                    console.error(`🚨 Twilio 토큰 요청 실패: ${res.status} ${res.statusText}`);
+                    sessionInfoDiv.innerText = `🚨 인증 실패: ${res.status} ${res.statusText}`;
+                    throw new Error('Failed to get Twilio token');
                 }
-                document.getElementById("accept-btn").style.display = "none";
-            });
+                return res.json();
+            })
+            .then(data => {
+                const accessToken = data.result.twilioAccessToken;
+                const device = new Twilio.Device(accessToken, { debug: true });
 
-            device.on('connect', () => console.log('🔊 통화 연결됨'));
-            device.on('disconnect', () => {
-                console.log('❌ 통화 종료');
-                document.getElementById("accept-btn").style.display = "none";
-            });
+                device.on('ready', () => {
+                    console.log('✅ Device ready');
+                    Twilio.Device.audio.speakerDevices.set('default');
+                    console.log('Twilio.Device.audio on ready:', Twilio.Device.audio); // 추가
 
-            device.on('error', err => {
-                console.error('🚨 Twilio 오류:', err);
-                document.getElementById("accept-btn").style.display = "none";
+                });
+
+                device.on('incoming', conn => {
+                    console.log('📞 수신:', conn.parameters.From);
+                    pendingConnection = conn;
+                    document.getElementById("accept-btn").style.display = "inline";
+
+                    // incoming 통화가 수락되기 전에 취소되었을 때 처리 필요
+                });
+
+                document.getElementById("accept-btn").addEventListener("click", () => {
+                    if (pendingConnection) {
+                        pendingConnection.accept();
+                        console.log("✅ 수신 수락됨");
+                        pendingConnection = null;
+                    }
+                    document.getElementById("accept-btn").style.display = "none";
+                });
+
+                device.on('connect', () => console.log('🔊 통화 연결됨'));
+                device.on('disconnect', () => {
+                    console.log('❌ 통화 종료');
+                    document.getElementById("accept-btn").style.display = "none";
+                });
+
+                device.on('error', err => {
+                    console.error('🚨 Twilio 오류:', err);
+                    document.getElementById("accept-btn").style.display = "none";
+                });
             });
-        });
+    }
 
     ws.onopen = () => console.log("🌐 WebSocket 연결됨");
     ws.onmessage = (event) => {
