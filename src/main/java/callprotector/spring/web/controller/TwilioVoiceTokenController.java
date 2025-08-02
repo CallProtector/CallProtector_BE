@@ -1,5 +1,6 @@
 package callprotector.spring.web.controller;
 
+import callprotector.spring.annotation.UserId;
 import callprotector.spring.apiPayload.ApiResponse;
 import callprotector.spring.web.dto.response.TwilioTokenResponseDTO;
 
@@ -29,12 +30,17 @@ public class TwilioVoiceTokenController {
     @Value("${twilio.api.secret}")
     private String TWILIO_API_SECRET;
 
+    @Value("${twilio.twiml.app.sid}")
+    private String TWILIO_TWIML_APP_SID;
+
     @GetMapping
-    public ApiResponse<TwilioTokenResponseDTO> getToken(){
+    public ApiResponse<TwilioTokenResponseDTO> getToken(
+        @UserId Long userId
+    ){
         String fixedIdentity = "browserUser"; // 고정 ID - 단일 사용자로 구현, 추후 상담사 분배 시에 다중 사용자로 확장 가능
         VoiceGrant grant = new VoiceGrant();
+        grant.setOutgoingApplicationSid(TWILIO_TWIML_APP_SID);
         grant.setIncomingAllow(true);
-
 
         AccessToken token = new AccessToken.Builder(
                 TWILIO_ACCOUNT_SID,
