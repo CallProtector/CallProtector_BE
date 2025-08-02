@@ -22,7 +22,11 @@ public class TwilioWebhookController {
 
         String userId = "1"; // 추후 수정 필요(로그인한 상담원의 userId 가져오기)
 
-        VoiceResponse response = new VoiceResponse.Builder() // 사전 안내 멘트 추가 예정
+        VoiceResponse response = new VoiceResponse.Builder()
+                .say(new Say.Builder("테스트")
+                    .voice(Say.Voice.ALICE)
+                    .language(Say.Language.KO_KR)
+                    .build())
                 .start(new Start.Builder()
                         .stream(new Stream.Builder()
                                 .url("wss://pet-pipefish-friendly.ngrok-free.app/ws/audio")
