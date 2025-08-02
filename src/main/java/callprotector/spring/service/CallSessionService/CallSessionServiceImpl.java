@@ -160,9 +160,9 @@ public class CallSessionServiceImpl implements CallSessionService {
 
     @Override
     @Transactional(readOnly = true)
-    public CallSessionResponseDTO.CallSessionDetailResponseDTO getCallSessionDetail(final Long callSessionId) {
+    public CallSessionResponseDTO.CallSessionDetailResponseDTO getUserCallSessionDetail(final Long callSessionId, final Long userId) {
         // sessionInfo
-        CallSession callSession = findCallSessionById(callSessionId);
+        CallSession callSession = findCallSessionByIdAndUserId(callSessionId, userId);
         CallSessionResponseDTO.CallSessionInfoDTO sessionInfoDTO = mapToSessionInfoDTO(callSession);
 
         // scriptHistory
@@ -170,6 +170,7 @@ public class CallSessionServiceImpl implements CallSessionService {
         List<CallSessionResponseDTO.CallSessionScriptDTO> sessionScriptDTO = mapToScriptDTO(scriptLogs);
 
         // aiSummary - Gemini
+        // TODO : AI 요약 구현 방식에 따라 변경 필요
         String aiSummary = callSession.getSummaryGemini();
         return CallSessionResponseDTO.CallSessionDetailResponseDTO.builder()
             .sessionInfo(sessionInfoDTO)
@@ -346,8 +347,8 @@ public class CallSessionServiceImpl implements CallSessionService {
 
     @Override
     @Transactional
-    public String generateGeminiSummary(Long callSessionId) {
-        CallSession session = findCallSessionById(callSessionId);
+    public String generateGeminiSummary(Long callSessionId, Long userId) {
+        CallSession session = findCallSessionByIdAndUserId(callSessionId, userId);
 
         // 중복 생성 방지
         if (session.getSummaryGemini() != null && !session.getSummaryGemini().isBlank()) {
@@ -398,8 +399,8 @@ public class CallSessionServiceImpl implements CallSessionService {
 
     @Override
     @Transactional
-    public CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummary(Long callSessionId) {
-        String summaryText = generateGeminiSummary(callSessionId);
+    public CallSessionResponseDTO.CallSessionSummaryResponseDTO createCallSessionSummary(Long callSessionId, Long userId) {
+        String summaryText = generateGeminiSummary(callSessionId, userId);
 
         return CallSessionResponseDTO.CallSessionSummaryResponseDTO.builder()
             .callSessionId(callSessionId)
@@ -515,5 +516,9 @@ public class CallSessionServiceImpl implements CallSessionService {
                     .build();
             })
             .collect(Collectors.toList());
+    }
+
+    private CallSession findCallSessionByIdAndUserId(final Long callSessionId, final Long userId) {
+        return callSessionRepository.findByIdAndUserId(callSessionId, userId).orElseThrow(CallSessionUserNotFoundException::new);
     }
 }
