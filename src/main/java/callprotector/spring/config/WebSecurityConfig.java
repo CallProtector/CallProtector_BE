@@ -54,16 +54,12 @@ public class WebSecurityConfig
                                             "/swagger-ui/**",
                                             "/swagger-resources/**",
                                             "/api/auth/**",
-                                            "/health", // 삭제
-                                            "/chat/**", // 삭제
-                                            "/mail/**", // 삭제
-                                            "/ws/**", // 인증 인가 처리 후 삭제 예정
                                             "/twilio/voice",
                                             "/popup.html",
-                                            "/call-session/**", // 삭제
                                             "/abuse/**",
-                                            "/api/sessions/**", // 인증 인가 처리 후 삭제 예정
-                                             "/filter-abuse",
+                                            "/filter-abuse",
+                                            "/ws/**", // 인증 인가 처리 후 삭제 예정
+                                            "/api/sessions/**", // 검색 인증 인가 처리 후 삭제 예정
                                             "/chatstream.html",  // ✅ HTML 직접 접근 허용**
                                             "/api/chat/stream",   // ✅ SSE 엔드포인트 허용**
                                             "/api/chat-session" // 테스트용 프론트 html 열기 위해 허용
