@@ -35,11 +35,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.info("Filter is running...");
 
             if (token != null && !token.equalsIgnoreCase("null")) {
-                String email = tokenProvider.validateAndGetUserEmail(token);
-                log.info("Authenticated user Email: " + email);
+                // String email = tokenProvider.validateAndGetUserEmail(token);
+                // log.info("Authenticated user Email: " + email);
+
+                Long userId = tokenProvider.validateAndGetUserId(token);
+                log.info("Authenticated user Id: " + userId);
 
                 AbstractAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        email,
+                        userId, // email
                         null,
                         AuthorityUtils.NO_AUTHORITIES
                 );
