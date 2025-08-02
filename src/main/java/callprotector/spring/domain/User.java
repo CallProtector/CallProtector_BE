@@ -1,7 +1,5 @@
 package callprotector.spring.domain;
 
-import callprotector.spring.domain.enums.Department;
-import callprotector.spring.domain.enums.Position;
 import callprotector.spring.domain.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,16 +27,6 @@ public class User extends BaseEntity {
 
     //@Column(nullable = false, length = 16) <- 에러 방지 위해, 일단 주석 : 당장 회원가입 시 사용하지 않기 때문에
     private String password;
-
-    private String profileImg;
-
-    @Enumerated(EnumType.STRING)
-    // @Column(nullable = false) <- 에러  방지 위해, 일단 주석
-    private Department department;
-
-    @Enumerated(EnumType.STRING)
-    // @Column(nullable = false) <- 에러  방지 위해,  일단 주석
-    private Position position;
 
     @Column(nullable = false)
     @Builder.Default
