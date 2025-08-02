@@ -1,14 +1,16 @@
 package callprotector.spring.web.controller;
 
+import callprotector.spring.annotation.UserId;
 import callprotector.spring.apiPayload.ApiResponse;
+import callprotector.spring.domain.User;
 import callprotector.spring.service.CallSessionService.CallSessionService;
+import callprotector.spring.service.UserService.UserService;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.*;
@@ -20,13 +22,16 @@ import org.springframework.web.bind.annotation.*;
 public class CallSessionController {
 
     private final CallSessionService callSessionService;
+    private final UserService userService;
 
     @Operation(summary = "CallSession 생성", description = "Twilio 수신 시 콜세션을 생성하고 발신번호를 저장합니다.")
     @PostMapping("")
     public ApiResponse<CallSessionResponseDTO.CallSessionMakeDTO> createCallSession(
-            @AuthenticationPrincipal String email,
-            @RequestBody CallSessionRequestDTO.CallSessionMakeDTO dto) {
-        Long sessionId = callSessionService.createCallSession(email, dto);
+        @UserId Long userId,
+        @RequestBody CallSessionRequestDTO.CallSessionMakeDTO dto)
+    {
+        User user = userService.getUserById(userId);
+        Long sessionId = callSessionService.createCallSession(user.getEmail(), dto);
         return ApiResponse.onSuccess(CallSessionResponseDTO.CallSessionMakeDTO.builder()
                 .sessionId(sessionId)
                 .build());
@@ -38,22 +43,24 @@ public class CallSessionController {
     )
     @GetMapping("")
     public ApiResponse<CallSessionResponseDTO.CallSessionPagingDTO> getCallSessions(
+        @UserId Long userId,
 
-            @Parameter(description = "검색 키워드")
-            @RequestParam(required = false) String keyword,
+        @Parameter(description = "검색 키워드")
+        @RequestParam(required = false) String keyword,
 
-            @Parameter(description = "현재 페이지의 기준이 되는 마지막 CallSession ID")
-            @RequestParam(required = false) Long cursorId,
+        @Parameter(description = "현재 페이지의 기준이 되는 마지막 CallSession ID")
+        @RequestParam(required = false) Long cursorId,
 
-            @Parameter(description = "가져올 데이터 개수 (기본값: 5)")
-            @RequestParam(defaultValue = "5") int size,
+        @Parameter(description = "가져올 데이터 개수 (기본값: 5)")
+        @RequestParam(defaultValue = "5") int size,
 
-            @Parameter(description = "정렬 순서 (desc: 최신순, asc: 오래된 순)")
-            @RequestParam(defaultValue = "desc") String order,
+        @Parameter(description = "정렬 순서 (desc: 최신순, asc: 오래된 순)")
+        @RequestParam(defaultValue = "desc") String order,
 
-            @Parameter(description = "폭언 유형 카테고리 (verbalAbuse | sexualHarass | threat)")
-            @RequestParam(required = false) String category
+        @Parameter(description = "폭언 유형 카테고리 (verbalAbuse | sexualHarass | threat)")
+        @RequestParam(required = false) String category
     ) {
+        // TODO: 검색 시, 해당 유저의 상담 내역만 조회할 수 있도록 처리
         // 키워드가 존재하는 경우: Elasticsearch 검색 수행
         if (keyword != null && !keyword.isBlank()) {
             log.info("🔍 키워드 검색 요청 - keyword={}, category={}, order={}, cursorId={}, size={}",
@@ -79,10 +86,10 @@ public class CallSessionController {
     @Operation(summary = "callSession 상세 조회", description = "상담 내역 상세 조회 시 callSession을 조회합니다.")
     @GetMapping("/{callSessionId}")
     public ApiResponse<CallSessionResponseDTO.CallSessionDetailResponseDTO> getCallSession(
-            @PathVariable("callSessionId") Long id
-            // TODO: 유저 인증(token) 추가
+        @PathVariable("callSessionId") Long id,
+        @UserId Long userId
     ) {
-        CallSessionResponseDTO.CallSessionDetailResponseDTO response = callSessionService.getCallSessionDetail(id);
+        CallSessionResponseDTO.CallSessionDetailResponseDTO response = callSessionService.getUserCallSessionDetail(id, userId);
         return ApiResponse.onSuccess(response);
     }
 
@@ -92,8 +99,10 @@ public class CallSessionController {
     )
     @PostMapping("/{callSessionId}/summary-openai")
     public ApiResponse<CallSessionResponseDTO.CallSessionSummaryResponseDTO> generateSummaryOpenAi(
-            @PathVariable("callSessionId") Long sessionId
+        @PathVariable("callSessionId") Long sessionId,
+        @UserId Long userId
     ) {
+        // TODO: 상담 요약 시, 해당 유저의 상담 내역을 조회하여 요약하도록 처리
         CallSessionResponseDTO.CallSessionSummaryResponseDTO response = callSessionService.createCallSessionSummaryByOpenAi(sessionId);
         return ApiResponse.onSuccess(response);
     }
@@ -104,9 +113,10 @@ public class CallSessionController {
     )
     @PostMapping("/{callSessionId}/summary-gemini")
     public ApiResponse<CallSessionResponseDTO.CallSessionSummaryResponseDTO> generateSummaryGemini(
-        @PathVariable("callSessionId") Long sessionId
+        @PathVariable("callSessionId") Long sessionId,
+        @UserId Long userId
     ) {
-        CallSessionResponseDTO.CallSessionSummaryResponseDTO response = callSessionService.createCallSessionSummary(sessionId);
+        CallSessionResponseDTO.CallSessionSummaryResponseDTO response = callSessionService.createCallSessionSummary(sessionId, userId);
         return ApiResponse.onSuccess(response);
     }
 
