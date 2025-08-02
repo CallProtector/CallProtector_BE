@@ -12,10 +12,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import callprotector.spring.client.FastClient;
+import callprotector.spring.domain.User;
 import callprotector.spring.domain.enums.CallTrack;
 import callprotector.spring.service.CallLogService.CallLogService;
 import callprotector.spring.service.CallSessionService.CallSessionService;
 import callprotector.spring.service.CallSttLogService.CallSttLogService;
+import callprotector.spring.service.UserService.UserService;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
 
@@ -30,6 +32,7 @@ public class TwilioMediaStreamProcessor {
 	private final CallSessionService callSessionService;
 	private final CallLogService callLogService;
 	private final CallSttLogService callSttLogService;
+	private final UserService userService;
 	private final ClientNotifier sttWebSocketHandler;
 
 	private final Map<CallTrack, SttContext> sttContexts = new ConcurrentHashMap<>();
@@ -82,11 +85,14 @@ public class TwilioMediaStreamProcessor {
 
 		if (!userIdStr.isEmpty()) {
 			log.info("Twilio start event에서 받은 userId: {}", userIdStr);
+
+			// 유저 객체 조회
 			currentUserId = Long.parseLong(userIdStr);
+			User user = userService.getUserById(currentUserId);
 
 			// callSession 객체 생성
 			currentCallSessionId = callSessionService.createCallSession(
-				"dlthdal07@gmail.com", // TODO: 사용자 이메일 동적 처리 필요
+				user,
 				new CallSessionRequestDTO.CallSessionMakeDTO(currentUserId, twilioCallSid, callerNumber)
 			);
 
