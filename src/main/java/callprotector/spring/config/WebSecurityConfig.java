@@ -50,22 +50,19 @@ public class WebSecurityConfig
                     .authorizeHttpRequests((authorizeRequests) ->
                             authorizeRequests
                                     .requestMatchers(
-                                            "/health",
-                                            "/api/auth/**",
                                             "/v3/api-docs/**",
                                             "/swagger-ui/**",
                                             "/swagger-resources/**",
-                                            "/chat/**",
-                                            "/mail/**",
-                                            "/api/webhook/**",
-                                            "/twiml",
-                                            "/ws/**",
-                                            "/api/token/**",
+                                            "/api/auth/**",
+                                            "/health", // 삭제
+                                            "/chat/**", // 삭제
+                                            "/mail/**", // 삭제
+                                            "/ws/**", // 인증 인가 처리 후 삭제 예정
                                             "/twilio/voice",
                                             "/popup.html",
-                                            "/call-session/**",
+                                            "/call-session/**", // 삭제
                                             "/abuse/**",
-                                            "/api/sessions/**",
+                                            "/api/sessions/**", // 인증 인가 처리 후 삭제 예정
                                              "/filter-abuse",
                                             "/chatstream.html",  // ✅ HTML 직접 접근 허용**
                                             "/api/chat/stream",   // ✅ SSE 엔드포인트 허용**
