@@ -1,5 +1,6 @@
 package callprotector.spring.service.UserService;
 
+import callprotector.spring.apiPayload.exception.handler.UserNotFoundException;
 import callprotector.spring.domain.User;
 import callprotector.spring.domain.VerificationToken;
 import callprotector.spring.repository.UserRepository;
@@ -66,14 +67,6 @@ public class UserServiceImpl implements UserService{
         token.markVerified(); // verified = true 로 표시
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자"));
-    }
-
-
     // 회원가입
     @Override
     @Transactional
@@ -123,4 +116,9 @@ public class UserServiceImpl implements UserService{
                 .build();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public User getUserById(Long id) {
+        return userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+    }
 }
