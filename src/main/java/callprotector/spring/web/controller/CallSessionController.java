@@ -2,10 +2,7 @@ package callprotector.spring.web.controller;
 
 import callprotector.spring.annotation.UserId;
 import callprotector.spring.apiPayload.ApiResponse;
-import callprotector.spring.domain.User;
 import callprotector.spring.service.CallSessionService.CallSessionService;
-import callprotector.spring.service.UserService.UserService;
-import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 public class CallSessionController {
 
     private final CallSessionService callSessionService;
-    private final UserService userService;
 
     @Operation(
             summary = "상담 내역 조회 API",
