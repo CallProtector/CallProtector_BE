@@ -24,19 +24,6 @@ public class CallSessionController {
     private final CallSessionService callSessionService;
     private final UserService userService;
 
-    @Operation(summary = "CallSession 생성", description = "Twilio 수신 시 콜세션을 생성하고 발신번호를 저장합니다.")
-    @PostMapping("")
-    public ApiResponse<CallSessionResponseDTO.CallSessionMakeDTO> createCallSession(
-        @UserId Long userId,
-        @RequestBody CallSessionRequestDTO.CallSessionMakeDTO dto)
-    {
-        User user = userService.getUserById(userId);
-        Long sessionId = callSessionService.createCallSession(user.getEmail(), dto);
-        return ApiResponse.onSuccess(CallSessionResponseDTO.CallSessionMakeDTO.builder()
-                .sessionId(sessionId)
-                .build());
-    }
-
     @Operation(
             summary = "상담 내역 조회 API",
             description = "검색어(keyword), 폭언 카테고리(category), 정렬 순서(order), 커서 기반 페이지네이션(cursorId)을 기반으로 상담 내역을 조회합니다."
