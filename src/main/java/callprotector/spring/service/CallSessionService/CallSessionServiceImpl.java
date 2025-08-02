@@ -48,10 +48,7 @@ public class CallSessionServiceImpl implements CallSessionService {
 
     @Override
     @Transactional
-    public Long createCallSession(String email, CallSessionRequestDTO.CallSessionMakeDTO dto) {
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다. ID=" + dto.getUserId()));
+    public Long createCallSession(User user, CallSessionRequestDTO.CallSessionMakeDTO dto) {
 
         // 세션 코드 생성
         String sessionCode = codeGenerator.generateTodayCallSessionCode();
