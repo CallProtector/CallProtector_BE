@@ -22,6 +22,7 @@ public enum ErrorStatus implements BaseErrorCode {
     // Call Session 관련 에러
     CALL_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "CALLSESSION4041", "call session이 존재하지 않습니다."),
     CALL_SESSION_USER_NOT_FOUND(HttpStatus.NOT_FOUND, "CALLSESSION4042", "해당 유저의 call session이 존재하지 않습니다."),
+    CALL_SESSION_ALREADY_EXISTS(HttpStatus.CONFLICT, "CALLSESSION4091", "이미 존재하는 callsid 입니다."),
 
     // Call Stt Log 관련 에러
     CALL_STT_LOG_NOT_FOUND(HttpStatus.NOT_FOUND, "CALLSTTLOG4041", "조건에 맞는 STT LOG가 존재하지 않습니다."),
