@@ -15,15 +15,6 @@ public class CallSessionResponseDTO {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class CallSessionMakeDTO{
-        private Long sessionId;
-        private String callSessionCode;
-    }
-
-    @Builder
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
     public static class CallSessionInfoDTO {
         private String callSessionCode;
         private String createdAt;
