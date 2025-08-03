@@ -42,6 +42,7 @@ public class TwilioMediaStreamProcessor {
 
 
 	private static final long STREAM_RESTART_INTERVAL_MS = 10_000;
+	private static final long TEMP_USERID = 0;
 
 	public void handleTwilioMessage(WebSocketSession session, TextMessage message) throws Exception {
 		JsonNode json = mapper.readTree(message.getPayload());
@@ -78,70 +79,62 @@ public class TwilioMediaStreamProcessor {
 	}
 
 	private void handleStartEvent(WebSocketSession session, JsonNode json) {
+		log.info("☆ Twilio Media Stream 'start' 이벤트 전체 JSON: {}", json.toPrettyString());
 		JsonNode customParams = json.path("start").path("customParameters");
-		String userIdStr = customParams.path("userId").asText();
+		String primaryCallSid = customParams.path("primaryCallSid").asText(); // 인바운드 통화 CallSid (고객의 최초 CallSid)
 		String callerNumber = customParams.path("callerNumber").asText();
-		String twilioCallSid = json.path("start").path("callSid").asText();
 
-		if (!userIdStr.isEmpty()) {
-			log.info("Twilio start event에서 받은 userId: {}", userIdStr);
+		// callSession 객체 생성
+		currentCallSessionId = callSessionService.createTempSession(
+			TEMP_USERID,
+			new CallSessionRequestDTO.CallSessionMakeDTO(primaryCallSid, callerNumber)
+		);
 
-			// 유저 객체 조회
-			currentUserId = Long.parseLong(userIdStr);
-			User user = userService.getUserById(currentUserId);
-
-			// callSession 객체 생성
-			currentCallSessionId = callSessionService.createCallSession(
-				user,
-				new CallSessionRequestDTO.CallSessionMakeDTO(currentUserId, twilioCallSid, callerNumber)
+		try {
+			// INBOUND STTContext 생성 및 초기화
+			SttContext inboundCtx = new SttContext(
+				currentCallSessionId,
+				currentUserId,
+				CallTrack.INBOUND,
+				fastClient,
+				callSessionService,
+				callLogService,
+				callSttLogService,
+				sttWebSocketHandler
 			);
+			inboundCtx.initializeStream(session.getId());
+			sttContexts.put(CallTrack.INBOUND, inboundCtx);
 
-			try {
-				// INBOUND STTContext 생성 및 초기화
-				SttContext inboundCtx = new SttContext(
-					currentCallSessionId,
-					currentUserId,
-					CallTrack.INBOUND,
-					fastClient,
-					callSessionService,
-					callLogService,
-					callSttLogService,
-					sttWebSocketHandler
-				);
-				inboundCtx.initializeStream(session.getId());
-				sttContexts.put(CallTrack.INBOUND, inboundCtx);
+			// OUTBOUND STTContext 생성 및 초기화
+			SttContext outboundCtx = new SttContext(
+				currentCallSessionId,
+				currentUserId,
+				CallTrack.OUTBOUND,
+				fastClient,
+				callSessionService,
+				callLogService,
+				callSttLogService,
+				sttWebSocketHandler
+			);
+			outboundCtx.initializeStream(session.getId());
+			sttContexts.put(CallTrack.OUTBOUND, outboundCtx);
 
-				// OUTBOUND STTContext 생성 및 초기화
-				SttContext outboundCtx = new SttContext(
-					currentCallSessionId,
-					currentUserId,
-					CallTrack.OUTBOUND,
-					fastClient,
-					callSessionService,
-					callLogService,
-					callSttLogService,
-					sttWebSocketHandler
-				);
-				outboundCtx.initializeStream(session.getId());
-				sttContexts.put(CallTrack.OUTBOUND, outboundCtx);
-
-			} catch (IOException e) {
-				log.error("세션 {}에 대한 STT 컨텍스트 초기화 실패", session.getId(), e);
-				throw new RuntimeException("STT Context 초기화 실패", e);
-			}
-
-			// 세션 정보 전달 - call_session_code, 날짜 (stt 페이지 상단)
-			CallSessionResponseDTO.CallSessionInfoDTO sessionInfo =
-				callSessionService.getCallSessionInfo(currentCallSessionId);
-			log.info("🧾 생성된 CallSession 정보: sessionCode = {}, createdAt = {}, totalAbuseCnt = {}",
-				sessionInfo.getCallSessionCode(), sessionInfo.getCreatedAt(), sessionInfo.getTotalAbuseCnt());
-
-			// sttWebSocketHandler.registerUserSession(currentUserId, session);
-			sttWebSocketHandler.sendSessionInfoToClient(currentUserId, sessionInfo);
-
-		} else {
-			log.warn("❗ start 이벤트에 userId 없음");
+		} catch (IOException e) {
+			log.error("세션 {}에 대한 STT 컨텍스트 초기화 실패", session.getId(), e);
+			throw new RuntimeException("STT Context 초기화 실패", e);
 		}
+
+		// 세션 정보 전달 - call_session_code, 날짜 (stt 페이지 상단)
+		CallSessionResponseDTO.CallSessionInfoDTO sessionInfo =
+			callSessionService.getSessionInfo(currentCallSessionId);
+		log.info("🧾 생성된 CallSession 정보: sessionCode = {}, createdAt = {}, totalAbuseCnt = {}",
+			sessionInfo.getCallSessionCode(), sessionInfo.getCreatedAt(), sessionInfo.getTotalAbuseCnt());
+
+		// sttWebSocketHandler.registerUserSession(currentUserId, session);
+		// sttWebSocketHandler.sendSessionInfoToClient(currentUserId, sessionInfo);
+
+
+
 	}
 
 	private void handleMediaEvent(WebSocketSession session, JsonNode json) throws IOException {
