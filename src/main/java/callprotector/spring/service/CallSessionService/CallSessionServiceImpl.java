@@ -10,6 +10,7 @@ import callprotector.spring.repository.*;
 import callprotector.spring.service.CallSttLogService.CallSttLogService;
 import callprotector.spring.service.GeminiService.GeminiService;
 import callprotector.spring.service.OpenAiService.OpenAiSummaryService;
+import callprotector.spring.service.UserService.UserService;
 import callprotector.spring.service.util.CallSessionCodeGenerator;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
@@ -35,7 +36,6 @@ import com.twilio.exception.ApiException;
 public class CallSessionServiceImpl implements CallSessionService {
 
     private final CallSessionRepository callSessionRepository;
-    private final UserRepository userRepository;
     private final CallSessionCodeGenerator codeGenerator;
     private final SttWebSocketHandler sttWebSocketHandler;
     private final CallSttLogService callSttLogService;
@@ -45,40 +45,7 @@ public class CallSessionServiceImpl implements CallSessionService {
     private final CallSttLogSearchRepository callSttLogSearchRepository;
     private final OpenAiSummaryService openAiSummaryService;
     private final GeminiService geminiService;
-
-    @Override
-    @Transactional
-    public Long createCallSession(User user, CallSessionRequestDTO.CallSessionMakeDTO dto) {
-
-        // 세션 코드 생성
-        String sessionCode = codeGenerator.generateTodayCallSessionCode();
-
-        String rawNumber = dto.getCallerNumber();
-        String formattedNumber = formatKoreanPhoneNumber(rawNumber);
-
-        CallSession session = CallSession.builder()
-                .callSessionCode(sessionCode)
-                .user(user)
-                .twilioCallSid(dto.getTwilioCallSid())
-                .callerNumber(formattedNumber)
-                .build();
-        callSessionRepository.save(session);
-        return session.getId();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public CallSessionResponseDTO.CallSessionInfoDTO getCallSessionInfo(final Long callSessionId) {
-        CallSession callSession = findCallSessionById(callSessionId);
-
-        String formattedCreatedAt = formatCreatedAt(callSession.getCreatedAt());
-
-        return CallSessionResponseDTO.CallSessionInfoDTO.builder()
-                .callSessionCode(callSession.getCallSessionCode())
-                .createdAt(formattedCreatedAt)
-                .totalAbuseCnt(callSession.getTotalAbuseCnt())
-                .build();
-    }
+    private final UserService userService;
 
     @Override
     @Transactional(readOnly = true)
@@ -414,6 +381,43 @@ public class CallSessionServiceImpl implements CallSessionService {
         log.info("CallSession (ID: {})의 endedAt 업데이트 완료 : {}", callSessionId, session.getEndedAt());
     }
 
+    @Override
+    @Transactional
+    public CallSessionResponseDTO.CallSessionInfoDTO registerAcceptedCall(CallSessionRequestDTO.CallSessionMakeDTO dto, Long userId) {
+
+        // 유저 조회
+        User user = userService.getUserById(userId);
+
+        // call session 생성
+        CallSession session = createCallSession(user, dto);
+        log.info("callSessionId: {}", session.getId());
+
+        CallSessionResponseDTO.CallSessionInfoDTO result = getCallSessionInfo(session);
+        return result;
+    }
+
+    @Transactional
+    protected CallSession createCallSession(User user, CallSessionRequestDTO.CallSessionMakeDTO dto) {
+
+        checkByCallSid(dto.getOriginalInboundCallSid());
+
+        // 세션 코드 생성
+        String sessionCode = codeGenerator.generateTodayCallSessionCode();
+
+        String rawNumber = dto.getCallerNumber();
+        String formattedNumber = formatKoreanPhoneNumber(rawNumber);
+
+        CallSession session = CallSession.builder()
+            .callSessionCode(sessionCode)
+            .user(user)
+            .twilioCallSid(dto.getOriginalInboundCallSid())
+            .callerNumber(formattedNumber)
+            .build();
+
+        callSessionRepository.save(session);
+        return session;
+    }
+
     private void validateAbuseCategory(String category) {
         List<String> valid = List.of("verbalAbuse", "sexualHarass", "threat");
         if (!valid.contains(category)) {
@@ -518,5 +522,23 @@ public class CallSessionServiceImpl implements CallSessionService {
 
     private CallSession findCallSessionByIdAndUserId(final Long callSessionId, final Long userId) {
         return callSessionRepository.findByIdAndUserId(callSessionId, userId).orElseThrow(CallSessionUserNotFoundException::new);
+    }
+
+    private void checkByCallSid(final String twilioCallSid) {
+        boolean result = callSessionRepository.existsByTwilioCallSid(twilioCallSid);
+        if(result) {
+            throw new CallSessionExistsException();
+        }
+    }
+
+    private CallSessionResponseDTO.CallSessionInfoDTO getCallSessionInfo(final CallSession callSession) {
+
+        String formattedCreatedAt = formatCreatedAt(callSession.getCreatedAt());
+
+        return CallSessionResponseDTO.CallSessionInfoDTO.builder()
+            .callSessionCode(callSession.getCallSessionCode())
+            .createdAt(formattedCreatedAt)
+            .totalAbuseCnt(callSession.getTotalAbuseCnt())
+            .build();
     }
 }
