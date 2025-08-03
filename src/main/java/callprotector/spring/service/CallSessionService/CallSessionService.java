@@ -29,5 +29,11 @@ public interface CallSessionService {
 
     void updateEndedAt(Long callSessionId);
 
-    CallSessionResponseDTO.CallSessionInfoDTO registerAcceptedCall(CallSessionRequestDTO.CallSessionMakeDTO dto, Long userId);
-    }
+    CallSessionResponseDTO.CallSessionInfoDTO registerAcceptedUser(CallSessionRequestDTO.CallSessionMakeDTO dto, Long userId);
+
+    CallSession findByCallSid(String callSid);
+
+    Long createTempSession(Long userId, CallSessionRequestDTO.CallSessionMakeDTO dto);
+
+    CallSessionResponseDTO.CallSessionInfoDTO getSessionInfo(Long callSessionId);
+ }

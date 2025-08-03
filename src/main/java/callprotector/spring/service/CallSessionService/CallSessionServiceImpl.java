@@ -2,11 +2,14 @@ package callprotector.spring.service.CallSessionService;
 
 import callprotector.spring.apiPayload.code.status.ErrorStatus;
 import callprotector.spring.apiPayload.exception.handler.*;
+import callprotector.spring.client.FastClient;
 import callprotector.spring.domain.enums.CallTrack;
 import callprotector.spring.handler.SttWebSocketHandler;
 import callprotector.spring.domain.*;
 import callprotector.spring.domain.mapping.AbuseTypeLog;
+import callprotector.spring.handler.TwilioMediaStreamProcessor;
 import callprotector.spring.repository.*;
+import callprotector.spring.service.CallLogService.CallLogService;
 import callprotector.spring.service.CallSttLogService.CallSttLogService;
 import callprotector.spring.service.GeminiService.GeminiService;
 import callprotector.spring.service.OpenAiService.OpenAiSummaryService;
@@ -17,6 +20,8 @@ import callprotector.spring.web.dto.response.CallSessionResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.exception.ApiException;
 
@@ -383,17 +389,52 @@ public class CallSessionServiceImpl implements CallSessionService {
 
     @Override
     @Transactional
-    public CallSessionResponseDTO.CallSessionInfoDTO registerAcceptedCall(CallSessionRequestDTO.CallSessionMakeDTO dto, Long userId) {
+    public CallSessionResponseDTO.CallSessionInfoDTO registerAcceptedUser(CallSessionRequestDTO.CallSessionMakeDTO dto, Long userId) {
 
         // 유저 조회
         User user = userService.getUserById(userId);
 
-        // call session 생성
-        CallSession session = createCallSession(user, dto);
+        // call session 조회
+        CallSession session = findByCallSid(dto.getOriginalInboundCallSid());
         log.info("callSessionId: {}", session.getId());
 
-        CallSessionResponseDTO.CallSessionInfoDTO result = getCallSessionInfo(session);
-        return result;
+        // 유저 등록
+        session.updateUser(user);
+        return getCallSessionInfo(session);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CallSession findByCallSid(String callSid){
+        return callSessionRepository.findByTwilioCallSid(callSid).orElseThrow(CallSessionNotFoundException::new);
+    }
+
+    @Override
+    @Transactional
+    public Long createTempSession(Long userId, CallSessionRequestDTO.CallSessionMakeDTO dto) {
+        User user = userService.getUserById(userId);
+        String sessionCode = codeGenerator.generateTodayCallSessionCode();
+
+        String rawNumber = dto.getCallerNumber();
+        String formattedNumber = formatKoreanPhoneNumber(rawNumber);
+
+        CallSession session = CallSession.builder()
+            .callSessionCode(sessionCode)
+            .user(user)
+            .twilioCallSid(dto.getOriginalInboundCallSid())
+            .callerNumber(formattedNumber)
+            .build();
+
+        callSessionRepository.save(session);
+        return session.getId();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CallSessionResponseDTO.CallSessionInfoDTO getSessionInfo(Long callSessionId) {
+        CallSession session = findCallSessionById(callSessionId);
+
+        return getCallSessionInfo(session);
     }
 
     @Transactional
