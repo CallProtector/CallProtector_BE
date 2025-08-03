@@ -3,6 +3,7 @@ package callprotector.spring.web.controller;
 import callprotector.spring.annotation.UserId;
 import callprotector.spring.apiPayload.ApiResponse;
 import callprotector.spring.service.CallSessionService.CallSessionService;
+import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -102,4 +103,19 @@ public class CallSessionController {
         return ApiResponse.onSuccess(response);
     }
 
+    @Operation(
+        summary = "전화 수락 시 call session 생성",
+        description = "전화 수락 시 해당 userId로 callsession을 생성하고 세션 정보를 반환합니다."
+    )
+    @PostMapping("/call/accept")
+    public ApiResponse<CallSessionResponseDTO.CallSessionInfoDTO> acceptCallFromClient(
+        @RequestBody CallSessionRequestDTO.CallSessionMakeDTO request,
+        @UserId Long userId
+    ) {
+        log.info("📞 Client accepted call. toClientCallSid: {}, originalInboundCallSid: {}, callerNumber: {}, UserId: {}",
+            request.getToClientCallSid(), request.getOriginalInboundCallSid(), request.getCallerNumber(), userId);
+        CallSessionResponseDTO.CallSessionInfoDTO response = callSessionService.registerAcceptedCall(request, userId);
+
+        return ApiResponse.onSuccess(response);
+    }
 }
