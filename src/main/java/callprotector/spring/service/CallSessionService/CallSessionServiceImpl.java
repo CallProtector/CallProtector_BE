@@ -2,14 +2,11 @@ package callprotector.spring.service.CallSessionService;
 
 import callprotector.spring.apiPayload.code.status.ErrorStatus;
 import callprotector.spring.apiPayload.exception.handler.*;
-import callprotector.spring.client.FastClient;
 import callprotector.spring.domain.enums.CallTrack;
 import callprotector.spring.handler.SttWebSocketHandler;
 import callprotector.spring.domain.*;
 import callprotector.spring.domain.mapping.AbuseTypeLog;
-import callprotector.spring.handler.TwilioMediaStreamProcessor;
 import callprotector.spring.repository.*;
-import callprotector.spring.service.CallLogService.CallLogService;
 import callprotector.spring.service.CallSttLogService.CallSttLogService;
 import callprotector.spring.service.GeminiService.GeminiService;
 import callprotector.spring.service.OpenAiService.OpenAiSummaryService;
@@ -17,11 +14,10 @@ import callprotector.spring.service.UserService.UserService;
 import callprotector.spring.service.util.CallSessionCodeGenerator;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +28,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.exception.ApiException;
 
