@@ -12,9 +12,9 @@ public class CallSessionRequestDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CallSessionMakeDTO{
-        private Long userId;      // 사용자 ID
-        private String twilioCallSid; // Twilio Call SID
-        private String callerNumber;    // 발신번호
+        private String toClientCallSid; // twilio -> browser
+        private String originalInboundCallSid; // client -> twilio
+        private String callerNumber;
     }
 
 }
