@@ -9,5 +9,5 @@ public interface ChatLogService {
     public List<ChatLogResponseDTO.ChatLogResponse> getChatLogsBySession(Long sessionId);
 
     // SSE 용
-    public void saveChatLog(Long sessionId, String question, String answer);
+    public void saveChatLog(Long sessionId, String question, String answer, String sourcePages);
 }
