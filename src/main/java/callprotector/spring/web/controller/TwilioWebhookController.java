@@ -14,13 +14,22 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("/twilio")
 public class TwilioWebhookController {
+    private static final String BROWSER_CLIENT_ID = "browserUser";
 
     @PostMapping(value = "/voice", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
     public String onIncomingCall(@RequestParam Map<String, String> params) {
-        log.info("☆ Inbound Call From: {}", params.get("From"));
+        log.info("params: {}", params);
+        log.info("☆ Inbound Call - From: {}", params.get("From"));
+        log.info("☆ Inbound Call - CallSid: {}", params.get("CallSid"));
         String callerNumber = params.get("From");
+        String inboundCallSid = params.get("CallSid");
 
-        String userId = "1"; // 추후 수정 필요(로그인한 상담원의 userId 가져오기)
+        Client clientVerb = new Client.Builder(BROWSER_CLIENT_ID) // 브라우저 Client ID - TwilioVoiceTokenController의 fixedIdentity와 일치해야 함
+            .parameter(new Parameter.Builder()
+                .name("initialCallSid")
+                .value(inboundCallSid)
+                .build())
+            .build();
 
         VoiceResponse response = new VoiceResponse.Builder()
                 .say(new Say.Builder("테스트")
@@ -32,8 +41,8 @@ public class TwilioWebhookController {
                                 .url("wss://pet-pipefish-friendly.ngrok-free.app/ws/audio")
                                 .track(Stream.Track.BOTH_TRACKS)
                                 .parameter(new com.twilio.twiml.voice.Parameter.Builder()
-                                        .name("userId")
-                                        .value(userId)
+                                    .name("primaryCallSid")
+                                    .value(inboundCallSid)
                                         .build())
                                 .parameter(new com.twilio.twiml.voice.Parameter.Builder()
                                         .name("callerNumber")
@@ -43,12 +52,13 @@ public class TwilioWebhookController {
                         .build())
                 .dial(new Dial.Builder()
                         .timeout(30) // 30초 안에 응답 없으면 통화 불가 안내 멘트
-                        .client(new Client.Builder("browserUser").build())  // 브라우저 Client ID - TwilioVoiceTokenController의 fixedIdentity와 일치해야 함
+                        .client(clientVerb)
                         .build())
                 .say(new Say.Builder("지금은 통화가 불가능한 시간입니다. 나중에 다시 걸어주세요.") // 안내 멘트 수정 예정
                         .voice(Say.Voice.ALICE)
                         .language(Say.Language.KO_KR)
                         .build())
+
                 .build();
 
         return response.toXml(); // TwiML 반환
