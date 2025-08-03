@@ -12,7 +12,6 @@ public class CallSessionRequestDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CallSessionMakeDTO{
-        private String toClientCallSid; // twilio -> browser
         private String originalInboundCallSid; // client -> twilio
         private String callerNumber;
     }
