@@ -9,4 +9,5 @@ public interface CallSessionRepository extends JpaRepository<CallSession, Long>,
     long countByCallSessionCodeStartingWith(String prefix);
     Optional<CallSession> findByIdAndUserId(Long id, Long userId);
     boolean existsByTwilioCallSid(String twilioCallsid);
+    Optional<CallSession> findByTwilioCallSid(String twilioCallsid);
 }
