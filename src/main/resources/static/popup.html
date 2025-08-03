@@ -35,6 +35,7 @@
 </head>
 <body>
 <h2>📞 브라우저 전화 수신 대기 중...</h2>
+<button id="create-session-btn">세션 생성</button>
 <button id="accept-btn" style="display:none;">📞 전화 수락</button>
 
 <div id="session-info">🔒 세션 정보 수신 대기 중...</div>
@@ -49,7 +50,8 @@
 
 <script>
     let pendingConnection = null;
-    const ws = new WebSocket("wss://pet-pipefish-friendly.ngrok-free.app/ws/stt?userId=1");
+    // const ws = new WebSocket("wss://pet-pipefish-friendly.ngrok-free.app/ws/stt?userId=1");
+    let ws = null;
 
     const sessionInfoDiv = document.getElementById("session-info");
     const logArea = document.getElementById("log-area");
@@ -61,6 +63,84 @@
         INBOUND: { currentIndex: 0, finalReceived: false },
         OUTBOUND: { currentIndex: 0, finalReceived: false }
     };
+
+    function parseQueryParams(queryString) {
+        const params = {};
+        if (!queryString) {
+            return params;
+        }
+        queryString.split('&').forEach(pair => {
+            const [key, value] = pair.split('=');
+            if (key && value) {
+                params[decodeURIComponent(key)] = decodeURIComponent(value);
+            }
+        });
+        return params;
+    }
+
+    function setupWebSocketListeners(websocket) {
+        websocket.onopen = () => console.log("🌐 WebSocket 연결됨");
+        websocket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+
+                console.log("=== data 출력 ===");
+                console.log("Received WebSocket data:", data);
+
+                if (data.type === "sessionInfo") {
+                    sessionInfoDiv.innerText = `🔑 세션 코드: ${data.sessionCode} | 생성 시각: ${data.createdAt} | 폭언 횟수: ${data.totalAbuseCnt}`;
+                } else if (data.type === "totalAbuseCntUpdate") {
+                    sessionInfoDiv.innerText = sessionInfoDiv.innerText.replace(/폭언 횟수: .+/, `폭언 횟수: ${data.totalAbuseCnt}`);
+                    console.log(`💡 폭언 횟수 업데이트됨: ${data.totalAbuseCnt} (세션 ID: ${data.callSessionId})`);
+                } else if (data.type === "finalTranscript") {
+                    const isInbound = data.track === "INBOUND";
+                    const targetDiv = isInbound ? finalInboundDiv : finalOutboundDiv;
+                    const label = isInbound ? "👤 고객 전체 텍스트" : "💼 상담원 전체 텍스트";
+
+                    const summaryHTML = `
+                    <div class="final-summary">
+                        <strong>${label}</strong><br>
+                        ${data.text}
+                    </div>
+                `;
+                    targetDiv.innerHTML = summaryHTML;
+                } else if (data.type === "stt") {
+                    const sttLogData = data.payload;
+
+                    const track = sttLogData.track;
+                    const script = sttLogData.script || data.text;
+                    const isFinal = sttLogData.isFinal;
+                    const abuseLabel = isFinal ? (sttLogData.isAbuse ? `🚫 ${sttLogData.abuseType}` : "✅ 정상") : "🟡 중간";
+
+                    const label = track === "INBOUND" ? "👤 고객" : "💼 상담원";
+                    const finalLabel = isFinal ? "🟢 최종" : "🟡 중간";
+
+                    const html = `<div class="log-line">${label} | ${finalLabel} | ${abuseLabel}<br>🗣️ ${script}</div>`;
+
+                    const state = trackState[track];
+                    const key = `${track}-${state.currentIndex}`;
+
+                    lines[key] = html;
+
+                    if (isFinal) {
+                        state.finalReceived = true;
+                        state.currentIndex++;
+                    }
+
+                    logArea.innerHTML = Object.values(lines).join("");
+                    logArea.scrollTop = logArea.scrollHeight;
+                } else {
+
+                    console.warn("Unknown WebSocket message type received:", data.type, data);
+                }
+
+            } catch (e) {
+                console.error("⚠️ WebSocket 메시지 처리 오류:", e);
+            }
+        };
+        websocket.onerror = err => console.error("❌ WebSocket 오류:", err);
+        websocket.onclose = () => console.log("🔌 WebSocket 연결 종료");
+    }
 
     const jwtToken = localStorage.getItem('jwtToken'); // 브라우저 로컬 스토리지에 jwtToken : <token> 이 저장되어 있어야 함
     if (!jwtToken) {
@@ -86,12 +166,24 @@
             })
             .then(data => {
                 const accessToken = data.result.twilioAccessToken;
+                const userId = data.result.userId;
+
+                if (!userId) {
+                    console.error("🚨 서버로부터 userId를 받지 못했습니다. WebSocket 연결 불가.");
+                    sessionInfoDiv.innerText = "🚨 서버 오류: 사용자 ID 없음";
+                    return;
+                }
                 const device = new Twilio.Device(accessToken, { debug: true });
 
                 device.on('ready', () => {
                     console.log('✅ Device ready');
-                    Twilio.Device.audio.speakerDevices.set('default');
-                    console.log('Twilio.Device.audio on ready:', Twilio.Device.audio); // 추가
+                    // Twilio.Device.audio.speakerDevices.set('default');
+                    console.log('Twilio.Device.audio on ready:', Twilio.Device.audio);
+
+                    console.log(`🔍 Device ready. WebSocket 연결 시작: userId=${userId}`);
+                    ws = new WebSocket(`wss://pet-pipefish-friendly.ngrok-free.app/ws/stt?userId=${userId}`);
+                    setupWebSocketListeners(ws);
+
 
                 });
 
@@ -101,16 +193,155 @@
                     document.getElementById("accept-btn").style.display = "inline";
 
                     // incoming 통화가 수락되기 전에 취소되었을 때 처리 필요
+
+                    // ✅ Twilio Device 초기화 이후 버튼 리스너 등록
+                    document.getElementById("create-session-btn").addEventListener("click", () => {
+                        const parsedParams = parseQueryParams(pendingConnection.parameters.Params);
+                        const initialCallSid = parsedParams.initialCallSid;
+                        const clientDialCallSid = pendingConnection.parameters.CallSid;
+                        const callerNumber = pendingConnection.parameters.From;
+
+                        fetch('/api/sessions/call/accept', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${jwtToken}`
+                            },
+                            body: JSON.stringify({
+                                toClientCallSid: clientDialCallSid,
+                                originalInboundCallSid: initialCallSid,
+                                callerNumber: callerNumber
+                            })
+                        })
+                            .then(res => res.json())
+                            .then(apiResponse => {
+                                console.log("✅ 세션 생성 응답:", apiResponse);
+                                if (apiResponse.isSuccess && apiResponse.result) {
+                                    const sessionInfo = apiResponse.result;
+
+                                    // ✅ 세션 정보 UI 업데이트
+                                    sessionInfoDiv.innerText = `🔑 세션 코드: ${sessionInfo.callSessionCode} | 생성 시각: ${sessionInfo.createdAt} | 폭언 횟수: ${sessionInfo.totalAbuseCnt}`;
+                                } else {
+                                    console.error("🚨 세션 생성 실패:", apiResponse.message || apiResponse);
+                                    alert("세션 생성에 실패했습니다.");
+                                }
+                            })
+                            .catch(err => console.error("🚨 세션 생성 오류:", err));
+                    });
+
+
+                    document.getElementById("accept-btn").addEventListener("click", () => {
+                        ws = new WebSocket(`wss://pet-pipefish-friendly.ngrok-free.app/ws/stt?userId=${data.result.userId}`);
+                        setupWebSocketListeners(ws);
+                        console.log("🌐 WebSocket 연결 시작");
+
+                        setTimeout(() => {
+                            pendingConnection.accept();
+                            console.log("✅ 통화 수락 완료");
+                            pendingConnection = null;
+                            document.getElementById("accept-btn").style.display = "none";
+                        }, 500);
+                    });
+
                 });
 
-                document.getElementById("accept-btn").addEventListener("click", () => {
-                    if (pendingConnection) {
-                        pendingConnection.accept();
-                        console.log("✅ 수신 수락됨");
-                        pendingConnection = null;
-                    }
-                    document.getElementById("accept-btn").style.display = "none";
-                });
+
+
+                // document.getElementById("accept-btn").addEventListener("click", () => {
+                //     if (pendingConnection) {
+                //         if (Twilio.Device.audio && Twilio.Device.audio.speakerDevices && Twilio.Device.audio.speakerDevices.isSupported) {
+                //             try {
+                //                 Twilio.Device.audio.speakerDevices.set('default');
+                //                 console.log('✅ Speaker devices set to default on accept button click (user gesture).');
+                //             } catch (audioError) {
+                //                 console.error('🚨 Error setting speaker devices:', audioError);
+                //                 alert('스피커 설정을 할 수 없습니다. 브라우저 설정을 확인해주세요.');
+                //             }
+                //         } else {
+                //             console.warn('⚠️ Twilio.Device.audio 또는 speakerDevices가 준비되지 않았거나 지원되지 않습니다.');
+                //         }
+                //
+                //         // api 추가
+                //         console.log("Full Connection Object:", pendingConnection);
+                //         console.log("Connection Parameters:", pendingConnection.parameters);
+                //
+                //         // 고객 -> twilio sid (최초 인바운드)
+                //         const parsedParams = parseQueryParams(pendingConnection.parameters.Params);
+                //         const initialCallSid = parsedParams.initialCallSid;
+                //         console.log("Original Inbound CallSid (최초 고객 통화 SID): ", initialCallSid);
+                //
+                //         // twilio -> 브라우저 sid (아웃바운드) - 통화 수락 전에 현재 CallSid을 서버로 전달
+                //         const clientDialCallSid = pendingConnection.parameters.CallSid;
+                //         console.log("clientDialCallSid: ", clientDialCallSid);
+                //
+                //         // 고객 번호
+                //         const callerNumber = pendingConnection.parameters.From;
+                //         console.log("callerNumber: ", callerNumber);
+                //
+                //
+                //         if (clientDialCallSid && initialCallSid && userId) {
+                //             fetch('/api/sessions/call/accept', {
+                //                 method: 'POST',
+                //                 headers: {
+                //                     'Content-Type': 'application/json',
+                //                     'Authorization': `Bearer ${jwtToken}`
+                //                 },
+                //                 body: JSON.stringify({
+                //                     toClientCallSid: clientDialCallSid, // 트윌리오 -> 브라우저 Outgoing Leg의 SID
+                //                     originalInboundCallSid: initialCallSid, // 최초 고객 Incoming Leg의 SID
+                //                     callerNumber: callerNumber
+                //                 })
+                //             })
+                //                 .then(response => {
+                //                     if (!response.ok) {
+                //                         console.error('🚨 Failed to register accepted call with server:', response.status, response.statusText);
+                //                         // 에러 처리: 서버에 등록 실패 시 사용자에게 알리거나 재시도
+                //                     } else {
+                //                         return response.json();
+                //                     }
+                //                 })
+                //                 .then(apiResponse => {
+                //                     if (apiResponse.isSuccess) {
+                //                         const sessionInfo = apiResponse.result; // CallSessionInfoDTO 객체
+                //                         if (sessionInfo) { // sessionInfo 객체가 null이 아닌지 확인
+                //                             console.log('✅ CallSession successfully created/updated on server. Session Info:', sessionInfo);
+                //
+                //                             // 🚨🚨🚨 여기에서 HTTP 응답으로 받은 세션 정보를 UI에 업데이트합니다. 🚨🚨🚨
+                //                             sessionInfoDiv.innerText = `🔑 세션 코드: ${sessionInfo.callSessionCode} | 생성 시각: ${sessionInfo.createdAt} | 폭언 횟수: ${sessionInfo.totalAbuseCnt}`;
+                //
+                //                             // ✅ 1000ms 지연 후 accept
+                //                             setTimeout(() => {
+                //                                 pendingConnection.accept();
+                //                                 console.log("✅ 통화 수락 및 STTContext 준비 완료");
+                //                                 pendingConnection = null;
+                //                                 document.getElementById("accept-btn").style.display = "none";
+                //                             }, 1000);
+                //
+                //                             // 콘솔 로그 변수명 수정 및 위치 조정
+                //                             console.log('✅ Call accepted registered with CallManager. ClientDialCallSid:', clientDialCallSid, 'UserId:', userIdToSend);
+                //
+                //                         } else {
+                //                             console.error('🚨 Call accept API returned success but missing session info in result:', apiResponse);
+                //                             alert('통화 수락 성공, 그러나 세션 정보가 누락되었습니다.');
+                //                         }
+                //                     } else {
+                //                         console.error('🚨 Call accept API returned failure:', apiResponse.message);
+                //                         alert(`통화 수락 실패: ${apiResponse.message || '알 수 없는 API 오류'}`);
+                //                     }
+                //                 })
+                //                 .catch(error => {
+                //                     console.error('🚨 Error sending call accept info to server:', error);
+                //                 });
+                //         } else {
+                //             console.warn('❗ Could not send call accept info: CallSid or UserId missing.');
+                //         }
+                //
+                //         // pendingConnection.accept();
+                //         // console.log("✅ 수신 수락됨");
+                //         // pendingConnection = null;
+                //     }
+                //     // document.getElementById("accept-btn").style.display = "none";
+                // });
 
                 device.on('connect', () => console.log('🔊 통화 연결됨'));
                 device.on('disconnect', () => {
@@ -125,68 +356,8 @@
             });
     }
 
-    ws.onopen = () => console.log("🌐 WebSocket 연결됨");
-    ws.onmessage = (event) => {
-        try {
-            const data = JSON.parse(event.data);
 
-            console.log("=== data 출력 ===");
-            console.log("Received WebSocket data:", data);
 
-            if (data.type === "sessionInfo") {
-                sessionInfoDiv.innerText = `🔑 세션 코드: ${data.sessionCode} | 생성 시각: ${data.createdAt} | 폭언 횟수: ${data.totalAbuseCnt}`;
-            } else if (data.type === "totalAbuseCntUpdate") {
-                sessionInfoDiv.innerText = sessionInfoDiv.innerText.replace(/폭언 횟수: .+/, `폭언 횟수: ${data.totalAbuseCnt}`);
-                console.log(`💡 폭언 횟수 업데이트됨: ${data.totalAbuseCnt} (세션 ID: ${data.callSessionId})`);
-            } else if (data.type === "finalTranscript") {
-                const isInbound = data.track === "INBOUND";
-                const targetDiv = isInbound ? finalInboundDiv : finalOutboundDiv;
-                const label = isInbound ? "👤 고객 전체 텍스트" : "💼 상담원 전체 텍스트";
-
-                const summaryHTML = `
-                    <div class="final-summary">
-                        <strong>${label}</strong><br>
-                        ${data.text}
-                    </div>
-                `;
-                targetDiv.innerHTML = summaryHTML;
-            } else if (data.type === "stt") {
-                const sttLogData = data.payload;
-
-                const track = sttLogData.track;
-                const script = sttLogData.script || data.text;
-                const isFinal = sttLogData.isFinal;
-                const abuseLabel = isFinal ? (sttLogData.isAbuse ? `🚫 ${sttLogData.abuseType}` : "✅ 정상") : "🟡 중간";
-
-                const label = track === "INBOUND" ? "👤 고객" : "💼 상담원";
-                const finalLabel = isFinal ? "🟢 최종" : "🟡 중간";
-
-                const html = `<div class="log-line">${label} | ${finalLabel} | ${abuseLabel}<br>🗣️ ${script}</div>`;
-
-                const state = trackState[track];
-                const key = `${track}-${state.currentIndex}`;
-
-                lines[key] = html;
-
-                if (isFinal) {
-                    state.finalReceived = true;
-                    state.currentIndex++;
-                }
-
-                logArea.innerHTML = Object.values(lines).join("");
-                logArea.scrollTop = logArea.scrollHeight;
-            } else {
-
-                console.warn("Unknown WebSocket message type received:", data.type, data);
-            }
-
-        } catch (e) {
-            console.error("⚠️ WebSocket 메시지 처리 오류:", e);
-        }
-    };
-
-    ws.onerror = err => console.error("❌ WebSocket 오류:", err);
-    ws.onclose = () => console.log("🔌 WebSocket 연결 종료");
 </script>
 </body>
 </html>
