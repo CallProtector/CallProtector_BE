@@ -112,9 +112,9 @@ public class CallSessionController {
         @RequestBody CallSessionRequestDTO.CallSessionMakeDTO request,
         @UserId Long userId
     ) {
-        log.info("📞 Client accepted call. toClientCallSid: {}, originalInboundCallSid: {}, callerNumber: {}, UserId: {}",
-            request.getToClientCallSid(), request.getOriginalInboundCallSid(), request.getCallerNumber(), userId);
-        CallSessionResponseDTO.CallSessionInfoDTO response = callSessionService.registerAcceptedCall(request, userId);
+        log.info("📞 Client accepted call.  originalInboundCallSid: {}, callerNumber: {}, UserId: {}",
+             request.getOriginalInboundCallSid(), request.getCallerNumber(), userId);
+        CallSessionResponseDTO.CallSessionInfoDTO response = callSessionService.registerAcceptedUser(request, userId);
 
         return ApiResponse.onSuccess(response);
     }
