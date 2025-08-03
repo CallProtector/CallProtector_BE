@@ -85,4 +85,8 @@ public class CallSession extends BaseEntity {
     public void updateSummaryGeneratedAt(LocalDateTime summaryGeneratedAt) {
         this.summaryGeneratedAt = summaryGeneratedAt;
     }
+
+    public void updateUser(User user) {
+        this.user = user;
+    }
 }
