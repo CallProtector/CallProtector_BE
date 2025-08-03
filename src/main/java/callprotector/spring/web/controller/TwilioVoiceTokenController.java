@@ -49,8 +49,9 @@ public class TwilioVoiceTokenController {
                 .build();
 
         log.info("access token: {}", token.toString());
+        log.info("userId : {}", userId);
 
-        TwilioTokenResponseDTO twilioTokenResponseDTO = TwilioTokenResponseDTO.of(token.toJwt());
+        TwilioTokenResponseDTO twilioTokenResponseDTO = TwilioTokenResponseDTO.of(token.toJwt(),  userId);
         return ApiResponse.onSuccess(twilioTokenResponseDTO);
     }
 }
