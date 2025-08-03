@@ -27,6 +27,10 @@ public class ChatLog extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String answer;
 
+    @Column(columnDefinition = "TEXT")
+    private String sourcePages;
+
+
 
     // ++ 필요한 경우 명시적으로 생성자/팩토리 메서드 추가도 가능
     public static ChatLog of(ChatSession session, String question, String answer, List<String> sourcePages) {

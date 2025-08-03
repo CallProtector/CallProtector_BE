@@ -2,7 +2,6 @@ package callprotector.spring.web.controller;
 
 import callprotector.spring.apiPayload.ApiResponse;
 import callprotector.spring.service.ChatLogService.ChatLogService;
-import callprotector.spring.web.dto.request.ChatbotRequestDTO;
 import callprotector.spring.web.dto.response.ChatLogResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
