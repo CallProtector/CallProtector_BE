@@ -1,8 +1,8 @@
-package callprotector.spring.service.CallSessionService;
+package callprotector.spring.domain.callsession.service;
 
-import callprotector.spring.domain.CallSession;
-import callprotector.spring.web.dto.request.CallSessionRequestDTO;
-import callprotector.spring.web.dto.response.CallSessionResponseDTO;
+import callprotector.spring.domain.callsession.entity.CallSession;
+import callprotector.spring.domain.callsession.dto.request.CallSessionRequestDTO;
+import callprotector.spring.domain.callsession.dto.response.CallSessionResponseDTO;
 
 public interface CallSessionService {
     CallSession getCallSession(Long callSessionId);

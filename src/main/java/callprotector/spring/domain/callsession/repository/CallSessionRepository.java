@@ -1,8 +1,8 @@
-package callprotector.spring.repository;
+package callprotector.spring.domain.callsession.repository;
 
 import java.util.Optional;
 
-import callprotector.spring.domain.CallSession;
+import callprotector.spring.domain.callsession.entity.CallSession;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CallSessionRepository extends JpaRepository<CallSession, Long>, CallSessionRepositoryCustom {

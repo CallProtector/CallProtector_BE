@@ -1,4 +1,4 @@
-package callprotector.spring.service.CallSessionService;
+package callprotector.spring.domain.callsession.service;
 
 import callprotector.spring.domain.abuse.entity.AbuseLog;
 import callprotector.spring.domain.abuse.entity.AbuseType;
@@ -6,6 +6,8 @@ import callprotector.spring.domain.abuse.repository.AbuseLogRepository;
 import callprotector.spring.domain.abuse.repository.AbuseTypeLogRepository;
 import callprotector.spring.domain.calllog.entity.CallLog;
 import callprotector.spring.domain.calllog.repository.CallLogRepository;
+import callprotector.spring.domain.callsession.entity.CallSession;
+import callprotector.spring.domain.callsession.repository.CallSessionRepository;
 import callprotector.spring.domain.user.entity.User;
 import callprotector.spring.global.apiPayload.code.status.ErrorStatus;
 import callprotector.spring.global.common.enums.CallTrack;
@@ -19,8 +21,8 @@ import callprotector.spring.service.GeminiService.GeminiService;
 import callprotector.spring.service.OpenAiService.OpenAiSummaryService;
 import callprotector.spring.domain.user.service.UserService;
 import callprotector.spring.service.util.CallSessionCodeGenerator;
-import callprotector.spring.web.dto.request.CallSessionRequestDTO;
-import callprotector.spring.web.dto.response.CallSessionResponseDTO;
+import callprotector.spring.domain.callsession.dto.request.CallSessionRequestDTO;
+import callprotector.spring.domain.callsession.dto.response.CallSessionResponseDTO;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
