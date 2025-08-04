@@ -1,7 +1,7 @@
 package callprotector.spring.domain;
 
-import callprotector.spring.domain.common.BaseEntity;
-import callprotector.spring.domain.enums.CallTrack;
+import callprotector.spring.global.common.entity.BaseEntity;
+import callprotector.spring.global.common.enums.CallTrack;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

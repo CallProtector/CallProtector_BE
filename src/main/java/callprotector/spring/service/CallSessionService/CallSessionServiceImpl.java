@@ -1,7 +1,7 @@
 package callprotector.spring.service.CallSessionService;
 
 import callprotector.spring.global.apiPayload.code.status.ErrorStatus;
-import callprotector.spring.domain.enums.CallTrack;
+import callprotector.spring.global.common.enums.CallTrack;
 import callprotector.spring.global.apiPayload.exception.handler.*;
 import callprotector.spring.global.handler.SttWebSocketHandler;
 import callprotector.spring.domain.*;

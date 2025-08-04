@@ -2,7 +2,7 @@ package callprotector.spring.repository;
 
 import callprotector.spring.domain.CallLog;
 import callprotector.spring.domain.CallSession;
-import callprotector.spring.domain.enums.CallTrack;
+import callprotector.spring.global.common.enums.CallTrack;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

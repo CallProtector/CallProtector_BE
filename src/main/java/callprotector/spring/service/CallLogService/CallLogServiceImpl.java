@@ -2,7 +2,7 @@ package callprotector.spring.service.CallLogService;
 
 import callprotector.spring.domain.CallLog;
 import callprotector.spring.domain.CallSession;
-import callprotector.spring.domain.enums.CallTrack;
+import callprotector.spring.global.common.enums.CallTrack;
 import callprotector.spring.repository.*;
 import callprotector.spring.service.AbuseService.AbuseService;
 import callprotector.spring.service.CallSessionService.CallSessionService;
