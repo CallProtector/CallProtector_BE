@@ -38,6 +38,7 @@ public class ChatStreamController {
             throw new IllegalArgumentException("해당 세션에 접근할 권한이 없습니다.");
         }
 
+
         StringBuilder jsonBuffer = new StringBuilder();
 
         return webClient.post()
