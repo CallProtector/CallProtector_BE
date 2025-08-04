@@ -1,11 +1,9 @@
-package callprotector.spring.service.ChatLogService;
+package callprotector.spring.domain.chat.service;
 
-import callprotector.spring.domain.ChatLog;
-import callprotector.spring.domain.ChatSession;
-import callprotector.spring.repository.ChatLogRepository;
-import callprotector.spring.service.ChatSessionService.ChatSessionService;
-import callprotector.spring.web.dto.response.ChatLogResponseDTO;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import callprotector.spring.domain.chat.entity.ChatLog;
+import callprotector.spring.domain.chat.entity.ChatSession;
+import callprotector.spring.domain.chat.repository.ChatLogRepository;
+import callprotector.spring.domain.chat.dto.response.ChatLogResponseDTO;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

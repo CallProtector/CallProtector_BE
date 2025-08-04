@@ -1,4 +1,4 @@
-package callprotector.spring.domain;
+package callprotector.spring.domain.chat.entity;
 
 import callprotector.spring.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
