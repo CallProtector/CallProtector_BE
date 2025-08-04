@@ -1,6 +1,6 @@
-package callprotector.spring.repository;
+package callprotector.spring.domain.user.repository;
 
-import callprotector.spring.domain.User;
+import callprotector.spring.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

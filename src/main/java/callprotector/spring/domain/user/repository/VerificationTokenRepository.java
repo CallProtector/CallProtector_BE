@@ -1,8 +1,7 @@
-package callprotector.spring.repository;
+package callprotector.spring.domain.user.repository;
 import java.util.Optional;
 
-import callprotector.spring.domain.User;
-import callprotector.spring.domain.VerificationToken;
+import callprotector.spring.domain.user.entity.VerificationToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

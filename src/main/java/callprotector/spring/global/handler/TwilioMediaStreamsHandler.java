@@ -7,7 +7,7 @@ import callprotector.spring.service.CallSttLogService.CallSttLogService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import callprotector.spring.service.UserService.UserService;
+import callprotector.spring.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

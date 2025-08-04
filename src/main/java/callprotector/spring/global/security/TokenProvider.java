@@ -1,6 +1,6 @@
 package callprotector.spring.global.security;
 
-import callprotector.spring.domain.User;
+import callprotector.spring.domain.user.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

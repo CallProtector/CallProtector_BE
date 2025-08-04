@@ -1,10 +1,10 @@
-package callprotector.spring.web.controller;
+package callprotector.spring.domain.user.controller;
 
 import callprotector.spring.global.apiPayload.ApiResponse;
-import callprotector.spring.service.UserService.UserService;
-import callprotector.spring.web.dto.request.UserRequestDTO;
-import callprotector.spring.web.dto.request.VerifyCodeRequestDTO;
-import callprotector.spring.web.dto.response.UserResponseDTO;
+import callprotector.spring.domain.user.service.UserService;
+import callprotector.spring.domain.user.dto.request.UserRequestDTO;
+import callprotector.spring.domain.user.dto.request.VerifyCodeRequestDTO;
+import callprotector.spring.domain.user.dto.response.UserResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
