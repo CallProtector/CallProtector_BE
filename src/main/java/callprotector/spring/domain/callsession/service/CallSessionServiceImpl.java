@@ -20,7 +20,7 @@ import callprotector.spring.domain.callsttlog.service.CallSttLogService;
 import callprotector.spring.service.GeminiService.GeminiService;
 import callprotector.spring.service.OpenAiService.OpenAiSummaryService;
 import callprotector.spring.domain.user.service.UserService;
-import callprotector.spring.service.util.CallSessionCodeGenerator;
+import callprotector.spring.domain.callsession.service.helper.CallSessionCodeGenerator;
 import callprotector.spring.domain.callsession.dto.request.CallSessionRequestDTO;
 import callprotector.spring.domain.callsession.dto.response.CallSessionResponseDTO;
 
