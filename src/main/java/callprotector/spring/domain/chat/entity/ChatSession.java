@@ -29,7 +29,9 @@ public class ChatSession extends BaseEntity {
     private LocalDateTime endTime;
 
     @Column(nullable = false)
-    private Integer status;
+    private Integer status; // 1. 진행 중, 2:종료
+
+    private String title; // title 필드 추가
 
 
     @OneToMany(mappedBy = "chatSession", cascade = CascadeType.ALL, orphanRemoval = true)
