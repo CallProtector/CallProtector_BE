@@ -1,11 +1,11 @@
-package callprotector.spring.web.controller;
+package callprotector.spring.domain.chat.controller;
 
 import callprotector.spring.global.annotation.UserId;
 import callprotector.spring.global.apiPayload.ApiResponse;
 import callprotector.spring.domain.user.entity.User;
-import callprotector.spring.service.ChatSessionService.ChatSessionService;
+import callprotector.spring.domain.chat.service.ChatSessionService;
 import callprotector.spring.domain.user.service.UserService;
-import callprotector.spring.web.dto.response.ChatSessionResponseDTO;
+import callprotector.spring.domain.chat.dto.response.ChatSessionResponseDTO;
 
 import lombok.RequiredArgsConstructor;
 

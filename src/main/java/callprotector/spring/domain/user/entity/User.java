@@ -1,6 +1,6 @@
 package callprotector.spring.domain.user.entity;
 
-import callprotector.spring.domain.ChatSession;
+import callprotector.spring.domain.chat.entity.ChatSession;
 import callprotector.spring.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;

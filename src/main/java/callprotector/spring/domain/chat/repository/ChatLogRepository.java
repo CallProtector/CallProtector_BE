@@ -1,6 +1,6 @@
-package callprotector.spring.repository;
+package callprotector.spring.domain.chat.repository;
 
-import callprotector.spring.domain.ChatLog;
+import callprotector.spring.domain.chat.entity.ChatLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

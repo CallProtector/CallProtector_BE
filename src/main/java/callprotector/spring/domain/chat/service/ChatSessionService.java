@@ -1,8 +1,8 @@
-package callprotector.spring.service.ChatSessionService;
+package callprotector.spring.domain.chat.service;
 
-import callprotector.spring.domain.ChatSession;
+import callprotector.spring.domain.chat.entity.ChatSession;
 import callprotector.spring.domain.user.entity.User;
-import callprotector.spring.web.dto.response.ChatSessionResponseDTO;
+import callprotector.spring.domain.chat.dto.response.ChatSessionResponseDTO;
 
 
 public interface ChatSessionService {

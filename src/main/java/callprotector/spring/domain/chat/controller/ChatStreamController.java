@@ -1,6 +1,6 @@
-package callprotector.spring.web.controller;
+package callprotector.spring.domain.chat.controller;
 
-import callprotector.spring.service.ChatLogService.ChatLogService;
+import callprotector.spring.domain.chat.service.ChatLogService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

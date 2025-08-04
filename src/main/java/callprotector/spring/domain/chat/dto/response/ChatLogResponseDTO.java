@@ -1,9 +1,6 @@
-package callprotector.spring.web.dto.response;
+package callprotector.spring.domain.chat.dto.response;
 
 import lombok.*;
-
-import java.util.List;
-import java.util.Map;
 
 public class ChatLogResponseDTO {
 

@@ -1,6 +1,6 @@
-package callprotector.spring.service.ChatLogService;
+package callprotector.spring.domain.chat.service;
 
-import callprotector.spring.web.dto.response.ChatLogResponseDTO;
+import callprotector.spring.domain.chat.dto.response.ChatLogResponseDTO;
 
 import java.util.List;
 
