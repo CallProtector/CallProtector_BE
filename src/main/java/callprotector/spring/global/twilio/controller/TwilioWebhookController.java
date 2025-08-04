@@ -1,4 +1,4 @@
-package callprotector.spring.web.controller;
+package callprotector.spring.global.twilio.controller;
 
 import com.twilio.twiml.VoiceResponse;
 import com.twilio.twiml.voice.*;

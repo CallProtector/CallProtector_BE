@@ -1,4 +1,4 @@
-package callprotector.spring.web.dto.response;
+package callprotector.spring.global.twilio.dto;
 
 public record TwilioTokenResponseDTO(
         String twilioAccessToken,
