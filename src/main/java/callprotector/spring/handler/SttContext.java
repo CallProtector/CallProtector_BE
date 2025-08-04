@@ -11,7 +11,7 @@ import com.google.api.gax.rpc.StreamController;
 import com.google.cloud.speech.v1.*;
 import com.google.protobuf.ByteString;
 
-import callprotector.spring.client.FastClient;
+import callprotector.spring.global.client.FastClient;
 import callprotector.spring.domain.CallSttLog;
 import callprotector.spring.domain.enums.CallTrack;
 import callprotector.spring.service.CallLogService.CallLogService;

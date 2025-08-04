@@ -1,6 +1,6 @@
 package callprotector.spring.service.AbuseService;
 
-import callprotector.spring.client.FastClient;
+import callprotector.spring.global.client.FastClient;
 import callprotector.spring.domain.AbuseLog;
 import callprotector.spring.domain.AbuseType;
 import callprotector.spring.domain.CallLog;

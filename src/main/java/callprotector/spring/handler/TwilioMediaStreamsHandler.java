@@ -1,6 +1,6 @@
 package callprotector.spring.handler;
 
-import callprotector.spring.client.FastClient;
+import callprotector.spring.global.client.FastClient;
 import callprotector.spring.service.CallLogService.CallLogService;
 import callprotector.spring.service.CallSessionService.CallSessionService;
 import callprotector.spring.service.CallSttLogService.CallSttLogService;
