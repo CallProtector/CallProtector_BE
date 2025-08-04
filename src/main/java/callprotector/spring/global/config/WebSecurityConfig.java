@@ -1,6 +1,6 @@
 package callprotector.spring.global.config;
 
-import callprotector.spring.apiPayload.ApiResponse;
+import callprotector.spring.global.apiPayload.ApiResponse;
 import callprotector.spring.global.security.JwtAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;

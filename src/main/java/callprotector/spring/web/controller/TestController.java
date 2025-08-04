@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import callprotector.spring.global.annotation.UserId;
-import callprotector.spring.apiPayload.ApiResponse;
+import callprotector.spring.global.apiPayload.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

@@ -1,18 +1,12 @@
 package callprotector.spring.web.controller;
 
-import callprotector.spring.apiPayload.ApiResponse;
-import callprotector.spring.domain.User;
-import callprotector.spring.domain.VerificationToken;
-import callprotector.spring.repository.UserRepository;
-import callprotector.spring.repository.VerificationTokenRepository;
+import callprotector.spring.global.apiPayload.ApiResponse;
 import callprotector.spring.service.UserService.UserService;
 import callprotector.spring.web.dto.request.UserRequestDTO;
 import callprotector.spring.web.dto.request.VerifyCodeRequestDTO;
 import callprotector.spring.web.dto.response.UserResponseDTO;
-import com.google.common.base.Optional;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;

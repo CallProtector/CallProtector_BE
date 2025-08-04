@@ -1,7 +1,7 @@
 package callprotector.spring.web.controller;
 
 
-import callprotector.spring.apiPayload.ApiResponse;
+import callprotector.spring.global.apiPayload.ApiResponse;
 import callprotector.spring.service.AbuseService.AbuseService;
 import callprotector.spring.web.dto.request.AbuseRequestDTO;
 import callprotector.spring.web.dto.response.AbuseResponseDTO;

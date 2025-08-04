@@ -1,6 +1,6 @@
 package callprotector.spring.service.UserService;
 
-import callprotector.spring.apiPayload.exception.handler.UserNotFoundException;
+import callprotector.spring.global.apiPayload.exception.handler.UserNotFoundException;
 import callprotector.spring.domain.User;
 import callprotector.spring.domain.VerificationToken;
 import callprotector.spring.repository.UserRepository;

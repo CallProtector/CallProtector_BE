@@ -1,7 +1,7 @@
 package callprotector.spring.web.controller;
 
 import callprotector.spring.global.annotation.UserId;
-import callprotector.spring.apiPayload.ApiResponse;
+import callprotector.spring.global.apiPayload.ApiResponse;
 import callprotector.spring.domain.User;
 import callprotector.spring.service.ChatSessionService.ChatSessionService;
 import callprotector.spring.service.UserService.UserService;

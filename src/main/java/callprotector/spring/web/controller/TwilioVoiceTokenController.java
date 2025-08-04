@@ -1,7 +1,7 @@
 package callprotector.spring.web.controller;
 
 import callprotector.spring.global.annotation.UserId;
-import callprotector.spring.apiPayload.ApiResponse;
+import callprotector.spring.global.apiPayload.ApiResponse;
 import callprotector.spring.web.dto.response.TwilioTokenResponseDTO;
 
 import com.twilio.jwt.accesstoken.AccessToken;
