@@ -1,4 +1,4 @@
-package callprotector.spring.handler;
+package callprotector.spring.global.handler;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
