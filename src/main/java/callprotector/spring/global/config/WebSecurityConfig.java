@@ -60,9 +60,7 @@ public class WebSecurityConfig
                                             "/filter-abuse",
                                             "/ws/**", // 인증 인가 처리 후 삭제 예정
                                             "/api/sessions/**", // 검색 인증 인가 처리 후 삭제 예정
-                                            "/chatstream.html",  // ✅ HTML 직접 접근 허용**
-                                            "/api/chat/stream",   // ✅ SSE 엔드포인트 허용**
-                                            "/api/chat-session" // 테스트용 프론트 html 열기 위해 허용
+                                            "/chatstream.html"  // [Chat 관련] 임시 프론트 테스트용 HTML 직접 접근 허용
                                     )
                                     .permitAll()
                                     .anyRequest().authenticated()
