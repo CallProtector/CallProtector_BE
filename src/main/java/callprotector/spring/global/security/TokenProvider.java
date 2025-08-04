@@ -1,4 +1,4 @@
-package callprotector.spring.security;
+package callprotector.spring.global.security;
 
 import callprotector.spring.domain.User;
 import io.jsonwebtoken.Claims;

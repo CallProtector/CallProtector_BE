@@ -5,7 +5,7 @@ import callprotector.spring.domain.User;
 import callprotector.spring.domain.VerificationToken;
 import callprotector.spring.repository.UserRepository;
 import callprotector.spring.repository.VerificationTokenRepository;
-import callprotector.spring.security.TokenProvider;
+import callprotector.spring.global.security.TokenProvider;
 import callprotector.spring.service.EmailService.EmailService;
 import callprotector.spring.service.util.PasswordValidator;
 import callprotector.spring.web.dto.request.UserRequestDTO;
