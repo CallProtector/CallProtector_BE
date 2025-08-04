@@ -1,7 +1,7 @@
-package callprotector.spring.apiPayload.code.status;
+package callprotector.spring.global.apiPayload.code.status;
 
-import callprotector.spring.apiPayload.code.BaseErrorCode;
-import callprotector.spring.apiPayload.code.ErrorReasonDTO;
+import callprotector.spring.global.apiPayload.code.BaseErrorCode;
+import callprotector.spring.global.apiPayload.code.ErrorReasonDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;

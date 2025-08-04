@@ -1,4 +1,4 @@
-package callprotector.spring.apiPayload.code;
+package callprotector.spring.global.apiPayload.code;
 
 public interface BaseCode {
 

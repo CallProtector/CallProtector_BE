@@ -1,7 +1,7 @@
-package callprotector.spring.apiPayload;
+package callprotector.spring.global.apiPayload;
 
-import callprotector.spring.apiPayload.code.BaseCode;
-import callprotector.spring.apiPayload.code.status.SuccessStatus;
+import callprotector.spring.global.apiPayload.code.BaseCode;
+import callprotector.spring.global.apiPayload.code.status.SuccessStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;

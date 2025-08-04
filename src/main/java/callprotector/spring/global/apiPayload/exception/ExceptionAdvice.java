@@ -1,8 +1,8 @@
-package callprotector.spring.apiPayload.exception;
+package callprotector.spring.global.apiPayload.exception;
 
-import callprotector.spring.apiPayload.ApiResponse;
-import callprotector.spring.apiPayload.code.ErrorReasonDTO;
-import callprotector.spring.apiPayload.code.status.ErrorStatus;
+import callprotector.spring.global.apiPayload.ApiResponse;
+import callprotector.spring.global.apiPayload.code.ErrorReasonDTO;
+import callprotector.spring.global.apiPayload.code.status.ErrorStatus;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
