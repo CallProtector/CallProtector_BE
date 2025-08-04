@@ -1,4 +1,4 @@
-package callprotector.spring.annotation;
+package callprotector.spring.global.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

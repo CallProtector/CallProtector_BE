@@ -1,6 +1,6 @@
 package callprotector.spring.web.controller;
 
-import callprotector.spring.annotation.UserId;
+import callprotector.spring.global.annotation.UserId;
 import callprotector.spring.apiPayload.ApiResponse;
 import callprotector.spring.service.CallSessionService.CallSessionService;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
