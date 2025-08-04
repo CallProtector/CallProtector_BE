@@ -1,5 +1,8 @@
 package callprotector.spring.domain.chat.controller;
 
+import callprotector.spring.domain.chat.entity.ChatSession;
+import callprotector.spring.domain.chat.service.ChatSessionService;
+import callprotector.spring.global.annotation.UserId;
 import callprotector.spring.global.apiPayload.ApiResponse;
 import callprotector.spring.domain.chat.service.ChatLogService;
 import callprotector.spring.domain.chat.dto.response.ChatLogResponseDTO;
@@ -16,10 +19,16 @@ import java.util.List;
 public class ChatLogController {
 
     private final ChatLogService chatLogService;
+    private final ChatSessionService chatSessionService;
 
 
     @GetMapping("/session/{sessionId}")
-    public ApiResponse<List<ChatLogResponseDTO.ChatLogResponse>> getLogs(@PathVariable Long sessionId) {
+    public ApiResponse<List<ChatLogResponseDTO.ChatLogResponse>> getLogs(@UserId Long userId, @PathVariable Long sessionId) {
+        // 세션 소유권 검증
+        ChatSession session = chatSessionService.getSessionById(sessionId);
+        if (!session.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("해당 세션에 접근할 권한이 없습니다.");
+        }
         return ApiResponse.onSuccess(chatLogService.getChatLogsBySession(sessionId));
     }
 
