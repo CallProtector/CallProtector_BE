@@ -1,10 +1,10 @@
-package callprotector.spring.web.controller;
+package callprotector.spring.domain.abuse.controller;
 
 
 import callprotector.spring.global.apiPayload.ApiResponse;
-import callprotector.spring.service.AbuseService.AbuseService;
-import callprotector.spring.web.dto.request.AbuseRequestDTO;
-import callprotector.spring.web.dto.response.AbuseResponseDTO;
+import callprotector.spring.domain.abuse.service.AbuseService;
+import callprotector.spring.domain.abuse.dto.request.AbuseRequestDTO;
+import callprotector.spring.domain.abuse.dto.response.AbuseResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 

@@ -1,6 +1,6 @@
-package callprotector.spring.repository;
+package callprotector.spring.domain.abuse.repository;
 
-import callprotector.spring.domain.AbuseLog;
+import callprotector.spring.domain.abuse.entity.AbuseLog;
 import callprotector.spring.domain.CallLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 

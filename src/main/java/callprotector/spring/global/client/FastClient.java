@@ -1,6 +1,6 @@
 package callprotector.spring.global.client;
 
-import callprotector.spring.web.dto.response.AbuseResponseDTO;
+import callprotector.spring.domain.abuse.dto.response.AbuseResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;

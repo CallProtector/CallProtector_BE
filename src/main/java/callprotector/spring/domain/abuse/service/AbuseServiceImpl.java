@@ -1,14 +1,14 @@
-package callprotector.spring.service.AbuseService;
+package callprotector.spring.domain.abuse.service;
 
 import callprotector.spring.global.client.FastClient;
-import callprotector.spring.domain.AbuseLog;
-import callprotector.spring.domain.AbuseType;
+import callprotector.spring.domain.abuse.entity.AbuseLog;
+import callprotector.spring.domain.abuse.entity.AbuseType;
 import callprotector.spring.domain.CallLog;
-import callprotector.spring.domain.mapping.AbuseTypeLog;
-import callprotector.spring.repository.AbuseLogRepository;
-import callprotector.spring.repository.AbuseTypeLogRepository;
-import callprotector.spring.repository.AbuseTypeRepository;
-import callprotector.spring.web.dto.response.AbuseResponseDTO;
+import callprotector.spring.domain.abuse.entity.AbuseTypeLog;
+import callprotector.spring.domain.abuse.repository.AbuseLogRepository;
+import callprotector.spring.domain.abuse.repository.AbuseTypeLogRepository;
+import callprotector.spring.domain.abuse.repository.AbuseTypeRepository;
+import callprotector.spring.domain.abuse.dto.response.AbuseResponseDTO;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
