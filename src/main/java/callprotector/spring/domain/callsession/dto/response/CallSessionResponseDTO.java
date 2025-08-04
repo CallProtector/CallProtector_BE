@@ -1,9 +1,9 @@
-package callprotector.spring.web.dto.response;
+package callprotector.spring.domain.callsession.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-import callprotector.spring.domain.CallSession;
+import callprotector.spring.domain.callsession.entity.CallSession;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

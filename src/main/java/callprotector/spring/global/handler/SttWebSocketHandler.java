@@ -1,6 +1,6 @@
 package callprotector.spring.global.handler;
 
-import callprotector.spring.web.dto.response.CallSessionResponseDTO;
+import callprotector.spring.domain.callsession.dto.response.CallSessionResponseDTO;
 import callprotector.spring.web.dto.response.CallSttLogResponseDTO;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

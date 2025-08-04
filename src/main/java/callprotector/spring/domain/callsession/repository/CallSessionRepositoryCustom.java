@@ -1,6 +1,6 @@
-package callprotector.spring.repository;
+package callprotector.spring.domain.callsession.repository;
 
-import callprotector.spring.domain.CallSession;
+import callprotector.spring.domain.callsession.entity.CallSession;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;

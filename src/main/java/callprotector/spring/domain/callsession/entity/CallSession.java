@@ -1,4 +1,4 @@
-package callprotector.spring.domain;
+package callprotector.spring.domain.callsession.entity;
 
 import callprotector.spring.domain.user.entity.User;
 import callprotector.spring.global.common.entity.BaseEntity;

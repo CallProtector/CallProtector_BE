@@ -1,6 +1,6 @@
 package callprotector.spring.service.util;
 
-import callprotector.spring.repository.CallSessionRepository;
+import callprotector.spring.domain.callsession.repository.CallSessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
