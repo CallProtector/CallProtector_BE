@@ -1,4 +1,4 @@
-package callprotector.spring.web.dto.request;
+package callprotector.spring.domain.abuse.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

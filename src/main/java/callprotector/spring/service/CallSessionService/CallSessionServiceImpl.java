@@ -1,12 +1,16 @@
 package callprotector.spring.service.CallSessionService;
 
+import callprotector.spring.domain.abuse.entity.AbuseLog;
+import callprotector.spring.domain.abuse.entity.AbuseType;
+import callprotector.spring.domain.abuse.repository.AbuseLogRepository;
+import callprotector.spring.domain.abuse.repository.AbuseTypeLogRepository;
 import callprotector.spring.domain.user.entity.User;
 import callprotector.spring.global.apiPayload.code.status.ErrorStatus;
 import callprotector.spring.global.common.enums.CallTrack;
 import callprotector.spring.global.apiPayload.exception.handler.*;
 import callprotector.spring.global.handler.SttWebSocketHandler;
 import callprotector.spring.domain.*;
-import callprotector.spring.domain.mapping.AbuseTypeLog;
+import callprotector.spring.domain.abuse.entity.AbuseTypeLog;
 import callprotector.spring.repository.*;
 import callprotector.spring.service.CallSttLogService.CallSttLogService;
 import callprotector.spring.service.GeminiService.GeminiService;

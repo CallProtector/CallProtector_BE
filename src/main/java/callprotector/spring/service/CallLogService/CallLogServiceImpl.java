@@ -4,7 +4,7 @@ import callprotector.spring.domain.CallLog;
 import callprotector.spring.domain.CallSession;
 import callprotector.spring.global.common.enums.CallTrack;
 import callprotector.spring.repository.*;
-import callprotector.spring.service.AbuseService.AbuseService;
+import callprotector.spring.domain.abuse.service.AbuseService;
 import callprotector.spring.service.CallSessionService.CallSessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
