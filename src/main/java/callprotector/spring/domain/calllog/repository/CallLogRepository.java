@@ -1,6 +1,6 @@
-package callprotector.spring.repository;
+package callprotector.spring.domain.calllog.repository;
 
-import callprotector.spring.domain.CallLog;
+import callprotector.spring.domain.calllog.entity.CallLog;
 import callprotector.spring.domain.CallSession;
 import callprotector.spring.global.common.enums.CallTrack;
 import org.springframework.data.jpa.repository.JpaRepository;

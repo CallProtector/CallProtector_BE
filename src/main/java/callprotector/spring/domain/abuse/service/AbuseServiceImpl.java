@@ -3,7 +3,7 @@ package callprotector.spring.domain.abuse.service;
 import callprotector.spring.global.client.FastClient;
 import callprotector.spring.domain.abuse.entity.AbuseLog;
 import callprotector.spring.domain.abuse.entity.AbuseType;
-import callprotector.spring.domain.CallLog;
+import callprotector.spring.domain.calllog.entity.CallLog;
 import callprotector.spring.domain.abuse.entity.AbuseTypeLog;
 import callprotector.spring.domain.abuse.repository.AbuseLogRepository;
 import callprotector.spring.domain.abuse.repository.AbuseTypeLogRepository;
