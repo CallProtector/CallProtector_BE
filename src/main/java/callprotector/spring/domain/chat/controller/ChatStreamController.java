@@ -27,42 +27,39 @@ public class ChatStreamController {
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamChat(@RequestParam Long sessionId, @RequestParam String question) {
-
-        StringBuilder fullAnswer = new StringBuilder();
+        StringBuilder jsonBuffer = new StringBuilder();
 
         return webClient.post()
                 .uri("/stream")
                 .bodyValue(Map.of("session_id", sessionId, "question", question))
                 .retrieve()
                 .bodyToFlux(String.class)
-                .map(data -> data.replace("data:", ""))
-                .doOnNext(fullAnswer::append)
+                .map(data -> data.replace("data:", "").trim())
+                .doOnNext(chunk -> {
+                    if (chunk.startsWith("[JSON]")) {
+                        String jsonPart = chunk.replace("[JSON]", "").trim();
+                        jsonBuffer.append(jsonPart);
+                    }
+                })
                 .doOnComplete(() -> {
                     try {
-                        String cleaned = fullAnswer.toString()
-                                .replace("```json", "")
-                                .replace("```", "")
-                                .replace("data:", "")
-                                .replace("[END]", "")
-                                .trim();
+                        if (jsonBuffer.length() > 0) {
+                            log.info("📥 최종 JSON: {}", jsonBuffer);
 
-                        int firstBraceIndex = cleaned.indexOf("{");
-                        int lastBraceIndex = cleaned.lastIndexOf("}");
-                        if (firstBraceIndex == -1 || lastBraceIndex == -1) {
-                            log.error("❌ JSON 추출 실패: {}", cleaned);
-                            return;
+                            // ✅ JSON 키 공백 정리
+                            String normalizedJson = jsonBuffer.toString()
+                                    .replaceAll("\"\\s*([^\"]*?)\\s*\"\\s*:", "\"$1\":")
+                                    .replaceAll(":\\s*\"\\s*([^\"]*?)\\s*\"", ":\"$1\"");
+
+                            ObjectMapper mapper = new ObjectMapper();
+                            JsonNode jsonNode = mapper.readTree(normalizedJson);
+
+                            String answer = jsonNode.get("answer").asText();
+                            log.info("💾 DB 저장 전 answer: {}", answer);
+
+                            String sourcePages = mapper.writeValueAsString(jsonNode.get("sourcePages"));
+                            chatLogService.saveChatLog(sessionId, question, answer, sourcePages);
                         }
-                        String jsonString = cleaned.substring(firstBraceIndex, lastBraceIndex + 1);
-
-                        log.info("📥 FastAPI 응답 (정제 후): {}", jsonString);
-
-                        ObjectMapper mapper = new ObjectMapper();
-                        JsonNode jsonNode = mapper.readTree(jsonString);
-
-                        String answer = jsonNode.get("answer").asText();
-                        String sourcePages = mapper.writeValueAsString(jsonNode.get("sourcePages"));
-
-                        chatLogService.saveChatLog(sessionId, question, answer, sourcePages);
                     } catch (Exception e) {
                         log.error("❌ JSON 파싱 오류", e);
                     }
