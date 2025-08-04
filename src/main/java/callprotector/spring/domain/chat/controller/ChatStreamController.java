@@ -1,6 +1,9 @@
 package callprotector.spring.domain.chat.controller;
 
+import callprotector.spring.domain.chat.entity.ChatSession;
 import callprotector.spring.domain.chat.service.ChatLogService;
+import callprotector.spring.domain.chat.service.ChatSessionService;
+import callprotector.spring.global.ai.OpenAiService.OpenAiTitleService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,8 @@ public class ChatStreamController {
 
     private final WebClient webClient = WebClient.create("http://localhost:8000"); // FastAPI URL
     private final ChatLogService chatLogService;
+    private final ChatSessionService chatSessionService;
+    private final OpenAiTitleService openAiTitleService;
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamChat(@RequestParam Long sessionId, @RequestParam String question) {
@@ -59,6 +64,12 @@ public class ChatStreamController {
 
                             String sourcePages = mapper.writeValueAsString(jsonNode.get("sourcePages"));
                             chatLogService.saveChatLog(sessionId, question, answer, sourcePages);
+
+                            // ✅ 첫 질문이면 세션 타이틀 생성
+                            ChatSession session = chatSessionService.getSessionById(sessionId);
+                            if (session.getTitle() == null || session.getTitle().isBlank()) {
+                                chatSessionService.updateTitleIfEmpty(session, question);
+                            }
                         }
                     } catch (Exception e) {
                         log.error("❌ JSON 파싱 오류", e);

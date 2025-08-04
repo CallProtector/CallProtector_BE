@@ -31,6 +31,7 @@ public class ChatSession extends BaseEntity {
     @Column(nullable = false)
     private Integer status; // 1. 진행 중, 2:종료
 
+    @Setter
     private String title; // title 필드 추가
 
 
