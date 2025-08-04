@@ -1,4 +1,4 @@
-package callprotector.spring.service.util;
+package callprotector.spring.global.util;
 
 import java.util.regex.Pattern;
 

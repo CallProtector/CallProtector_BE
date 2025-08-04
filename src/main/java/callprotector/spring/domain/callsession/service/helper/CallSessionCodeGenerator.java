@@ -1,4 +1,4 @@
-package callprotector.spring.service.util;
+package callprotector.spring.domain.callsession.service.helper;
 
 import callprotector.spring.domain.callsession.repository.CallSessionRepository;
 import lombok.RequiredArgsConstructor;
