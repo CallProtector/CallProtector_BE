@@ -1,4 +1,4 @@
-package callprotector.spring.client;
+package callprotector.spring.global.client;
 
 import callprotector.spring.web.dto.response.AbuseResponseDTO;
 import lombok.RequiredArgsConstructor;

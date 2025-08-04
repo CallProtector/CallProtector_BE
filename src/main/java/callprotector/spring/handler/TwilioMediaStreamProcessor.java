@@ -11,8 +11,7 @@ import org.springframework.web.socket.WebSocketSession;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import callprotector.spring.client.FastClient;
-import callprotector.spring.domain.User;
+import callprotector.spring.global.client.FastClient;
 import callprotector.spring.domain.enums.CallTrack;
 import callprotector.spring.service.CallLogService.CallLogService;
 import callprotector.spring.service.CallSessionService.CallSessionService;
