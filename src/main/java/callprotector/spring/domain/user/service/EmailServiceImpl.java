@@ -1,4 +1,4 @@
-package callprotector.spring.service.EmailService;
+package callprotector.spring.domain.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
