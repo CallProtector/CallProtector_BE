@@ -1,7 +1,7 @@
 package callprotector.spring.service.ChatSessionService;
 
 import callprotector.spring.domain.ChatSession;
-import callprotector.spring.domain.User;
+import callprotector.spring.domain.user.entity.User;
 import callprotector.spring.repository.ChatSessionRepository;
 import callprotector.spring.web.dto.response.ChatSessionResponseDTO;
 import lombok.RequiredArgsConstructor;

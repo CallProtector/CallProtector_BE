@@ -1,15 +1,15 @@
-package callprotector.spring.service.UserService;
+package callprotector.spring.domain.user.service;
 
 import callprotector.spring.global.apiPayload.exception.handler.UserNotFoundException;
-import callprotector.spring.domain.User;
-import callprotector.spring.domain.VerificationToken;
-import callprotector.spring.repository.UserRepository;
-import callprotector.spring.repository.VerificationTokenRepository;
+import callprotector.spring.domain.user.entity.User;
+import callprotector.spring.domain.user.entity.VerificationToken;
+import callprotector.spring.domain.user.repository.UserRepository;
+import callprotector.spring.domain.user.repository.VerificationTokenRepository;
 import callprotector.spring.global.security.TokenProvider;
 import callprotector.spring.service.EmailService.EmailService;
 import callprotector.spring.service.util.PasswordValidator;
-import callprotector.spring.web.dto.request.UserRequestDTO;
-import callprotector.spring.web.dto.response.UserResponseDTO;
+import callprotector.spring.domain.user.dto.request.UserRequestDTO;
+import callprotector.spring.domain.user.dto.response.UserResponseDTO;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

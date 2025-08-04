@@ -1,5 +1,6 @@
 package callprotector.spring.service.CallSessionService;
 
+import callprotector.spring.domain.user.entity.User;
 import callprotector.spring.global.apiPayload.code.status.ErrorStatus;
 import callprotector.spring.global.common.enums.CallTrack;
 import callprotector.spring.global.apiPayload.exception.handler.*;
@@ -10,7 +11,7 @@ import callprotector.spring.repository.*;
 import callprotector.spring.service.CallSttLogService.CallSttLogService;
 import callprotector.spring.service.GeminiService.GeminiService;
 import callprotector.spring.service.OpenAiService.OpenAiSummaryService;
-import callprotector.spring.service.UserService.UserService;
+import callprotector.spring.domain.user.service.UserService;
 import callprotector.spring.service.util.CallSessionCodeGenerator;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;

@@ -1,8 +1,8 @@
-package callprotector.spring.service.UserService;
+package callprotector.spring.domain.user.service;
 
-import callprotector.spring.domain.User;
-import callprotector.spring.web.dto.request.UserRequestDTO;
-import callprotector.spring.web.dto.response.UserResponseDTO;
+import callprotector.spring.domain.user.entity.User;
+import callprotector.spring.domain.user.dto.request.UserRequestDTO;
+import callprotector.spring.domain.user.dto.response.UserResponseDTO;
 
 public interface UserService {
 

@@ -16,7 +16,7 @@ import callprotector.spring.global.common.enums.CallTrack;
 import callprotector.spring.service.CallLogService.CallLogService;
 import callprotector.spring.service.CallSessionService.CallSessionService;
 import callprotector.spring.service.CallSttLogService.CallSttLogService;
-import callprotector.spring.service.UserService.UserService;
+import callprotector.spring.domain.user.service.UserService;
 import callprotector.spring.web.dto.request.CallSessionRequestDTO;
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
 
