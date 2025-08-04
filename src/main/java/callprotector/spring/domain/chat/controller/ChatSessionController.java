@@ -23,9 +23,7 @@ public class ChatSessionController {
     private final UserService userService;
 
     @PostMapping
-    public ApiResponse<ChatSessionResponseDTO.ChatSessionResponse> createSession(
-        @UserId Long userId
-    ) {
+    public ApiResponse<ChatSessionResponseDTO.ChatSessionResponse> createSession(@UserId Long userId) {
         User user = userService.getUserById(userId);
         return ApiResponse.onSuccess(chatSessionService.createSession(user));
     }
