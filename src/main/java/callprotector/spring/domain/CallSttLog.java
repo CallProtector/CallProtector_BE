@@ -2,7 +2,7 @@ package callprotector.spring.domain;
 
 import java.time.LocalDateTime;
 
-import callprotector.spring.domain.enums.CallTrack;
+import callprotector.spring.global.common.enums.CallTrack;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;

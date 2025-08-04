@@ -3,7 +3,7 @@ package callprotector.spring.service.CallSttLogService;
 import java.util.List;
 
 import callprotector.spring.domain.CallSttLog;
-import callprotector.spring.domain.enums.CallTrack;
+import callprotector.spring.global.common.enums.CallTrack;
 
 public interface CallSttLogService {
     CallSttLog saveTranscriptLog(Long callSessionId, CallTrack track, String script, boolean isFinal, boolean isAbuse, String abuseType);

@@ -13,7 +13,7 @@ import com.google.protobuf.ByteString;
 
 import callprotector.spring.global.client.FastClient;
 import callprotector.spring.domain.CallSttLog;
-import callprotector.spring.domain.enums.CallTrack;
+import callprotector.spring.global.common.enums.CallTrack;
 import callprotector.spring.service.CallLogService.CallLogService;
 import callprotector.spring.service.CallSessionService.CallSessionService;
 import callprotector.spring.service.CallSttLogService.CallSttLogService;

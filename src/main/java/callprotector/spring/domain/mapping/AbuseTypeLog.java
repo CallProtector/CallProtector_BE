@@ -2,8 +2,7 @@ package callprotector.spring.domain.mapping;
 
 import callprotector.spring.domain.AbuseLog;
 import callprotector.spring.domain.AbuseType;
-import callprotector.spring.domain.CallLog;
-import callprotector.spring.domain.common.BaseEntity;
+import callprotector.spring.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
