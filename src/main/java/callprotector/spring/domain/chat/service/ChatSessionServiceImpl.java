@@ -4,12 +4,14 @@ import callprotector.spring.domain.chat.entity.ChatSession;
 import callprotector.spring.domain.user.entity.User;
 import callprotector.spring.domain.chat.repository.ChatSessionRepository;
 import callprotector.spring.domain.chat.dto.response.ChatSessionResponseDTO;
+import callprotector.spring.global.ai.OpenAiService.OpenAiTitleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -17,6 +19,7 @@ import java.time.LocalDateTime;
 public class ChatSessionServiceImpl implements ChatSessionService{
 
     private final ChatSessionRepository chatSessionRepository;
+    private final OpenAiTitleService openAiTitleService;
 
 
     @Override
@@ -42,7 +45,30 @@ public class ChatSessionServiceImpl implements ChatSessionService{
         return ChatSessionResponseDTO.ChatSessionResponse.builder()
                 .sessionId(saved.getId())
                 .startTime(saved.getStartTime().toString())
+                .title(saved.getTitle()) // title 추가
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void updateTitleIfEmpty(ChatSession session, String firstQuestion) {
+        if (session.getTitle() == null || session.getTitle().isBlank()) {
+            String generatedTitle = openAiTitleService.generateTitle(firstQuestion);
+            session.setTitle(generatedTitle);
+            chatSessionRepository.save(session);
+        }
+
+    }
+
+    @Override
+    public List<ChatSessionResponseDTO.ChatSessionResponse> getSessionList(Long userId) {
+        return chatSessionRepository.findByUserIdOrderByStartTimeDesc(userId).stream()
+                .map(session -> ChatSessionResponseDTO.ChatSessionResponse.builder()
+                        .sessionId(session.getId())
+                        .title(session.getTitle())
+                        .startTime(session.getStartTime().toString())
+                        .build())
+                .toList();
     }
 
 }

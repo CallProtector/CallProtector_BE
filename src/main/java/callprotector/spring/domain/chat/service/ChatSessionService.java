@@ -4,12 +4,17 @@ import callprotector.spring.domain.chat.entity.ChatSession;
 import callprotector.spring.domain.user.entity.User;
 import callprotector.spring.domain.chat.dto.response.ChatSessionResponseDTO;
 
+import java.util.List;
+
 
 public interface ChatSessionService {
 
-    public ChatSession getSessionById(Long sessionId);
+    ChatSession getSessionById(Long sessionId);
 
     ChatSessionResponseDTO.ChatSessionResponse createSession(User user);
 
+    public void updateTitleIfEmpty(ChatSession session, String firstQuestion);
+
+    public List<ChatSessionResponseDTO.ChatSessionResponse> getSessionList(Long userId);
 
 }

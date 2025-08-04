@@ -14,6 +14,7 @@ public class ChatSessionResponseDTO {
     public static class ChatSessionResponse{
         private Long sessionId;
         private String startTime;
+        private String title;
     }
 
 }

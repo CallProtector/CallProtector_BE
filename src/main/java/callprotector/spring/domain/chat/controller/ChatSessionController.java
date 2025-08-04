@@ -1,5 +1,6 @@
 package callprotector.spring.domain.chat.controller;
 
+import callprotector.spring.domain.chat.entity.ChatSession;
 import callprotector.spring.global.annotation.UserId;
 import callprotector.spring.global.apiPayload.ApiResponse;
 import callprotector.spring.domain.user.entity.User;
@@ -9,9 +10,9 @@ import callprotector.spring.domain.chat.dto.response.ChatSessionResponseDTO;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,4 +29,15 @@ public class ChatSessionController {
         User user = userService.getUserById(userId);
         return ApiResponse.onSuccess(chatSessionService.createSession(user));
     }
+
+    
+    // userId에 해당하는 채팅세션 조회 API
+    @GetMapping("/list")
+    public ApiResponse<List<ChatSessionResponseDTO.ChatSessionResponse>>  getSessionList(@UserId Long userId) {
+        return ApiResponse.onSuccess(chatSessionService.getSessionList(userId));
+    }
+
+
+
+
 }
