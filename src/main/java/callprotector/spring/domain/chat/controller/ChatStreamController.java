@@ -3,7 +3,7 @@ package callprotector.spring.domain.chat.controller;
 import callprotector.spring.domain.chat.entity.ChatSession;
 import callprotector.spring.domain.chat.service.ChatLogService;
 import callprotector.spring.domain.chat.service.ChatSessionService;
-import callprotector.spring.global.ai.OpenAiService.OpenAiTitleService;
+import callprotector.spring.global.annotation.UserId;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -28,10 +28,17 @@ public class ChatStreamController {
     private final WebClient webClient = WebClient.create("http://localhost:8000"); // FastAPI URL
     private final ChatLogService chatLogService;
     private final ChatSessionService chatSessionService;
-    private final OpenAiTitleService openAiTitleService;
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> streamChat(@RequestParam Long sessionId, @RequestParam String question) {
+    public Flux<String> streamChat(@UserId Long userId, @RequestParam Long sessionId, @RequestParam String question) {
+
+        // 세션 소유권 검증
+        ChatSession session = chatSessionService.getSessionById(sessionId);
+        if (!session.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("해당 세션에 접근할 권한이 없습니다.");
+        }
+
+
         StringBuilder jsonBuffer = new StringBuilder();
 
         return webClient.post()
@@ -66,7 +73,6 @@ public class ChatStreamController {
                             chatLogService.saveChatLog(sessionId, question, answer, sourcePages);
 
                             // ✅ 첫 질문이면 세션 타이틀 생성
-                            ChatSession session = chatSessionService.getSessionById(sessionId);
                             if (session.getTitle() == null || session.getTitle().isBlank()) {
                                 chatSessionService.updateTitleIfEmpty(session, question);
                             }
