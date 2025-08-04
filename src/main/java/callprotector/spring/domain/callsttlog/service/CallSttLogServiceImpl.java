@@ -1,8 +1,8 @@
-package callprotector.spring.service.CallSttLogService;
+package callprotector.spring.domain.callsttlog.service;
 
-import callprotector.spring.domain.CallSttLog;
+import callprotector.spring.domain.callsttlog.entity.CallSttLog;
 import callprotector.spring.global.common.enums.CallTrack;
-import callprotector.spring.repository.CallSttLogRepository;
+import callprotector.spring.domain.callsttlog.repository.CallSttLogRepository;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

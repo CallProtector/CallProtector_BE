@@ -3,7 +3,7 @@ package callprotector.spring.global.handler;
 import callprotector.spring.global.client.FastClient;
 import callprotector.spring.domain.calllog.service.CallLogService;
 import callprotector.spring.domain.callsession.service.CallSessionService;
-import callprotector.spring.service.CallSttLogService.CallSttLogService;
+import callprotector.spring.domain.callsttlog.service.CallSttLogService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

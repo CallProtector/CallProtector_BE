@@ -1,8 +1,8 @@
 package callprotector.spring.global.elasticsearch;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import callprotector.spring.domain.CallSttLog;
-import callprotector.spring.repository.CallSttLogRepository;
+import callprotector.spring.domain.callsttlog.entity.CallSttLog;
+import callprotector.spring.domain.callsttlog.repository.CallSttLogRepository;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;

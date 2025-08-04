@@ -15,7 +15,7 @@ import callprotector.spring.global.client.FastClient;
 import callprotector.spring.global.common.enums.CallTrack;
 import callprotector.spring.domain.calllog.service.CallLogService;
 import callprotector.spring.domain.callsession.service.CallSessionService;
-import callprotector.spring.service.CallSttLogService.CallSttLogService;
+import callprotector.spring.domain.callsttlog.service.CallSttLogService;
 import callprotector.spring.domain.user.service.UserService;
 import callprotector.spring.domain.callsession.dto.request.CallSessionRequestDTO;
 import callprotector.spring.domain.callsession.dto.response.CallSessionResponseDTO;
