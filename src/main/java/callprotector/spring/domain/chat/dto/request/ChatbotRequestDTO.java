@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+// request 폴더 살리려고 일단 냅둠
 public class ChatbotRequestDTO {
 
     @Builder
