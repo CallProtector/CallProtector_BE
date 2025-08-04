@@ -5,16 +5,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
-public class ChatbotResponseDTO {
+public class SourcePageDTO {
 
     @Builder
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ChatbotResponse{
-        private String answer;
-        private List<String> sourcePages;
+    public static class SourcePage{
+        private String 유형;
+        private String 관련법률;
     }
 }
