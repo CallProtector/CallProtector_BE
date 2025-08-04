@@ -1,4 +1,4 @@
-package callprotector.spring.domain;
+package callprotector.spring.domain.callsttlog.entity;
 
 import java.time.LocalDateTime;
 

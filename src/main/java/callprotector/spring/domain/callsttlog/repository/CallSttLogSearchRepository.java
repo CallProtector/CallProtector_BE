@@ -1,6 +1,6 @@
-package callprotector.spring.repository;
+package callprotector.spring.domain.callsttlog.repository;
 
-import callprotector.spring.domain.CallSttLog;
+import callprotector.spring.domain.callsttlog.entity.CallSttLog;
 
 import java.util.List;
 

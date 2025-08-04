@@ -1,6 +1,6 @@
-package callprotector.spring.repository;
+package callprotector.spring.domain.callsttlog.repository;
 
-import callprotector.spring.domain.CallSttLog;
+import callprotector.spring.domain.callsttlog.entity.CallSttLog;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;

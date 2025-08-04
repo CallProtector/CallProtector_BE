@@ -1,8 +1,8 @@
-package callprotector.spring.service.CallSttLogService;
+package callprotector.spring.domain.callsttlog.service;
 
 import java.util.List;
 
-import callprotector.spring.domain.CallSttLog;
+import callprotector.spring.domain.callsttlog.entity.CallSttLog;
 import callprotector.spring.global.common.enums.CallTrack;
 
 public interface CallSttLogService {
