@@ -1,4 +1,4 @@
-package callprotector.spring.service.CallLogService;
+package callprotector.spring.domain.calllog.service;
 
 import callprotector.spring.global.common.enums.CallTrack;
 

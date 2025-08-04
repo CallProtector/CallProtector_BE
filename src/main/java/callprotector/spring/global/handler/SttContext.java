@@ -14,7 +14,7 @@ import com.google.protobuf.ByteString;
 import callprotector.spring.global.client.FastClient;
 import callprotector.spring.domain.CallSttLog;
 import callprotector.spring.global.common.enums.CallTrack;
-import callprotector.spring.service.CallLogService.CallLogService;
+import callprotector.spring.domain.calllog.service.CallLogService;
 import callprotector.spring.service.CallSessionService.CallSessionService;
 import callprotector.spring.service.CallSttLogService.CallSttLogService;
 import callprotector.spring.web.dto.response.CallSttLogResponseDTO;

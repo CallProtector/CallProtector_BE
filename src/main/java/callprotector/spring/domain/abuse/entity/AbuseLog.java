@@ -1,6 +1,6 @@
 package callprotector.spring.domain.abuse.entity;
 
-import callprotector.spring.domain.CallLog;
+import callprotector.spring.domain.calllog.entity.CallLog;
 import callprotector.spring.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;

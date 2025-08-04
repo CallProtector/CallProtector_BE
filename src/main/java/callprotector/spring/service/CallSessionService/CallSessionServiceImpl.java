@@ -4,6 +4,8 @@ import callprotector.spring.domain.abuse.entity.AbuseLog;
 import callprotector.spring.domain.abuse.entity.AbuseType;
 import callprotector.spring.domain.abuse.repository.AbuseLogRepository;
 import callprotector.spring.domain.abuse.repository.AbuseTypeLogRepository;
+import callprotector.spring.domain.calllog.entity.CallLog;
+import callprotector.spring.domain.calllog.repository.CallLogRepository;
 import callprotector.spring.domain.user.entity.User;
 import callprotector.spring.global.apiPayload.code.status.ErrorStatus;
 import callprotector.spring.global.common.enums.CallTrack;

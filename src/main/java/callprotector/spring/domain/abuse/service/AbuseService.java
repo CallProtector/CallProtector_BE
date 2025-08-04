@@ -1,6 +1,6 @@
 package callprotector.spring.domain.abuse.service;
 
-import callprotector.spring.domain.CallLog;
+import callprotector.spring.domain.calllog.entity.CallLog;
 import callprotector.spring.domain.abuse.dto.response.AbuseResponseDTO;
 
 public interface AbuseService {

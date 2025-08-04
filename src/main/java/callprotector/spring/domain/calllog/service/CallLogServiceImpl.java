@@ -1,9 +1,9 @@
-package callprotector.spring.service.CallLogService;
+package callprotector.spring.domain.calllog.service;
 
-import callprotector.spring.domain.CallLog;
+import callprotector.spring.domain.calllog.entity.CallLog;
 import callprotector.spring.domain.CallSession;
+import callprotector.spring.domain.calllog.repository.CallLogRepository;
 import callprotector.spring.global.common.enums.CallTrack;
-import callprotector.spring.repository.*;
 import callprotector.spring.domain.abuse.service.AbuseService;
 import callprotector.spring.service.CallSessionService.CallSessionService;
 import lombok.RequiredArgsConstructor;

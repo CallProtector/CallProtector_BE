@@ -1,5 +1,6 @@
-package callprotector.spring.domain;
+package callprotector.spring.domain.calllog.entity;
 
+import callprotector.spring.domain.CallSession;
 import callprotector.spring.global.common.entity.BaseEntity;
 import callprotector.spring.global.common.enums.CallTrack;
 import jakarta.persistence.*;
