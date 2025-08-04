@@ -1,4 +1,4 @@
-package callprotector.spring.config;
+package callprotector.spring.global.config;
 
 import com.twilio.Twilio;
 import jakarta.annotation.PostConstruct;

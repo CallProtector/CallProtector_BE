@@ -1,6 +1,6 @@
 package callprotector.spring.service.OpenAiService;
 
-import callprotector.spring.config.OpenAiConfig;
+import callprotector.spring.global.config.OpenAiConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
