@@ -1,4 +1,4 @@
-package callprotector.spring.service.GeminiService;
+package callprotector.spring.global.ai.GeminiService;
 
 import java.io.IOException;
 

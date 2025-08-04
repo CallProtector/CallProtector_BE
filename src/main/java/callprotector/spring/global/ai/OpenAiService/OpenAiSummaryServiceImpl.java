@@ -1,4 +1,4 @@
-package callprotector.spring.service.OpenAiService;
+package callprotector.spring.global.ai.OpenAiService;
 
 import callprotector.spring.global.config.OpenAiConfig;
 import lombok.RequiredArgsConstructor;
