@@ -1,4 +1,4 @@
-package callprotector.spring.security;
+package callprotector.spring.global.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
