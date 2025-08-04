@@ -1,4 +1,4 @@
-package callprotector.spring.config;
+package callprotector.spring.global.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;

@@ -1,4 +1,4 @@
-package callprotector.spring.config;
+package callprotector.spring.global.config;
 
 import callprotector.spring.apiPayload.ApiResponse;
 import callprotector.spring.security.JwtAuthenticationFilter;

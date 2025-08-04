@@ -1,4 +1,4 @@
-package callprotector.spring.config;
+package callprotector.spring.global.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;

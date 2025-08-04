@@ -1,4 +1,4 @@
-package callprotector.spring.config;
+package callprotector.spring.global.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
