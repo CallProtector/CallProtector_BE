@@ -1,4 +1,4 @@
-package callprotector.spring.handler;
+package callprotector.spring.global.handler;
 
 import callprotector.spring.web.dto.response.CallSessionResponseDTO;
 import callprotector.spring.web.dto.response.CallSttLogResponseDTO;
