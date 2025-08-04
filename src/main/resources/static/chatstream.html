@@ -96,15 +96,20 @@
                         const parsed = JSON.parse(cleanedJson); // ✅ JSON만 파싱
 
                         responseDiv.innerHTML = `
-                <p><strong>💬 답변:</strong><br>${parsed.answer}</p>
-                <p><strong>📚 출처:</strong></p>
-                <ul style="margin-top:5px; margin-bottom:5px;">
-                    ${parsed.sourcePages.map(sp => `
-                        <li>📌 유형: ${sp["유형"]}<br>
-                        ⚖ 관련 법률: ${sp["관련 법률"] || sp["관련법률"] || "없음"}</li>
-                    `).join("")}
-                </ul>
-            `;
+                            <p style="margin-bottom: 8px;"><strong>💬 답변:</strong><br>${parsed.answer}</p>
+                            <p style="margin-bottom: 4px;"><strong>📚 출처:</strong></p>
+                            <ul style="margin: 0; padding: 0; list-style-type: none;">
+                                ${parsed.sourcePages.map(sp => `
+                                    <li style="margin-bottom: 4px;">
+                                        <div style="display: flex; flex-direction: column; gap: 2px; align-items: flex-start;">
+                                            <span>📌 <strong>유형:</strong> ${sp["유형"]}</span>
+                                            <span>⚖ <strong>관련 법률:</strong> ${sp["관련 법률"] || sp["관련법률"] || "없음"}</span>
+                                        </div>
+                                    </li>
+                                `).join("")}
+                            </ul>
+                        `;
+
                     } catch (e) {
                         console.error("JSON 파싱 오류:", e);
                         responseDiv.innerHTML = "⚠️ 응답 파싱 중 오류 발생";
