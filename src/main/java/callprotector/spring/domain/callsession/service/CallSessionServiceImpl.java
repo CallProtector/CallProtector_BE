@@ -157,12 +157,12 @@ public class CallSessionServiceImpl implements CallSessionService {
 
     @Override
     @Transactional(readOnly = true)
-    public CallSessionResponseDTO.CallSessionPagingDTO getCallSessions(String sortBy, String order, Long cursorId, int size) {
+    public CallSessionResponseDTO.CallSessionPagingDTO getCallSessions(Long userId, String sortBy, String order, Long cursorId, int size) {
         Sort.Direction direction = order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
 
         List<CallSession> sessions = (cursorId == null)
-                ? callSessionRepository.findFirstPage(sortBy, size + 1, direction)
-                : callSessionRepository.findByCursor(sortBy, cursorId, size + 1, direction);
+                ? callSessionRepository.findFirstPageByUserId(userId, sortBy, size + 1, direction)
+                : callSessionRepository.findByUserIdAndCursor(userId, sortBy, cursorId, size + 1, direction);
 
         boolean hasNext = sessions.size() > size;
         Long nextCursorId = hasNext ? sessions.get(size - 1).getId() : null;
@@ -173,7 +173,7 @@ public class CallSessionServiceImpl implements CallSessionService {
                     String category = getAbuseCategoryForSession(session);
                     return CallSessionResponseDTO.CallSessionListDTO.fromEntity(session, category);
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         return CallSessionResponseDTO.CallSessionPagingDTO.builder()
                 .sessions(resultList)
@@ -184,12 +184,12 @@ public class CallSessionServiceImpl implements CallSessionService {
 
     @Override
     @Transactional(readOnly = true)
-    public CallSessionResponseDTO.CallSessionPagingDTO getSessionsByAbuseCategory(String category, Long cursorId, int size, String order) {
+    public CallSessionResponseDTO.CallSessionPagingDTO getSessionsByAbuseCategory(Long userId, String category, Long cursorId, int size, String order) {
         validateAbuseCategory(category);
 
         Sort.Direction direction = order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
 
-        List<CallSession> sessions = callSessionRepository.findSessionsByAbuseCategory(category, cursorId, size + 1, direction);
+        List<CallSession> sessions = callSessionRepository.findSessionsByAbuseCategoryAndUserId(category, userId, cursorId, size + 1, direction);
 
         boolean hasNext = sessions.size() > size;
         Long nextCursorId = hasNext ? sessions.get(size - 1).getId() : null;
@@ -211,7 +211,7 @@ public class CallSessionServiceImpl implements CallSessionService {
 
     @Override
     @Transactional(readOnly = true)
-    public CallSessionResponseDTO.CallSessionPagingDTO searchCallSessions(String keyword, String category, String order, Long cursorId, int size) {
+    public CallSessionResponseDTO.CallSessionPagingDTO searchCallSessions(Long userId, String keyword, String category, String order, Long cursorId, int size) {
         // Elasticsearch에서 CallSttLog 검색
         List<CallSttLog> sttLogs = callSttLogSearchRepository.searchByKeywordAndFilters(keyword, category, order, cursorId, size + 1);
 
@@ -220,7 +220,7 @@ public class CallSessionServiceImpl implements CallSessionService {
                 .collect(Collectors.toMap(
                         CallSttLog::getCallSessionId,
                         CallSttLog::getScript,
-                        (existing, replacement) -> existing // 중복 키 발생 시 첫 번째 script 유지
+                        (existing, replacement) -> existing
                 ));
 
         // CallSession ID 추출
@@ -230,7 +230,7 @@ public class CallSessionServiceImpl implements CallSessionService {
 
         // 세션 정렬 후 조회
         Sort.Direction direction = order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-        List<CallSession> sessions = callSessionRepository.findByIdsWithOrder(sessionIds, direction);
+        List<CallSession> sessions = callSessionRepository.findByIdsWithOrderAndUserId(sessionIds, direction, userId);
 
         // DTO 변환
         boolean hasNext = sessionIds.size() > size;
@@ -246,7 +246,7 @@ public class CallSessionServiceImpl implements CallSessionService {
                 })
                 .toList();
 
-        log.info("📌 keyword: {}, category: {}, order: {}, cursorId: {}, size: {}", keyword, category, order, cursorId, size); //추가
+        log.info("📌 keyword: {}, category: {}, order: {}, cursorId: {}, size={}, userId={}", keyword, category, order, cursorId, size, userId);
 
         return CallSessionResponseDTO.CallSessionPagingDTO.builder()
                 .sessions(resultList)
@@ -257,9 +257,8 @@ public class CallSessionServiceImpl implements CallSessionService {
 
 
     @Override
-    public String generateSummaryByOpenAi(Long callSessionId,  Long userId) {
+    public String generateSummaryByOpenAi(Long callSessionId, Long userId) {
         CallSession session = findCallSessionByIdAndUserId(callSessionId, userId);
-
 
         if (session.getSummarySimple() != null && !session.getSummarySimple().isBlank()) {
             log.info("✅ 기존 요약 반환 - CallSession ID: {}", callSessionId);
