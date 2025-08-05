@@ -44,26 +44,25 @@ public class CallSessionController {
         @Parameter(description = "폭언 유형 카테고리 (verbalAbuse | sexualHarass | threat)")
         @RequestParam(required = false) String category
     ) {
-        // TODO: 검색 시, 해당 유저의 상담 내역만 조회할 수 있도록 처리
         // 키워드가 존재하는 경우: Elasticsearch 검색 수행
         if (keyword != null && !keyword.isBlank()) {
             log.info("🔍 키워드 검색 요청 - keyword={}, category={}, order={}, cursorId={}, size={}",
                     keyword, category, order, cursorId, size);
             return ApiResponse.onSuccess(
-                    callSessionService.searchCallSessions(keyword, category, order, cursorId, size)
+                    callSessionService.searchCallSessions(userId, keyword, category, order, cursorId, size)
             );
         }
 
         // 카테고리만 존재하는 경우: 필터 기반 조회
         if (category != null && !category.isBlank()) {
             return ApiResponse.onSuccess(
-                    callSessionService.getSessionsByAbuseCategory(category, cursorId, size, order)
+                    callSessionService.getSessionsByAbuseCategory(userId, category, cursorId, size, order)
             );
         }
 
         // 기본 전체 조회 (정렬 기준: ID)
         return ApiResponse.onSuccess(
-                callSessionService.getCallSessions("id", order, cursorId, size)
+                callSessionService.getCallSessions(userId, "id", order, cursorId, size)
         );
     }
 
