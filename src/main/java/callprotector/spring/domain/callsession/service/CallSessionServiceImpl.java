@@ -298,8 +298,6 @@ public class CallSessionServiceImpl implements CallSessionService {
             log.info("✅ 요약 생성 완료 - CallSession ID: {}", callSessionId);
 
             session.updateSummarySimple(summary);
-            session.updateSummaryGenerated(true);
-            session.updateSummaryGeneratedAt(LocalDateTime.now());
             callSessionRepository.save(session);
 
             return summary;

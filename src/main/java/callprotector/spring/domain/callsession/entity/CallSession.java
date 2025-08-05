@@ -56,10 +56,6 @@ public class CallSession extends BaseEntity {
     @Column(name= "summary_detailed", length = 2000)
     private String summaryDetailed;
 
-    private Boolean summaryGenerated;
-
-    private LocalDateTime summaryGeneratedAt;
-
     public void updateAbuseCnt() {
         this.totalAbuseCnt = (this.totalAbuseCnt == null ? 0 : this.totalAbuseCnt) + 1;
     }
@@ -78,14 +74,6 @@ public class CallSession extends BaseEntity {
 
     public void updateSummaryDetailed(String summaryDetailed) {
         this.summaryDetailed = summaryDetailed;
-    }
-
-    public void updateSummaryGenerated(Boolean summaryGenerated) {
-        this.summaryGenerated = summaryGenerated;
-    }
-
-    public void updateSummaryGeneratedAt(LocalDateTime summaryGeneratedAt) {
-        this.summaryGeneratedAt = summaryGeneratedAt;
     }
 
     public void updateUser(User user) {
