@@ -6,9 +6,9 @@ import org.springframework.data.domain.Sort;
 import java.util.List;
 
 public interface CallSessionRepositoryCustom {
-    List<CallSession> findFirstPage(String sortBy, int limit, Sort.Direction direction);
-    List<CallSession> findByCursor(String sortBy, Object cursorValue, int limit, Sort.Direction direction);
+    List<CallSession> findFirstPageByUserId(Long userId, String sortBy, int limit, Sort.Direction direction);
+    List<CallSession> findByUserIdAndCursor(Long userId, String sortBy, Object cursorValue, int limit, Sort.Direction direction);
 
-    List<CallSession> findSessionsByAbuseCategory(String category, Long cursorId, int limit, Sort.Direction direction);
-    List<CallSession> findByIdsWithOrder(List<Long> ids, Sort.Direction direction);
+    List<CallSession> findSessionsByAbuseCategoryAndUserId(String category, Long userId, Long cursorId, int limit, Sort.Direction direction);
+    List<CallSession> findByIdsWithOrderAndUserId(List<Long> ids, Sort.Direction direction, Long userId);
 }

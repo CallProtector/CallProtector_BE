@@ -18,28 +18,31 @@ public class CallSessionRepositoryImpl implements CallSessionRepositoryCustom {
     private final EntityManager em;
 
     @Override
-    public List<CallSession> findFirstPage(String sortBy, int limit, Sort.Direction direction) {
-        String jpql = "SELECT c FROM CallSession c ORDER BY c." + sortBy + " " + direction.name();
+    public List<CallSession> findFirstPageByUserId(Long userId, String sortBy, int limit, Sort.Direction direction) {
+        String jpql = "SELECT c FROM CallSession c WHERE c.user.id = :userId ORDER BY c." + sortBy + " " + direction.name();
         return em.createQuery(jpql, CallSession.class)
+                .setParameter("userId", userId)
                 .setMaxResults(limit)
                 .getResultList();
     }
 
     @Override
-    public List<CallSession> findByCursor(String sortBy, Object cursorValue, int limit, Sort.Direction direction) {
+    public List<CallSession> findByUserIdAndCursor(Long userId, String sortBy, Object cursorValue, int limit, Sort.Direction direction) {
         String operator = direction.isAscending() ? ">" : "<";
 
         String jpql = "SELECT c FROM CallSession c " +
-                "WHERE c." + sortBy + " " + operator + " :cursorValue " +
+                "WHERE c.user.id = :userId AND c." + sortBy + " " + operator + " :cursorValue " +
                 "ORDER BY c." + sortBy + " " + direction.name();
 
         return em.createQuery(jpql, CallSession.class)
+                .setParameter("userId", userId)
                 .setParameter("cursorValue", cursorValue)
                 .setMaxResults(limit)
                 .getResultList();
     }
 
-    public List<CallSession> findSessionsByAbuseCategory(String category, Long cursorId, int limit, Sort.Direction direction) {
+    @Override
+    public List<CallSession> findSessionsByAbuseCategoryAndUserId(String category, Long userId, Long cursorId, int limit, Sort.Direction direction) {
         String operator = direction.isAscending() ? ">" : "<";
 
         String jpql = "SELECT DISTINCT cs FROM CallSession cs " +
@@ -47,11 +50,13 @@ public class CallSessionRepositoryImpl implements CallSessionRepositoryCustom {
                 "JOIN AbuseLog al ON al.callLog = cl " +
                 "JOIN AbuseTypeLog atl ON atl.abuseLog = al " +
                 "JOIN AbuseType at ON at = atl.abuseType " +
-                "WHERE at." + category + " = true " +
+                "WHERE cs.user.id = :userId " +
+                "AND at." + category + " = true " +
                 (cursorId != null ? "AND cs.id " + operator + " :cursorId " : "") +
                 "ORDER BY cs.id " + direction.name();
 
         TypedQuery<CallSession> query = em.createQuery(jpql, CallSession.class)
+                .setParameter("userId", userId)
                 .setMaxResults(limit + 1);
 
         if (cursorId != null) {
@@ -62,13 +67,16 @@ public class CallSessionRepositoryImpl implements CallSessionRepositoryCustom {
     }
 
     @Override
-    public List<CallSession> findByIdsWithOrder(List<Long> ids, Sort.Direction direction) {
+    public List<CallSession> findByIdsWithOrderAndUserId(List<Long> ids, Sort.Direction direction, Long userId) {
         if (ids.isEmpty()) return List.of();
 
-        String jpql = "SELECT cs FROM CallSession cs WHERE cs.id IN :ids ORDER BY cs.createdAt " + (direction.isAscending() ? "ASC" : "DESC");
+        String jpql = "SELECT cs FROM CallSession cs " +
+                "WHERE cs.id IN :ids AND cs.user.id = :userId " +
+                "ORDER BY cs.createdAt " + (direction.isAscending() ? "ASC" : "DESC");
 
         return em.createQuery(jpql, CallSession.class)
                 .setParameter("ids", ids)
+                .setParameter("userId", userId)
                 .getResultList();
     }
 }
