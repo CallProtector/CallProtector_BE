@@ -1,5 +1,6 @@
 package callprotector.spring.domain.abuse.service;
 
+import callprotector.spring.domain.abuse.dto.response.AbuseFilterResponseDTO;
 import callprotector.spring.global.client.FastClient;
 import callprotector.spring.domain.abuse.entity.AbuseLog;
 import callprotector.spring.domain.abuse.entity.AbuseType;
@@ -8,7 +9,6 @@ import callprotector.spring.domain.abuse.entity.AbuseTypeLog;
 import callprotector.spring.domain.abuse.repository.AbuseLogRepository;
 import callprotector.spring.domain.abuse.repository.AbuseTypeLogRepository;
 import callprotector.spring.domain.abuse.repository.AbuseTypeRepository;
-import callprotector.spring.domain.abuse.dto.response.AbuseResponseDTO;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ public class AbuseServiceImpl implements AbuseService{
     private final AbuseTypeLogRepository abuseTypeLogRepository;
 
     @Override
-    public AbuseResponseDTO.AbuseFilterDTO analyzeText(String text) {
+    public AbuseFilterResponseDTO analyzeText(String text) {
         return fastClient.sendTextToFastAPI(text);
     }
 
