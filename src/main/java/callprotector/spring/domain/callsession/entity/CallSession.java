@@ -25,7 +25,7 @@ public class CallSession extends BaseEntity {
     @Column(nullable = false, unique = true, length = 20)
     private String callSessionCode;
 
-    @ManyToOne(fetch = FetchType.LAZY) // 지연로딩
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name ="user_id")
     private User user;
 
@@ -45,19 +45,20 @@ public class CallSession extends BaseEntity {
     @Builder.Default
     private Integer totalAbuseCnt = DEFAULT_ABUSE_COUNT;
 
-    @Column(name = "twilio_call_sid", length = 34) // CA로 시작하는 34자리 문자열
+    // CA로 시작하는 34자리 문자열
+    @Column(name = "twilio_call_sid", length = 34)
     private String twilioCallSid;
 
     // 상담 요약
-    @Column(length = 2000)
-    private String summary;
+    @Column(name= "summary_simple",length = 2000)
+    private String summarySimple;
+
+    @Column(name= "summary_detailed", length = 2000)
+    private String summaryDetailed;
 
     private Boolean summaryGenerated;
 
     private LocalDateTime summaryGeneratedAt;
-
-    @Column(name= "summary_gemini", length = 2000)
-    private String summaryGemini;
 
     public void updateAbuseCnt() {
         this.totalAbuseCnt = (this.totalAbuseCnt == null ? 0 : this.totalAbuseCnt) + 1;
@@ -71,12 +72,12 @@ public class CallSession extends BaseEntity {
         this.abuseTag = Boolean.TRUE;
     }
 
-    public void updateSummaryGemini(String summaryGemini) {
-        this.summaryGemini = summaryGemini;
+    public void updateSummarySimple(String summarySimple) {
+        this.summarySimple = summarySimple;
     }
 
-    public void updateSummary(String summary) {
-        this.summary = summary;
+    public void updateSummaryDetailed(String summaryDetailed) {
+        this.summaryDetailed = summaryDetailed;
     }
 
     public void updateSummaryGenerated(Boolean summaryGenerated) {
