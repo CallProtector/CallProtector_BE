@@ -4,7 +4,6 @@ import callprotector.spring.domain.abuse.dto.response.AbuseFilterResponseDTO;
 import callprotector.spring.global.apiPayload.ApiResponse;
 import callprotector.spring.domain.abuse.service.AbuseService;
 import callprotector.spring.domain.abuse.dto.request.AbuseRequestDTO;
-import callprotector.spring.domain.abuse.dto.response.AbuseResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
