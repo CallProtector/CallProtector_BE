@@ -1,6 +1,6 @@
 package callprotector.spring.domain.abuse.service;
 
-import callprotector.spring.domain.abuse.dto.response.AbuseFilterResponseDTO;
+import callprotector.spring.domain.abuse.dto.response.AbuseResponseDTO;
 import callprotector.spring.global.client.FastClient;
 import callprotector.spring.domain.abuse.entity.AbuseLog;
 import callprotector.spring.domain.abuse.entity.AbuseType;
@@ -28,7 +28,7 @@ public class AbuseServiceImpl implements AbuseService{
     private final AbuseTypeLogRepository abuseTypeLogRepository;
 
     @Override
-    public AbuseFilterResponseDTO analyzeText(String text) {
+    public AbuseResponseDTO.AbuseFilterDTO analyzeText(String text) {
         return fastClient.sendTextToFastAPI(text);
     }
 

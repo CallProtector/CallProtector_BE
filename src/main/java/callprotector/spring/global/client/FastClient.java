@@ -1,6 +1,6 @@
 package callprotector.spring.global.client;
 
-import callprotector.spring.domain.abuse.dto.response.AbuseFilterResponseDTO;
+import callprotector.spring.domain.abuse.dto.response.AbuseResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +23,7 @@ public class FastClient {
     @Value("${fastapi.url}")
     private String fastApiUrl;
 
-    public AbuseFilterResponseDTO sendTextToFastAPI(String text) {
+    public AbuseResponseDTO.AbuseFilterDTO sendTextToFastAPI(String text) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -31,16 +31,16 @@ public class FastClient {
         HttpEntity<Map<String, String>> entity = new HttpEntity<>(requestBody, headers);
 
         try {
-            ResponseEntity<AbuseFilterResponseDTO> response = restTemplate.postForEntity(
+            ResponseEntity<AbuseResponseDTO.AbuseFilterDTO> response = restTemplate.postForEntity(
                     fastApiUrl,
                     entity,
-                    AbuseFilterResponseDTO.class
+                    AbuseResponseDTO.AbuseFilterDTO.class
             );
 
-            AbuseFilterResponseDTO result = response.getBody();
+            AbuseResponseDTO.AbuseFilterDTO result = response.getBody();
             if (result == null) {
                 log.warn("⚠️ FastAPI 응답이 null입니다.");
-                return new AbuseFilterResponseDTO(false, false, "분석 실패(null)");
+                return new AbuseResponseDTO.AbuseFilterDTO(false, false, "분석 실패(null)");
             }
 
             log.info("🚨 욕설 분석 결과: abuse={}, detected={}, type={}",
@@ -50,7 +50,7 @@ public class FastClient {
 
         } catch (Exception e) {
             log.error("🔥 FastAPI 호출 실패: {}", e.getMessage(), e);
-            return new AbuseFilterResponseDTO(false, false, "분석 실패");
+            return new AbuseResponseDTO.AbuseFilterDTO(false, false, "분석 실패");
         }
     }
 }
