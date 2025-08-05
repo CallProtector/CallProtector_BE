@@ -79,7 +79,7 @@ public class CallSessionController {
 
     @Operation(
             summary = "AI 상담 요약 생성 API - OpenAI GPT",
-            description = "CallSession ID를 기반으로 고객과 상담원의 통화 내용을 요약하여 CallSession의 summary 필드에 저장합니다."
+            description = "CallSession ID를 기반으로 고객과 상담원의 통화 내용을 요약하여 CallSession의 summary_simple 필드에 저장합니다."
     )
     @PostMapping("/{callSessionId}/summary/simple")
     public ApiResponse<CallSessionResponseDTO.CallSessionSummaryResponseDTO> generateSummaryOpenAi(
@@ -92,7 +92,7 @@ public class CallSessionController {
 
     @Operation(
         summary = "AI 상담 요약 생성 API - Gemini 2.5 flash",
-        description = "CallSession ID를 기반으로 고객과 상담원의 통화 내용을 요약하여 CallSession의 summary_gemini 필드에 저장합니다."
+        description = "CallSession ID를 기반으로 고객과 상담원의 통화 내용을 요약하여 CallSession의 summary_detailed 필드에 저장합니다."
     )
     @PostMapping("/{callSessionId}/summary/detailed")
     public ApiResponse<CallSessionResponseDTO.CallSessionSummaryResponseDTO> generateSummaryGemini(
