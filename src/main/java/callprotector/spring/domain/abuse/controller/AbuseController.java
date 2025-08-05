@@ -1,6 +1,6 @@
 package callprotector.spring.domain.abuse.controller;
 
-import callprotector.spring.domain.abuse.dto.response.AbuseFilterResponseDTO;
+import callprotector.spring.domain.abuse.dto.response.AbuseResponseDTO;
 import callprotector.spring.global.apiPayload.ApiResponse;
 import callprotector.spring.domain.abuse.service.AbuseService;
 import callprotector.spring.domain.abuse.dto.request.AbuseRequestDTO;
@@ -18,7 +18,7 @@ public class AbuseController {
 
     @Operation(summary = "욕설 필터링 API", description = "욕설 필터링 API입니다.")
     @PostMapping("/filter")
-    public ApiResponse<AbuseFilterResponseDTO> filterAbuse(
+    public ApiResponse<AbuseResponseDTO.AbuseFilterDTO> filterAbuse(
             @RequestBody AbuseRequestDTO.AbuseFilterDTO request) {
         return ApiResponse.onSuccess(abuseService.analyzeText(request.getText()));
     }
