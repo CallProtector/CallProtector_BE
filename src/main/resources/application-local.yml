@@ -60,3 +60,6 @@ elasticsearch:
   host: localhost
   port: 9200
   enabled: false
+
+fastapi:
+  url: http://localhost:8000/api/abuse/filter
