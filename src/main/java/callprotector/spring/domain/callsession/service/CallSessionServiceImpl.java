@@ -145,7 +145,7 @@ public class CallSessionServiceImpl implements CallSessionService {
 
         // aiSummary - Gemini
         // TODO : AI 요약 구현 방식에 따라 변경 필요
-        String aiSummary = callSession.getSummaryGemini();
+        String aiSummary = callSession.getSummaryDetailed();
         return CallSessionResponseDTO.CallSessionDetailResponseDTO.builder()
             .sessionInfo(sessionInfoDTO)
             .scriptHistory(sessionScriptDTO)
@@ -261,9 +261,9 @@ public class CallSessionServiceImpl implements CallSessionService {
         CallSession session = findCallSessionByIdAndUserId(callSessionId, userId);
 
 
-        if (session.getSummary() != null && !session.getSummary().isBlank()) {
+        if (session.getSummarySimple() != null && !session.getSummarySimple().isBlank()) {
             log.info("✅ 기존 요약 반환 - CallSession ID: {}", callSessionId);
-            return session.getSummary();
+            return session.getSummarySimple();
         }
 
         try {
@@ -297,7 +297,7 @@ public class CallSessionServiceImpl implements CallSessionService {
             String summary = openAiSummaryService.summarize(fullConversation);
             log.info("✅ 요약 생성 완료 - CallSession ID: {}", callSessionId);
 
-            session.updateSummary(summary);
+            session.updateSummarySimple(summary);
             session.updateSummaryGenerated(true);
             session.updateSummaryGeneratedAt(LocalDateTime.now());
             callSessionRepository.save(session);
@@ -326,9 +326,9 @@ public class CallSessionServiceImpl implements CallSessionService {
         CallSession session = findCallSessionByIdAndUserId(callSessionId, userId);
 
         // 중복 생성 방지
-        if (session.getSummaryGemini() != null && !session.getSummaryGemini().isBlank()) {
+        if (session.getSummaryDetailed() != null && !session.getSummaryDetailed().isBlank()) {
             log.info("CallSession (ID: {})에 이미 요약 완료. Gemini api 호출 없이 기존 요약 내용 반환", callSessionId);
-            return session.getSummaryGemini();
+            return session.getSummaryDetailed();
         }
 
         String summaryText;
@@ -361,7 +361,7 @@ public class CallSessionServiceImpl implements CallSessionService {
             summaryText = geminiService.summarizeCallScript(fullConversation);
             log.info("CallSession (ID: {}) 요약 생성 완료.", callSessionId);
 
-            session.updateSummaryGemini(summaryText);
+            session.updateSummaryDetailed(summaryText);
             log.info("summaryGemini: {}", summaryText);
             callSessionRepository.save(session);
             return summaryText;
