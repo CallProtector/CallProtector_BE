@@ -25,7 +25,7 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class SttWebSocketHandler extends TextWebSocketHandler implements ClientNotifier {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     // WebSocket 세션 관리
     private final Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
@@ -93,19 +93,19 @@ public class SttWebSocketHandler extends TextWebSocketHandler implements ClientN
     }
 
     // CallSession 정보 데이터 전송
-    @Override
-    public void sendSessionInfoToClient(Long userId, CallSessionResponseDTO.CallSessionInfoDTO sessionInfo) {
-        ObjectNode jsonPayload = objectMapper.createObjectNode();
-        jsonPayload.put("type", "sessionInfo");
-        jsonPayload.put("sessionCode", sessionInfo.getCallSessionCode());
-        jsonPayload.put("createdAt", sessionInfo.getCreatedAt());
-        jsonPayload.put("totalAbuseCnt", sessionInfo.getTotalAbuseCnt());
-
-        sendWebSocketMessage(userId, jsonPayload, json -> {
-            log.info("세션 초기 정보 WebSocket 전송 대상 userId ======== {}", userId);
-            log.info("전송 내용: {}", json);
-        });
-    }
+    // @Override
+    // public void sendSessionInfoToClient(Long userId, CallSessionResponseDTO.CallSessionInfoDTO sessionInfo) {
+    //     ObjectNode jsonPayload = objectMapper.createObjectNode();
+    //     jsonPayload.put("type", "sessionInfo");
+    //     jsonPayload.put("sessionCode", sessionInfo.getCallSessionCode());
+    //     jsonPayload.put("createdAt", sessionInfo.getCreatedAt());
+    //     jsonPayload.put("totalAbuseCnt", sessionInfo.getTotalAbuseCnt());
+    //
+    //     sendWebSocketMessage(userId, jsonPayload, json -> {
+    //         log.info("세션 초기 정보 WebSocket 전송 대상 userId ======== {}", userId);
+    //         log.info("전송 내용: {}", json);
+    //     });
+    // }
 
     // CallSession - totalAbuseCnt 업데이트 정보 데이터 전송
     @Override
@@ -122,28 +122,28 @@ public class SttWebSocketHandler extends TextWebSocketHandler implements ClientN
     }
 
     // 특정 사용자 ID와 WebSocket 세션을 매핑하여 등록
-    @Override
-    public void registerUserSession(Long userId, WebSocketSession session) {
-        // 이미 해당 userId로 세션이 등록되어 있는지 확인 (다중 연결 방지)
-        if (sessions.containsKey(userId)) {
-            WebSocketSession existingSession = sessions.get(userId);
-            if (existingSession != null && existingSession.isOpen()) {
-                log.warn("이미 활성 세션이 존재합니다. 새 연결로 교체합니다. userId: {}, 기존 sessionId: {}, 새 sessionId: {}",
-                    userId, existingSession.getId(), session.getId());
-                try {
-                    existingSession.close(CloseStatus.SERVER_ERROR.withReason("새로운 STT 세션이 시작되었습니다."));
-                } catch (IOException e) {
-                    log.error("기존 세션 닫기 실패: {}", e.getMessage());
-                }
-                sessionIdToUserId.remove(existingSession.getId()); // 기존 매핑 제거
-            }
-        }
-
-        sessions.put(userId, session);
-        sessionIdToUserId.put(session.getId(), userId); // 세션 ID -> userId 매핑 업데이트
-        log.info("사용자 {}가 STT WebSocket 세션 {}에 등록되었습니다.", userId, session.getId());
-        log.info("현재 세션에 접속 중인 유저 목록: {}", sessions.keySet());
-    }
+    // @Override
+    // public void registerUserSession(Long userId, WebSocketSession session) {
+    //     // 이미 해당 userId로 세션이 등록되어 있는지 확인 (다중 연결 방지)
+    //     if (sessions.containsKey(userId)) {
+    //         WebSocketSession existingSession = sessions.get(userId);
+    //         if (existingSession != null && existingSession.isOpen()) {
+    //             log.warn("이미 활성 세션이 존재합니다. 새 연결로 교체합니다. userId: {}, 기존 sessionId: {}, 새 sessionId: {}",
+    //                 userId, existingSession.getId(), session.getId());
+    //             try {
+    //                 existingSession.close(CloseStatus.SERVER_ERROR.withReason("새로운 STT 세션이 시작되었습니다."));
+    //             } catch (IOException e) {
+    //                 log.error("기존 세션 닫기 실패: {}", e.getMessage());
+    //             }
+    //             sessionIdToUserId.remove(existingSession.getId()); // 기존 매핑 제거
+    //         }
+    //     }
+    //
+    //     sessions.put(userId, session);
+    //     sessionIdToUserId.put(session.getId(), userId); // 세션 ID -> userId 매핑 업데이트
+    //     log.info("사용자 {}가 STT WebSocket 세션 {}에 등록되었습니다.", userId, session.getId());
+    //     log.info("현재 세션에 접속 중인 유저 목록: {}", sessions.keySet());
+    // }
 
     private Long getUserIdFromSession(WebSocketSession session) {
         try {
