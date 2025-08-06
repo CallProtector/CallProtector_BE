@@ -324,6 +324,9 @@
                             if (apiResponse.isSuccess && apiResponse.result) {
                                 const sessionInfo = apiResponse.result;
 
+                                callSessionId = sessionInfo.callSessionId;
+                                console.log("callsessionId : ", callSessionId);
+
                                 // ✅ 세션 정보 UI 업데이트
                                 sessionInfoDiv.innerText = `🔑 세션 코드: ${sessionInfo.callSessionCode} | 생성 시각: ${sessionInfo.createdAt} | 폭언 횟수: ${sessionInfo.totalAbuseCnt}`;
                             } else {
