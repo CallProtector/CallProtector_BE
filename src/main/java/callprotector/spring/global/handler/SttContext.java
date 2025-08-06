@@ -25,10 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-@RequiredArgsConstructor
 public class SttContext {
 	private final Long callSessionId;
-	private final Long userId;
 	private final CallTrack track;
 
 	private final FastClient fastClient;
@@ -37,6 +35,7 @@ public class SttContext {
 	private final CallSttLogService callSttLogService;
 	private final ClientNotifier sttWebSocketHandler;
 
+	private Long userId;
 	private SpeechClient client;
 	private ClientStream<StreamingRecognizeRequest> stream;
 	private ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -49,6 +48,19 @@ public class SttContext {
 	private static final Boolean NOT_ABUSIVE = false;
 	private static final String ABUSIVE_TYPE_NORMAL = "정상";
 	private static final String DATA_TYPE_STT = "stt";
+	private static final Boolean IS_FINAL_TRUE = true;
+
+	public SttContext(Long callSessionId, Long userId, CallTrack track, FastClient fastClient,
+						CallSessionService callSessionService, CallLogService callLogService, CallSttLogService callSttLogService, ClientNotifier sttWebSocketHandler) {
+		this.callSessionId = callSessionId;
+		this.userId = userId;
+		this.track = track;
+		this.fastClient = fastClient;
+		this.callSessionService = callSessionService;
+		this.callLogService = callLogService;
+		this.callSttLogService = callSttLogService;
+		this.sttWebSocketHandler = sttWebSocketHandler;
+	}
 
 	// Google STT 스트림 초기화
 	public void initializeStream(String sessionId) throws IOException {
@@ -103,42 +115,53 @@ public class SttContext {
 
 				try {
 					// 중복 저장 방지
-					boolean isDuplicate = forcedFinal.equals(lastSavedFinalTranscript)
-						|| transcriptBuilder.toString().contains(forcedFinal);
-
-					if (track == CallTrack.INBOUND && isDuplicate) {
+					if(isDuplicate(forcedFinal)) {
 						log.debug("[중복 제거] 강제 저장 생략: {}", forcedFinal);
 					} else {
-						// 욕설 분석 요청
-						var result = fastClient.sendTextToFastAPI(forcedFinal);
+						boolean isAbuse = NOT_ABUSIVE;
+						String abuseType = ABUSIVE_TYPE_NORMAL;
+
+						// INBOUND 트랙만 욕설 분석
+						if (track == CallTrack.INBOUND) {
+							var result = fastClient.sendTextToFastAPI(forcedFinal);
+							isAbuse = result.isAbuse();
+							abuseType = result.getType();
+						}
 
 						// stt 로그 저장
 						CallSttLog savedLog = callSttLogService.saveTranscriptLog(
 							callSessionId,
 							track,
 							forcedFinal,
-							true,
-							result.isAbuse(),
-							result.getType()
+							IS_FINAL_TRUE,
+							isAbuse,
+							abuseType
 						);
 
 						if (track == CallTrack.INBOUND) {
+							// INBOUND는 중복 누적 방지 로직을 유지
+							if (!forcedFinal.equals(lastSavedFinalTranscript)) {
+								transcriptBuilder.append(forcedFinal).append(" ");
+								lastSavedFinalTranscript = forcedFinal;
+							}
+							// INBOUND 트랙만 욕설 처리
+							// 욕설 감지 시 CallSession의 totalAbuseCnt 업데이트
+							if (isAbuse) {
+								log.info("STT 결과 욕설 감지 - (isAbuse={}) / CallSession total_abuse_cnt 업데이트 시도 - CallSessionId={}", isAbuse, callSessionId);
+								callSessionService.incrementTotalAbuseCnt(callSessionId);
+								callLogService.updateAbuse(callSessionId, track);
+							}
+						} else {
+							// OUTBOUND는 중복 누적 방지 없이 무조건 추가
 							transcriptBuilder.append(forcedFinal).append(" ");
 							lastSavedFinalTranscript = forcedFinal;
 						}
 
 						// 클라이언트에 STT 로그 전송
 						CallSttLogResponseDTO forcedResponse = new CallSttLogResponseDTO(DATA_TYPE_STT, savedLog);
+
 						if (userId != null) {
 							sttWebSocketHandler.sendSttToClient(userId, forcedResponse);
-						}
-
-						// INBOUND 트랙만 욕설 처리
-						// 욕설 감지 시 CallSession의 totalAbuseCnt 업데이트
-						if (result.isAbuse() && track == CallTrack.INBOUND) {
-							log.info("STT 결과 욕설 감지 - (isAbuse={}) / CallSession total_abuse_cnt 업데이트 시도 - CallSessionId={}", result.isAbuse(), callSessionId);
-							callSessionService.incrementTotalAbuseCnt(callSessionId);
-							callLogService.updateAbuse(callSessionId, track);
 						}
 					}
 				} catch (Exception e) {
@@ -185,6 +208,12 @@ public class SttContext {
 				log.error("❌ [{}] STT 종료 중 오류", track, e);
 			}
 		}
+	}
+
+	// 실제 로그인 userId로 업데이트
+	public void updateUserId(Long newUserId) {
+		userId = newUserId;
+		log.info("[{}] SttContext의 userId가 {}로 업데이트되었습니다.", track, newUserId);
 	}
 
 	// 스트림 종료 시 또는 재시작 시점에 남아있는 중간 텍스트를 최종 텍스트로 처리하고 저장
@@ -287,15 +316,16 @@ public class SttContext {
 							if (isFinal) { // 최종 결과
 								String trimmedTranscript = transcript.trim();
 
-								// 중복 방지 - 이전 저장값과 동일한 경우 저장 생략
-								if (track == CallTrack.INBOUND && trimmedTranscript.equals(lastSavedFinalTranscript)) {
+								// 중복 방지 - 이전 저장값과 동일한 경우 저장 생략 (INBOUND만 적용)
+								if(isDuplicate(trimmedTranscript)) {
 									log.debug("[중복 제거] 동일한 최종 텍스트는 무시됨: {}", trimmedTranscript);
 									continue;
 								}
 
-								boolean isAbuse = false;
+								boolean isAbuse = NOT_ABUSIVE;
 								String abuseType = ABUSIVE_TYPE_NORMAL;
 
+								// INBOUND 트랙만 FastAPI를 통한 욕설 분석
 								if(track == CallTrack.INBOUND) {
 									var analysis = fastClient.sendTextToFastAPI(trimmedTranscript);
 									isAbuse = analysis.isAbuse();
@@ -320,6 +350,8 @@ public class SttContext {
 								log.info("MongoDB에 CallSttLog 저장 완료: callSessionId={}, track={}, script={}", callSessionId, track, trimmedTranscript);
 
 
+
+								// INBOUND (고객) 스크립트 누적 및 욕설 감지 후 처리
 								if (track == CallTrack.INBOUND) {
 									// transcriptBuilder 중복 누적 방지
 									if (!trimmedTranscript.equals(lastSavedFinalTranscript)) {
@@ -334,6 +366,10 @@ public class SttContext {
 										log.info("🍀 고객 발화 필터링됨");
 										callLogService.updateAbuse(callSessionId, track);
 									}
+								} else { // OUTBOUND (상담원) 스크립트 누적
+									// 중복 누적 방지 없이 무조건 추가
+									transcriptBuilder.append(trimmedTranscript).append(" ");
+									lastSavedFinalTranscript = trimmedTranscript;
 								}
 
 								// 클라이언트에 최종 STT 결과 전송
@@ -352,7 +388,7 @@ public class SttContext {
 									.script(transcript)
 									.isFinal(false)
 									.isAbuse(false)
-									.abuseType("정상")
+									.abuseType(ABUSIVE_TYPE_NORMAL)
 									.abuseCnt(0)
 									.build();
 
@@ -381,5 +417,12 @@ public class SttContext {
 				log.info("[{}] STT 완료", track);
 			}
 		};
+	}
+
+	private boolean isDuplicate(String newTranscript) {
+		if (track == CallTrack.INBOUND && newTranscript.equals(lastSavedFinalTranscript)) {
+			return true;
+		}
+		return false;
 	}
 }
