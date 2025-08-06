@@ -5,6 +5,9 @@ import callprotector.spring.global.apiPayload.ApiResponse;
 import callprotector.spring.domain.callsession.service.CallSessionService;
 import callprotector.spring.domain.callsession.dto.request.CallSessionRequestDTO;
 import callprotector.spring.domain.callsession.dto.response.CallSessionResponseDTO;
+import callprotector.spring.global.handler.TwilioMediaStreamProcessor;
+import callprotector.spring.global.handler.TwilioMediaStreamsHandler;
+import callprotector.spring.global.handler.TwilioSessionManager;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class CallSessionController {
 
     private final CallSessionService callSessionService;
+    private final TwilioSessionManager twilioSessionManager;
 
     @Operation(
             summary = "상담 내역 조회 API",
@@ -114,6 +118,17 @@ public class CallSessionController {
         log.info("📞 Client accepted call.  originalInboundCallSid: {}, callerNumber: {}, UserId: {}",
              request.getOriginalInboundCallSid(), request.getCallerNumber(), userId);
         CallSessionResponseDTO.CallSessionInfoDTO response = callSessionService.registerAcceptedUser(request, userId);
+
+        // 실시간 세션(SttContext) 업데이트
+        TwilioMediaStreamProcessor processor = twilioSessionManager.getProcessorByCallSid(request.getOriginalInboundCallSid());
+        if (processor != null) {
+            processor.updateUserId(userId);
+        } else {
+            log.warn("해당 originalInboundCallSid({})에 대한 진행 중인 통화가 없습니다.", request.getOriginalInboundCallSid());
+        }
+
+        log.info("🧾 생성된 CallSession 정보: sessionCode = {}, createdAt = {}, totalAbuseCnt = {}",
+            response.getCallSessionCode(), response.getCreatedAt(), response.getTotalAbuseCnt());
 
         return ApiResponse.onSuccess(response);
     }
