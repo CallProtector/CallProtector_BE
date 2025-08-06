@@ -19,6 +19,7 @@ public class CallSessionResponseDTO {
         private String callSessionCode;
         private String createdAt;
         private Integer totalAbuseCnt;
+        private Long callSessionId;
     }
 
     @Builder

@@ -579,6 +579,7 @@ public class CallSessionServiceImpl implements CallSessionService {
             .callSessionCode(callSession.getCallSessionCode())
             .createdAt(formattedCreatedAt)
             .totalAbuseCnt(callSession.getTotalAbuseCnt())
+            .callSessionId(callSession.getId())
             .build();
     }
 
