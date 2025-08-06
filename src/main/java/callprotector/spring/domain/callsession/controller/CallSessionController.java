@@ -6,7 +6,6 @@ import callprotector.spring.domain.callsession.service.CallSessionService;
 import callprotector.spring.domain.callsession.dto.request.CallSessionRequestDTO;
 import callprotector.spring.domain.callsession.dto.response.CallSessionResponseDTO;
 import callprotector.spring.global.handler.TwilioMediaStreamProcessor;
-import callprotector.spring.global.handler.TwilioMediaStreamsHandler;
 import callprotector.spring.global.handler.TwilioSessionManager;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
