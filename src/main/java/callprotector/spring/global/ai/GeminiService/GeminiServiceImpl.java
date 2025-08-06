@@ -34,8 +34,8 @@ public class GeminiServiceImpl implements  GeminiService {
 
 	@PostConstruct
 	public void init() throws IOException {
-		String credentialsPath = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
-		log.info("GeminiService 초기화: GOOGLE_APPLICATION_CREDENTIALS 경로 = {}", credentialsPath != null ? credentialsPath : "설정되지 않음");
+		String credentialsPath = System.getenv("GOOGLE_APPLICATION_CREDENTIALS_VERTEX_AI");
+		log.info("GeminiService 초기화: GOOGLE_APPLICATION_CREDENTIALS_VERTEX_AI 경로 = {}", credentialsPath != null ? credentialsPath : "설정되지 않음");
 
 
 		vertexAi = new VertexAI(projectId, locationId);
