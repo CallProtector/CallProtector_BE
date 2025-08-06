@@ -35,8 +35,6 @@ public class AuthController {
         return ApiResponse.onSuccess("이메일 인증이 완료되었습니다.");
     }
 
-
-
     // 회원가입 API
     @Operation(summary = "회원가입 API", description = "이름, 메일, 전화번호, 비밀번호를 넣어주세요. 비밀번호는 영문, 숫자, 특수문자 포함 8~20자리입니다.")
     @PostMapping("/signup")
@@ -54,14 +52,4 @@ public class AuthController {
         UserResponseDTO.LoginDTO result = userService.login(loginDTO);
         return ApiResponse.onSuccess(result);
     }
-
-
-
-
-
-
-
-
-
-
 }
