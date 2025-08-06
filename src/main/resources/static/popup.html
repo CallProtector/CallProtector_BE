@@ -31,11 +31,40 @@
             background: #f5f5f5;
             white-space: pre-line;
         }
+        .tab-bar {
+            display: flex;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            padding: 4px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            width: 300px;
+        }
+        .tab-button {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.3s, color 0.3s;
+            font-weight: bold;
+            color: #555;
+        }
+        .tab-button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        #summary-content {
+            border: 1px solid #ccc;
+            padding: 15px;
+            background-color: #fff;
+            min-height: 100px;
+        }
     </style>
 </head>
 <body>
 <h2>📞 브라우저 전화 수신 대기 중...</h2>
-<button id="create-session-btn">세션 생성</button>
+<button id="update-session-btn" style="display:none;">세션 userId 변경</button>
 <button id="accept-btn" style="display:none;">📞 전화 수락</button>
 
 <div id="session-info">🔒 세션 정보 수신 대기 중...</div>
@@ -48,15 +77,29 @@
 <div id="final-inbound"></div>
 <div id="final-outbound"></div>
 
+<h3>📝 상담 요약</h3>
+<div id="summary-section">
+    <div class="tab-bar">
+        <div id="tab-v1" class="tab-button active">v1 요약</div>
+        <div id="tab-v2" class="tab-button">v2 요약</div>
+    </div>
+    <div id="summary-content">요약 내용이 여기에 표시됩니다.</div>
+</div>
+
 <script>
     let pendingConnection = null;
     // const ws = new WebSocket("wss://pet-pipefish-friendly.ngrok-free.app/ws/stt?userId=1");
     let ws = null;
+    let currentUserId = null;
 
     const sessionInfoDiv = document.getElementById("session-info");
     const logArea = document.getElementById("log-area");
     const finalInboundDiv = document.getElementById("final-inbound");
     const finalOutboundDiv = document.getElementById("final-outbound");
+    const summarySection = document.getElementById("summary-section");
+    const summaryContentDiv = document.getElementById("summary-content");
+    const tabV1 = document.getElementById("tab-v1");
+    const tabV2 = document.getElementById("tab-v2");
 
     const lines = {}; // track + index 키 기반 저장
     const trackState = {
@@ -79,7 +122,15 @@
     }
 
     function setupWebSocketListeners(websocket) {
-        websocket.onopen = () => console.log("🌐 WebSocket 연결됨");
+        websocket.onopen = () => {
+            console.log("🌐 WebSocket 연결 성공, 통화 수락 진행");
+            if (pendingConnection) {
+                pendingConnection.accept();
+                console.log("✅ 통화 수락 완료");
+                pendingConnection = null;
+                document.getElementById("accept-btn").style.display = "none";
+            }
+        };
         websocket.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
@@ -142,6 +193,19 @@
         websocket.onclose = () => console.log("🔌 WebSocket 연결 종료");
     }
 
+    function showSummary(version) {
+        tabV1.classList.remove('active');
+        tabV2.classList.remove('active');
+
+        if (version === 'v1') {
+            tabV1.classList.add('active');
+            summaryContentDiv.innerText = "v1 요약이 없습니다."; // 추후 api 결과값으로 대체
+        } else if (version === 'v2') {
+            tabV2.classList.add('active');
+            summaryContentDiv.innerText = "v2 요약이 없습니다."; // 추후 api 결과값으로 대체
+        }
+    }
+
     const jwtToken = localStorage.getItem('jwtToken'); // 브라우저 로컬 스토리지에 jwtToken : <token> 이 저장되어 있어야 함
     if (!jwtToken) {
         console.error("🚨 JWT 토큰이 localStorage에 없습니다. 로그인 후 다시 시도해주세요.");
@@ -166,9 +230,9 @@
             })
             .then(data => {
                 const accessToken = data.result.twilioAccessToken;
-                const userId = data.result.userId;
+                currentUserId = data.result.userId;
 
-                if (!userId) {
+                if (!currentUserId) {
                     console.error("🚨 서버로부터 userId를 받지 못했습니다. WebSocket 연결 불가.");
                     sessionInfoDiv.innerText = "🚨 서버 오류: 사용자 ID 없음";
                     return;
@@ -180,9 +244,9 @@
                     // Twilio.Device.audio.speakerDevices.set('default');
                     console.log('Twilio.Device.audio on ready:', Twilio.Device.audio);
 
-                    console.log(`🔍 Device ready. WebSocket 연결 시작: userId=${userId}`);
-                    ws = new WebSocket(`wss://pet-pipefish-friendly.ngrok-free.app/ws/stt?userId=${userId}`);
-                    setupWebSocketListeners(ws);
+                    // console.log(`🔍 Device ready. WebSocket 연결 시작: userId=${userId}`);
+                    // ws = new WebSocket(`wss://pet-pipefish-friendly.ngrok-free.app/ws/stt?userId=${userId}`);
+                    // setupWebSocketListeners(ws);
 
 
                 });
@@ -191,61 +255,72 @@
                     console.log('📞 수신:', conn.parameters.From);
                     pendingConnection = conn;
                     document.getElementById("accept-btn").style.display = "inline";
-
+                    document.getElementById("update-session-btn").style.display = "inline";
                     // incoming 통화가 수락되기 전에 취소되었을 때 처리 필요
-
-                    // ✅ Twilio Device 초기화 이후 버튼 리스너 등록
-                    document.getElementById("create-session-btn").addEventListener("click", () => {
-                        const parsedParams = parseQueryParams(pendingConnection.parameters.Params);
-                        const initialCallSid = parsedParams.initialCallSid;
-                        const clientDialCallSid = pendingConnection.parameters.CallSid;
-                        const callerNumber = pendingConnection.parameters.From;
-
-                        fetch('/api/sessions/call/accept', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${jwtToken}`
-                            },
-                            body: JSON.stringify({
-                                toClientCallSid: clientDialCallSid,
-                                originalInboundCallSid: initialCallSid,
-                                callerNumber: callerNumber
-                            })
-                        })
-                            .then(res => res.json())
-                            .then(apiResponse => {
-                                console.log("✅ 세션 생성 응답:", apiResponse);
-                                if (apiResponse.isSuccess && apiResponse.result) {
-                                    const sessionInfo = apiResponse.result;
-
-                                    // ✅ 세션 정보 UI 업데이트
-                                    sessionInfoDiv.innerText = `🔑 세션 코드: ${sessionInfo.callSessionCode} | 생성 시각: ${sessionInfo.createdAt} | 폭언 횟수: ${sessionInfo.totalAbuseCnt}`;
-                                } else {
-                                    console.error("🚨 세션 생성 실패:", apiResponse.message || apiResponse);
-                                    alert("세션 생성에 실패했습니다.");
-                                }
-                            })
-                            .catch(err => console.error("🚨 세션 생성 오류:", err));
-                    });
-
-
-                    document.getElementById("accept-btn").addEventListener("click", () => {
-                        ws = new WebSocket(`wss://pet-pipefish-friendly.ngrok-free.app/ws/stt?userId=${data.result.userId}`);
-                        setupWebSocketListeners(ws);
-                        console.log("🌐 WebSocket 연결 시작");
-
-                        setTimeout(() => {
-                            pendingConnection.accept();
-                            console.log("✅ 통화 수락 완료");
-                            pendingConnection = null;
-                            document.getElementById("accept-btn").style.display = "none";
-                        }, 500);
-                    });
-
                 });
 
+                // Twilio Device 초기화 이후 세션 useId 변경을 위한 이벤트 리스너
+                document.getElementById("update-session-btn").addEventListener("click", () => {
+                    if (!pendingConnection) {
+                        alert("수신 전화가 없습니다.");
+                        return;
+                    }
 
+                    const parsedParams = parseQueryParams(pendingConnection.parameters.Params);
+                    const initialCallSid = parsedParams.initialCallSid;
+                    const clientDialCallSid = pendingConnection.parameters.CallSid;
+                    const callerNumber = pendingConnection.parameters.From;
+
+                    fetch('/api/sessions/call/accept', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${jwtToken}`
+                        },
+                        body: JSON.stringify({
+                            toClientCallSid: clientDialCallSid,
+                            originalInboundCallSid: initialCallSid,
+                            callerNumber: callerNumber
+                        })
+                    })
+                        .then(res => res.json())
+                        .then(apiResponse => {
+                            console.log("✅ 세션 생성 응답:", apiResponse);
+                            if (apiResponse.isSuccess && apiResponse.result) {
+                                const sessionInfo = apiResponse.result;
+
+                                // ✅ 세션 정보 UI 업데이트
+                                sessionInfoDiv.innerText = `🔑 세션 코드: ${sessionInfo.callSessionCode} | 생성 시각: ${sessionInfo.createdAt} | 폭언 횟수: ${sessionInfo.totalAbuseCnt}`;
+                            } else {
+                                console.error("🚨 세션 생성 실패:", apiResponse.message || apiResponse);
+                                alert("세션 생성에 실패했습니다.");
+                            }
+                        })
+                        .catch(err => console.error("🚨 세션 생성 오류:", err));
+                });
+
+                document.getElementById("accept-btn").addEventListener("click", () => {
+                    if (!pendingConnection) {
+                        alert("통화 수락 대기 중인 연결이 없습니다.");
+                        return;
+                    }
+
+                    // 통화 수락 클릭 시에만 웹소켓 연결을 시작하고, 이미 연결되어 있으면 새로 연결하지 않음
+                    if (!ws || ws.readyState === WebSocket.CLOSED) {
+                        ws = new WebSocket(`wss://pet-pipefish-friendly.ngrok-free.app/ws/stt?userId=${currentUserId}`);
+
+                        // 웹소켓 연결 리스너 설정
+                        setupWebSocketListeners(ws);
+                    } else {
+                        // 이미 웹소켓 연결된 상태면 바로 통화 수락
+                        if (pendingConnection) {
+                            pendingConnection.accept();
+                            console.log("✅ 통화 수락 완료 (웹소켓 이미 연결됨)");
+                            pendingConnection = null;
+                            document.getElementById("accept-btn").style.display = "none";
+                        }
+                    }
+                });
 
                 // document.getElementById("accept-btn").addEventListener("click", () => {
                 //     if (pendingConnection) {
@@ -355,6 +430,18 @@
                 });
             });
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        tabV1.addEventListener('click', () => {
+            showSummary('v1');
+            // 여기에 v1 요약 API 호출 로직 추가
+        });
+
+        tabV2.addEventListener('click', () => {
+            showSummary('v2');
+            // 여기에 v2 요약 API 호출 로직 추가
+        });
+    });
 
 
 
