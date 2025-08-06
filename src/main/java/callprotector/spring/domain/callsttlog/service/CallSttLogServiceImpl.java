@@ -49,6 +49,7 @@ public class CallSttLogServiceImpl implements CallSttLogService {
         // }
 
         // Elasticsearch 인덱싱
+        /*
         try {
             elasticsearchClient.index(i -> i
                     .index("call_stt_log")
@@ -59,7 +60,7 @@ public class CallSttLogServiceImpl implements CallSttLogService {
         } catch (IOException e) {
             log.error("❌ Elasticsearch 인덱싱 실패 - id: {}", savedSttLog.getId(), e);
         }
-
+        */
         return savedSttLog;
     }
 
