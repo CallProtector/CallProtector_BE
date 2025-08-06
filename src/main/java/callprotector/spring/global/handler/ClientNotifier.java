@@ -8,7 +8,7 @@ import org.springframework.web.socket.WebSocketSession;
 public interface ClientNotifier {
 	void sendSttToClient(Long userId, CallSttLogResponseDTO sttLogResponseDTO);
 	void sendSttToClient(Long userId, Object payload);
-	void sendSessionInfoToClient(Long userId, CallSessionResponseDTO.CallSessionInfoDTO sessionInfo);
+	// void sendSessionInfoToClient(Long userId, CallSessionResponseDTO.CallSessionInfoDTO sessionInfo);
 	void sendUpdateAbuseCntToClient(Long userId, CallSessionResponseDTO.CallSessionTotalAbuseCntDTO sessionTotalAbuseCnt);
-	void registerUserSession(Long userId, WebSocketSession session);
+	// void registerUserSession(Long userId, WebSocketSession session);
 }
