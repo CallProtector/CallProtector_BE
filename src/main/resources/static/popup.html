@@ -88,7 +88,6 @@
 
 <script>
     let pendingConnection = null;
-    // const ws = new WebSocket("wss://pet-pipefish-friendly.ngrok-free.app/ws/stt?userId=1");
     let ws = null;
     let currentUserId = null;
 
@@ -243,12 +242,6 @@
                     console.log('✅ Device ready');
                     // Twilio.Device.audio.speakerDevices.set('default');
                     console.log('Twilio.Device.audio on ready:', Twilio.Device.audio);
-
-                    // console.log(`🔍 Device ready. WebSocket 연결 시작: userId=${userId}`);
-                    // ws = new WebSocket(`wss://pet-pipefish-friendly.ngrok-free.app/ws/stt?userId=${userId}`);
-                    // setupWebSocketListeners(ws);
-
-
                 });
 
                 device.on('incoming', conn => {
@@ -321,102 +314,6 @@
                         }
                     }
                 });
-
-                // document.getElementById("accept-btn").addEventListener("click", () => {
-                //     if (pendingConnection) {
-                //         if (Twilio.Device.audio && Twilio.Device.audio.speakerDevices && Twilio.Device.audio.speakerDevices.isSupported) {
-                //             try {
-                //                 Twilio.Device.audio.speakerDevices.set('default');
-                //                 console.log('✅ Speaker devices set to default on accept button click (user gesture).');
-                //             } catch (audioError) {
-                //                 console.error('🚨 Error setting speaker devices:', audioError);
-                //                 alert('스피커 설정을 할 수 없습니다. 브라우저 설정을 확인해주세요.');
-                //             }
-                //         } else {
-                //             console.warn('⚠️ Twilio.Device.audio 또는 speakerDevices가 준비되지 않았거나 지원되지 않습니다.');
-                //         }
-                //
-                //         // api 추가
-                //         console.log("Full Connection Object:", pendingConnection);
-                //         console.log("Connection Parameters:", pendingConnection.parameters);
-                //
-                //         // 고객 -> twilio sid (최초 인바운드)
-                //         const parsedParams = parseQueryParams(pendingConnection.parameters.Params);
-                //         const initialCallSid = parsedParams.initialCallSid;
-                //         console.log("Original Inbound CallSid (최초 고객 통화 SID): ", initialCallSid);
-                //
-                //         // twilio -> 브라우저 sid (아웃바운드) - 통화 수락 전에 현재 CallSid을 서버로 전달
-                //         const clientDialCallSid = pendingConnection.parameters.CallSid;
-                //         console.log("clientDialCallSid: ", clientDialCallSid);
-                //
-                //         // 고객 번호
-                //         const callerNumber = pendingConnection.parameters.From;
-                //         console.log("callerNumber: ", callerNumber);
-                //
-                //
-                //         if (clientDialCallSid && initialCallSid && userId) {
-                //             fetch('/api/sessions/call/accept', {
-                //                 method: 'POST',
-                //                 headers: {
-                //                     'Content-Type': 'application/json',
-                //                     'Authorization': `Bearer ${jwtToken}`
-                //                 },
-                //                 body: JSON.stringify({
-                //                     toClientCallSid: clientDialCallSid, // 트윌리오 -> 브라우저 Outgoing Leg의 SID
-                //                     originalInboundCallSid: initialCallSid, // 최초 고객 Incoming Leg의 SID
-                //                     callerNumber: callerNumber
-                //                 })
-                //             })
-                //                 .then(response => {
-                //                     if (!response.ok) {
-                //                         console.error('🚨 Failed to register accepted call with server:', response.status, response.statusText);
-                //                         // 에러 처리: 서버에 등록 실패 시 사용자에게 알리거나 재시도
-                //                     } else {
-                //                         return response.json();
-                //                     }
-                //                 })
-                //                 .then(apiResponse => {
-                //                     if (apiResponse.isSuccess) {
-                //                         const sessionInfo = apiResponse.result; // CallSessionInfoDTO 객체
-                //                         if (sessionInfo) { // sessionInfo 객체가 null이 아닌지 확인
-                //                             console.log('✅ CallSession successfully created/updated on server. Session Info:', sessionInfo);
-                //
-                //                             // 🚨🚨🚨 여기에서 HTTP 응답으로 받은 세션 정보를 UI에 업데이트합니다. 🚨🚨🚨
-                //                             sessionInfoDiv.innerText = `🔑 세션 코드: ${sessionInfo.callSessionCode} | 생성 시각: ${sessionInfo.createdAt} | 폭언 횟수: ${sessionInfo.totalAbuseCnt}`;
-                //
-                //                             // ✅ 1000ms 지연 후 accept
-                //                             setTimeout(() => {
-                //                                 pendingConnection.accept();
-                //                                 console.log("✅ 통화 수락 및 STTContext 준비 완료");
-                //                                 pendingConnection = null;
-                //                                 document.getElementById("accept-btn").style.display = "none";
-                //                             }, 1000);
-                //
-                //                             // 콘솔 로그 변수명 수정 및 위치 조정
-                //                             console.log('✅ Call accepted registered with CallManager. ClientDialCallSid:', clientDialCallSid, 'UserId:', userIdToSend);
-                //
-                //                         } else {
-                //                             console.error('🚨 Call accept API returned success but missing session info in result:', apiResponse);
-                //                             alert('통화 수락 성공, 그러나 세션 정보가 누락되었습니다.');
-                //                         }
-                //                     } else {
-                //                         console.error('🚨 Call accept API returned failure:', apiResponse.message);
-                //                         alert(`통화 수락 실패: ${apiResponse.message || '알 수 없는 API 오류'}`);
-                //                     }
-                //                 })
-                //                 .catch(error => {
-                //                     console.error('🚨 Error sending call accept info to server:', error);
-                //                 });
-                //         } else {
-                //             console.warn('❗ Could not send call accept info: CallSid or UserId missing.');
-                //         }
-                //
-                //         // pendingConnection.accept();
-                //         // console.log("✅ 수신 수락됨");
-                //         // pendingConnection = null;
-                //     }
-                //     // document.getElementById("accept-btn").style.display = "none";
-                // });
 
                 device.on('connect', () => console.log('🔊 통화 연결됨'));
                 device.on('disconnect', () => {
