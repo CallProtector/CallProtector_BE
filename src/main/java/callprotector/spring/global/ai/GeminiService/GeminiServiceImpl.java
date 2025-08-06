@@ -27,15 +27,15 @@ public class GeminiServiceImpl implements  GeminiService {
 	@Value("${gcp.location.id}")
 	private String locationId;
 
-	private static final String MODEL_ID = "gemini-2.5-flash";
+	private static final String MODEL_ID = "gemini-2.5-flash-lite";
 
 	private VertexAI vertexAi;
 	private GenerativeModel generativeModel;
 
 	@PostConstruct
 	public void init() throws IOException {
-		String credentialsPath = System.getenv("GOOGLE_APPLICATION_CREDENTIALS_VERTEX_AI");
-		log.info("GeminiService 초기화: GOOGLE_APPLICATION_CREDENTIALS_VERTEX_AI 경로 = {}", credentialsPath != null ? credentialsPath : "설정되지 않음");
+		String credentialsPath = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
+		log.info("GeminiService 초기화: GOOGLE_APPLICATION_CREDENTIALS 경로 = {}", credentialsPath != null ? credentialsPath : "설정되지 않음");
 
 
 		vertexAi = new VertexAI(projectId, locationId);
