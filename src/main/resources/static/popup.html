@@ -271,7 +271,7 @@
                     const clientDialCallSid = pendingConnection.parameters.CallSid;
                     const callerNumber = pendingConnection.parameters.From;
 
-                    fetch('/api/sessions/call/accept', {
+                    fetch('/api/call-sessions/user', {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',
