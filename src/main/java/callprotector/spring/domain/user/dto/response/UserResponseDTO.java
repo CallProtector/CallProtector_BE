@@ -22,6 +22,7 @@ public class UserResponseDTO {
     public static class LoginDTO{
         String token;
         Long id;
+        String name;
     }
 
 
