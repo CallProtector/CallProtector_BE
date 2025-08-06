@@ -53,8 +53,6 @@ jobs:
               --restart always \
               --env-file /home/ubuntu/.env.prod \
               -p 8080:8080 \
-              -v /home/ubuntu/credentials/callprotector-stt-key.json:/app/credentials/google-sa-key.json \
-              -e GOOGLE_APPLICATION_CREDENTIALS="/app/credentials/google-sa-key.json" \
               -v /home/ubuntu/credentials/callprotector-vertex-ai-key.json:/app/credentials/vertex-ai-key.json \
-              -e GOOGLE_APPLICATION_CREDENTIALS_VERTEX_AI="/app/credentials/vertex-ai-key.json" \
+              -e GOOGLE_APPLICATION_CREDENTIALS="/app/credentials/vertex-ai-key.json" \
               callprotect/backend-server:latest
