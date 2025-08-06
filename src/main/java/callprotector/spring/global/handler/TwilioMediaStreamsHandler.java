@@ -30,9 +30,9 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
     private final CallSttLogService callSttLogService;
     private final UserService userService;
     private final ClientNotifier sttWebSocketHandler;
+    private final TwilioSessionManager sessionManager;
 
     private final Map<String, TwilioMediaStreamProcessor> activeProcessors = new ConcurrentHashMap<>();
-
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -45,7 +45,8 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
             this.callLogService,
             this.callSttLogService,
             this.userService,
-            this.sttWebSocketHandler
+            this.sttWebSocketHandler,
+            this.sessionManager
         );
         activeProcessors.put(session.getId(), processor);
     }
@@ -72,6 +73,13 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
         if (processor == null) {
             log.warn("❗ 연결 종료 시 세션 {}에 대한 프로세서를 찾을 수 없음.", session.getId());
             return;
+        }
+
+        String callSid = processor.getPrimaryCallSid();
+        if (callSid != null) {
+            sessionManager.unregisterProcessor(callSid);
+        } else {
+            log.warn("❗ 종료된 세션 {}에 CallSid가 없어 TwilioSessionManager에서 제거할 수 없습니다.", session.getId());
         }
 
         processor.closeSession();

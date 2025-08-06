@@ -18,12 +18,13 @@ import callprotector.spring.domain.callsession.service.CallSessionService;
 import callprotector.spring.domain.callsttlog.service.CallSttLogService;
 import callprotector.spring.domain.user.service.UserService;
 import callprotector.spring.domain.callsession.dto.request.CallSessionRequestDTO;
-import callprotector.spring.domain.callsession.dto.response.CallSessionResponseDTO;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Getter
 @RequiredArgsConstructor
 public class TwilioMediaStreamProcessor {
 	private final ObjectMapper mapper;
@@ -33,15 +34,16 @@ public class TwilioMediaStreamProcessor {
 	private final CallSttLogService callSttLogService;
 	private final UserService userService;
 	private final ClientNotifier sttWebSocketHandler;
+	private final TwilioSessionManager twilioSessionManager;
 
 	private final Map<CallTrack, SttContext> sttContexts = new ConcurrentHashMap<>();
 
 	private Long currentUserId;
 	private Long currentCallSessionId;
-
+	private String primaryCallSid;
 
 	private static final long STREAM_RESTART_INTERVAL_MS = 10_000;
-	private static final long TEMP_USERID = 0;
+	private static final long TEMP_USERID = 1;
 
 	public void handleTwilioMessage(WebSocketSession session, TextMessage message) throws Exception {
 		JsonNode json = mapper.readTree(message.getPayload());
@@ -77,11 +79,29 @@ public class TwilioMediaStreamProcessor {
 		log.info("✅ CallSessionId {}의 TwilioMediaStreamProcessor 정리 완료.", currentCallSessionId);
 	}
 
+	public void updateUserId(Long newUserId) {
+		if (this.currentUserId == null || !this.currentUserId.equals(newUserId)) {
+			log.info("CallSessionId {}의 userId가 {}에서 {}로 업데이트됩니다.",
+				this.currentCallSessionId, this.currentUserId, newUserId);
+			this.currentUserId = newUserId;
+
+			// SttContext의 userId 업데이트
+			sttContexts.values().forEach(ctx -> ctx.updateUserId(newUserId));
+
+			log.info("CallSessionId {}의 userId를 {}로 업데이트 왑료", this.currentCallSessionId, this.currentUserId);
+		}
+	}
+
 	private void handleStartEvent(WebSocketSession session, JsonNode json) {
 		log.info("☆ Twilio Media Stream 'start' 이벤트 전체 JSON: {}", json.toPrettyString());
 		JsonNode customParams = json.path("start").path("customParameters");
 		String primaryCallSid = customParams.path("primaryCallSid").asText(); // 인바운드 통화 CallSid (고객의 최초 CallSid)
 		String callerNumber = customParams.path("callerNumber").asText();
+
+		this.primaryCallSid = primaryCallSid;
+
+		// 프로세스 인스턴스 등록
+		twilioSessionManager.registerProcessor(this.primaryCallSid, this);
 
 		// callSession 객체 생성
 		currentCallSessionId = callSessionService.createTempSession(
@@ -124,10 +144,10 @@ public class TwilioMediaStreamProcessor {
 		}
 
 		// 세션 정보 전달 - call_session_code, 날짜 (stt 페이지 상단)
-		CallSessionResponseDTO.CallSessionInfoDTO sessionInfo =
-			callSessionService.getSessionInfo(currentCallSessionId);
-		log.info("🧾 생성된 CallSession 정보: sessionCode = {}, createdAt = {}, totalAbuseCnt = {}",
-			sessionInfo.getCallSessionCode(), sessionInfo.getCreatedAt(), sessionInfo.getTotalAbuseCnt());
+		// CallSessionResponseDTO.CallSessionInfoDTO sessionInfo =
+		// 	callSessionService.getSessionInfo(currentCallSessionId);
+		// log.info("🧾 생성된 CallSession 정보: sessionCode = {}, createdAt = {}, totalAbuseCnt = {}",
+		// 	sessionInfo.getCallSessionCode(), sessionInfo.getCreatedAt(), sessionInfo.getTotalAbuseCnt());
 
 		// sttWebSocketHandler.registerUserSession(currentUserId, session);
 		// sttWebSocketHandler.sendSessionInfoToClient(currentUserId, sessionInfo);
