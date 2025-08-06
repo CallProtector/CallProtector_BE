@@ -15,6 +15,7 @@ import java.util.Map;
 @RequestMapping("/twilio")
 public class TwilioWebhookController {
     private static final String BROWSER_CLIENT_ID = "browserUser";
+    private static final String WS_URL ="wss://callprotect.site/ws/audio"; // "wss://pet-pipefish-friendly.ngrok-free.app/ws/audio";
 
     @PostMapping(value = "/voice", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
     public String onIncomingCall(@RequestParam Map<String, String> params) {
@@ -38,7 +39,7 @@ public class TwilioWebhookController {
                     .build())
                 .start(new Start.Builder()
                         .stream(new Stream.Builder()
-                                .url("wss://pet-pipefish-friendly.ngrok-free.app/ws/audio")
+                                .url(WS_URL)
                                 .track(Stream.Track.BOTH_TRACKS)
                                 .parameter(new com.twilio.twiml.voice.Parameter.Builder()
                                     .name("primaryCallSid")
