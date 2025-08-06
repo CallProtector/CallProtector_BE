@@ -143,17 +143,15 @@ public class CallSessionServiceImpl implements CallSessionService {
         List<CallSttLog> scriptLogs = callSttLogService.getAllBySessionId(callSessionId);
         List<CallSessionResponseDTO.CallSessionScriptDTO> sessionScriptDTO = mapToScriptDTO(scriptLogs);
 
-        // aiSummary - Gemini
-        // TODO : AI 요약 구현 방식에 따라 변경 필요
-        String aiSummary = callSession.getSummaryDetailed();
+        // aiSummary
+        CallSessionResponseDTO.CallSessionAISummariesDTO aiSummariesDTO = mapToAiSummaryDTO(callSession);
+
         return CallSessionResponseDTO.CallSessionDetailResponseDTO.builder()
             .sessionInfo(sessionInfoDTO)
             .scriptHistory(sessionScriptDTO)
-            .aiSummary(aiSummary)
+            .aiSummary(aiSummariesDTO)
             .build();
     }
-
-
 
     @Override
     @Transactional(readOnly = true)
@@ -581,6 +579,13 @@ public class CallSessionServiceImpl implements CallSessionService {
             .callSessionCode(callSession.getCallSessionCode())
             .createdAt(formattedCreatedAt)
             .totalAbuseCnt(callSession.getTotalAbuseCnt())
+            .build();
+    }
+
+    private CallSessionResponseDTO.CallSessionAISummariesDTO mapToAiSummaryDTO(CallSession callSession) {
+        return CallSessionResponseDTO.CallSessionAISummariesDTO.builder()
+            .simple(callSession.getSummarySimple())
+            .detailed(callSession.getSummaryDetailed())
             .build();
     }
 }
