@@ -18,6 +18,8 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // User 관련 에러
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER4041", "사용자가 없습니다."),
+    USER_VALIDATION_ERROR(HttpStatus.UNAUTHORIZED, "USER4011", "등록되지 않은 이메일입니다."),
+    USER_PASSWORD_MISMATCH(HttpStatus.UNAUTHORIZED, "4012", "비밀번호가 일치하지 않습니다."),
 
     // Call Session 관련 에러
     CALL_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "CALLSESSION4041", "call session이 존재하지 않습니다."),
