@@ -1,10 +1,12 @@
 package callprotector.spring.domain.user.service;
 
+import callprotector.spring.global.apiPayload.exception.handler.PasswordMismatchException;
 import callprotector.spring.global.apiPayload.exception.handler.UserNotFoundException;
 import callprotector.spring.domain.user.entity.User;
 import callprotector.spring.domain.user.entity.VerificationToken;
 import callprotector.spring.domain.user.repository.UserRepository;
 import callprotector.spring.domain.user.repository.VerificationTokenRepository;
+import callprotector.spring.global.apiPayload.exception.handler.UserValidationException;
 import callprotector.spring.global.security.TokenProvider;
 import callprotector.spring.global.util.PasswordValidator;
 import callprotector.spring.domain.user.dto.request.UserRequestDTO;
@@ -103,15 +105,16 @@ public class UserServiceImpl implements UserService{
     @Override
     @Transactional(readOnly = true)
     public UserResponseDTO.LoginDTO login(UserRequestDTO.LoginDTO dto) {
-        final Optional<User> user = userRepository.findByEmail(dto.getEmail());
+        User user = getUserByEmail(dto.getEmail());
 
-        if (user.isEmpty() || !passwordEncoder.matches(dto.getPassword(), user.get().getPassword())) {
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다.");
+        if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
+            throw new PasswordMismatchException();
         }
 
         return UserResponseDTO.LoginDTO.builder()
-                .token(tokenProvider.create(user.get()))
-                .id(user.get().getId())
+                .token(tokenProvider.create(user))
+                .id(user.getId())
+                .name(user.getName())
                 .build();
     }
 
@@ -119,5 +122,11 @@ public class UserServiceImpl implements UserService{
     @Transactional(readOnly = true)
     public User getUserById(Long id) {
         return userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(UserValidationException::new);
     }
 }
