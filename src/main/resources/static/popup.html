@@ -272,7 +272,7 @@
                     const callerNumber = pendingConnection.parameters.From;
 
                     fetch('/api/sessions/call/accept', {
-                        method: 'POST',
+                        method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${jwtToken}`
