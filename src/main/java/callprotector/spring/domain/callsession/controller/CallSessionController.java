@@ -109,7 +109,7 @@ public class CallSessionController {
         summary = "전화 수락 시 call session 생성",
         description = "전화 수락 시 해당 userId로 callsession을 생성하고 세션 정보를 반환합니다."
     )
-    @PostMapping("/call/accept")
+    @PatchMapping("/user")
     public ApiResponse<CallSessionResponseDTO.CallSessionInfoDTO> acceptCallFromClient(
         @RequestBody CallSessionRequestDTO.CallSessionMakeDTO request,
         @UserId Long userId
