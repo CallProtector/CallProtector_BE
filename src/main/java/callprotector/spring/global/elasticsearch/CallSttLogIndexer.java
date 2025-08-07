@@ -25,10 +25,20 @@ public class CallSttLogIndexer {
     private final CallSttLogRepository callSttLogRepository;
     private final ElasticsearchClient esClient;
 
-    @EventListener(ApplicationReadyEvent.class) // 애플리케이션 시작 시 실행
+    @EventListener(ApplicationReadyEvent.class)
     public void reindexAllLogs() throws IOException {
-        List<CallSttLog> mongoLogs = callSttLogRepository.findAll();
+        // 1. 이미 인덱스가 존재하면 재색인 생략
+        boolean indexExists = esClient.indices()
+                .exists(b -> b.index("call_stt_log"))
+                .value();
 
+        if (indexExists) {
+            log.info("ℹ️ call_stt_log 인덱스가 이미 존재합니다. 재색인 생략");
+            return;
+        }
+
+        // 2. 인덱스 없으면 재색인 진행
+        List<CallSttLog> mongoLogs = callSttLogRepository.findAll();
         log.info("📦 MongoDB에서 불러온 CallSttLog 개수: {}", mongoLogs.size());
 
         List<BulkOperation> operations = mongoLogs.stream()
@@ -36,18 +46,14 @@ public class CallSttLogIndexer {
                         .index(i -> i
                                 .index("call_stt_log")
                                 .document(log)
-                        )))
-                .toList();
+                        ))).toList();
 
         BulkRequest bulkRequest = BulkRequest.of(b -> b.operations(operations));
         BulkResponse response = esClient.bulk(bulkRequest);
 
         if (response.errors()) {
-            log.error("❌ 일부 문서 이관 실패: {}",
-                    response.items().stream()
-                            .filter(item -> item.error() != null)
-                            .toList()
-            );
+            log.error("❌ 일부 문서 이관 실패: {}", response.items().stream()
+                    .filter(item -> item.error() != null).toList());
         } else {
             log.info("🚀 Elasticsearch 재색인 완료: {}건", mongoLogs.size());
         }
