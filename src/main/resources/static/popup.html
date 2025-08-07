@@ -345,7 +345,7 @@
 
                     // 통화 수락 클릭 시에만 웹소켓 연결을 시작하고, 이미 연결되어 있으면 새로 연결하지 않음
                     if (!ws || ws.readyState === WebSocket.CLOSED) {
-                        ws = new WebSocket(`wss://pet-pipefish-friendly.ngrok-free.app/ws/stt?userId=${currentUserId}`);
+                        ws = new WebSocket(`wss://callprotect.site/ws/stt?userId=${currentUserId}`);
 
                         // 웹소켓 연결 리스너 설정
                         setupWebSocketListeners(ws);
