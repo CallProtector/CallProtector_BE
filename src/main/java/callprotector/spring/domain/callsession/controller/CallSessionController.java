@@ -69,7 +69,7 @@ public class CallSessionController {
         );
     }
 
-    @Operation(summary = "callSession 상세 조회", description = "상담 내역 상세 조회 시 callSession을 조회합니다.")
+    @Operation(summary = "callSession 상세 조회 API", description = "상담 내역 상세 조회 시 callSession을 조회합니다.")
     @GetMapping("/{callSessionId}")
     public ApiResponse<CallSessionResponseDTO.CallSessionDetailResponseDTO> getCallSession(
         @PathVariable("callSessionId") Long id,
@@ -78,8 +78,6 @@ public class CallSessionController {
         CallSessionResponseDTO.CallSessionDetailResponseDTO response = callSessionService.getUserCallSessionDetail(id, userId);
         return ApiResponse.onSuccess(response);
     }
-
-
 
     @Operation(
             summary = "AI 상담 요약 생성 API - OpenAI GPT",
@@ -108,7 +106,7 @@ public class CallSessionController {
     }
 
     @Operation(
-        summary = "전화 수락 시 call session 생성",
+        summary = "전화 수락 시 call session 생성 API",
         description = "전화 수락 시 해당 userId로 callsession을 생성하고 세션 정보를 반환합니다."
     )
     @PatchMapping("/user")
@@ -133,4 +131,24 @@ public class CallSessionController {
 
         return ApiResponse.onSuccess(response);
     }
+
+    @Operation(
+            summary = "폭언 상담 내역 조회 API",
+            description = "폭언(욕설, 성희롱, 협박)이 발생한 상담 내역만 조회합니다."
+    )
+    @GetMapping("/abusive")
+    public ApiResponse<CallSessionResponseDTO.AbusiveCallSessionPagingDTO> getAbusiveCallSessions(
+            @UserId Long userId,
+
+            @Parameter(description = "현재 페이지의 기준이 되는 마지막 CallSession ID")
+            @RequestParam(required = false) Long cursorId,
+
+            @Parameter(description = "가져올 데이터 개수 (기본값: 5)")
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        return ApiResponse.onSuccess(
+                callSessionService.getAbusiveCallSessions(userId, cursorId, size)
+        );
+    }
+
 }
