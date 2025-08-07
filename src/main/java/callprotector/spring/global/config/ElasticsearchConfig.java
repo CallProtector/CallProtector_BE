@@ -1,5 +1,6 @@
 package callprotector.spring.global.config;
 
+import lombok.Setter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
@@ -16,8 +17,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.elasticsearch.client.RestClient;
 
-// ElasticSearch 임시 비활성화용 어노테이션 추가
-@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true") 
+@ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true")
 @Configuration
 @EnableConfigurationProperties(ElasticsearchConfig.ElasticsearchProperties.class)
 @RequiredArgsConstructor
@@ -43,10 +43,12 @@ public class ElasticsearchConfig {
     }
 
     @Getter
+    @Setter
     @ConfigurationProperties(prefix = "elasticsearch")
     public static class ElasticsearchProperties {
         private String host;
         private int port;
+        private boolean enabled;
     }
 }
 
