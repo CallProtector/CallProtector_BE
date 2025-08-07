@@ -3,13 +3,15 @@ package callprotector.spring.domain.chat.controller;
 import callprotector.spring.domain.chat.entity.ChatSession;
 import callprotector.spring.domain.chat.service.ChatLogService;
 import callprotector.spring.domain.chat.service.ChatSessionService;
-import callprotector.spring.global.annotation.UserId;
+import callprotector.spring.global.security.TokenProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,9 +30,27 @@ public class ChatStreamController {
     private final WebClient webClient = WebClient.create("http://localhost:8000"); // FastAPI URL
     private final ChatLogService chatLogService;
     private final ChatSessionService chatSessionService;
+    private final TokenProvider tokenProvider;
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> streamChat(@UserId Long userId, @RequestParam Long sessionId, @RequestParam String question) {
+    public Flux<String> streamChat(
+            @RequestParam Long sessionId,
+            @RequestParam String question,
+            @RequestParam(required = false) String token,
+            @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) {
+        // JWT 추출 (쿼리 우선, 없으면 헤더)
+        String jwt = token != null ? token :
+                (authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : null);
+
+        System.out.println("🔑 전달된 JWT: " + jwt);
+
+        if (jwt == null) {
+            throw new IllegalArgumentException("JWT가 필요합니다.");
+        }
+
+        // userId 추출
+        Long userId = tokenProvider.validateAndGetUserId(jwt);
 
         // 세션 소유권 검증
         ChatSession session = chatSessionService.getSessionById(sessionId);
@@ -42,6 +62,7 @@ public class ChatStreamController {
 
         return webClient.post()
                 .uri("/stream")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)  // JWT 명시적으로 전달
                 .bodyValue(Map.of("session_id", sessionId, "question", question))
                 .retrieve()
                 .bodyToFlux(String.class)
@@ -57,7 +78,7 @@ public class ChatStreamController {
                         if (jsonBuffer.length() > 0) {
                             log.info("📥 최종 JSON: {}", jsonBuffer);
 
-                            // ✅ JSON 키 공백 정리
+                            // JSON 키 공백 정리
                             String normalizedJson = jsonBuffer.toString()
                                     .replaceAll("\"\\s*([^\"]*?)\\s*\"\\s*:", "\"$1\":")
                                     .replaceAll(":\\s*\"\\s*([^\"]*?)\\s*\"", ":\"$1\"");
@@ -71,7 +92,7 @@ public class ChatStreamController {
                             String sourcePages = mapper.writeValueAsString(jsonNode.get("sourcePages"));
                             chatLogService.saveChatLog(sessionId, question, answer, sourcePages);
 
-                            // ✅ 첫 질문이면 세션 타이틀 생성
+                            // 첫 질문이면 세션 타이틀 생성
                             if (session.getTitle() == null || session.getTitle().isBlank()) {
                                 chatSessionService.updateTitleIfEmpty(session, question);
                             }
