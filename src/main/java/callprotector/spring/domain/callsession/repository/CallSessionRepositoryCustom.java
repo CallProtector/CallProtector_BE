@@ -11,4 +11,6 @@ public interface CallSessionRepositoryCustom {
 
     List<CallSession> findSessionsByAbuseCategoryAndUserId(String category, Long userId, Long cursorId, int limit, Sort.Direction direction);
     List<CallSession> findByIdsWithOrderAndUserId(List<Long> ids, Sort.Direction direction, Long userId);
+
+    List<CallSession> findAbusiveCallSessions(Long userId, Long cursorId, int limit);
 }
