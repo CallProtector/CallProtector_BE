@@ -36,18 +36,12 @@ public class ChatStreamController {
     public Flux<String> streamChat(
             @RequestParam Long sessionId,
             @RequestParam String question,
-            @RequestParam(required = false) String token,
-            @RequestHeader(value = "Authorization", required = false) String authHeader
+            @RequestParam String token
     ) {
-        // JWT 추출 (쿼리 우선, 없으면 헤더)
-        String jwt = token != null ? token :
-                (authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : null);
+        // JWT 추출 (쿼리로만 받음)
+        String jwt = token;
+        log.info("🔑 전달된 JWT (query): {}", jwt);
 
-        System.out.println("🔑 전달된 JWT: " + jwt);
-
-        if (jwt == null) {
-            throw new IllegalArgumentException("JWT가 필요합니다.");
-        }
 
         // userId 추출
         Long userId = tokenProvider.validateAndGetUserId(jwt);
@@ -62,7 +56,6 @@ public class ChatStreamController {
 
         return webClient.post()
                 .uri("/stream")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)  // JWT 명시적으로 전달
                 .bodyValue(Map.of("session_id", sessionId, "question", question))
                 .retrieve()
                 .bodyToFlux(String.class)
