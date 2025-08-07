@@ -57,9 +57,9 @@ gcp:
     id: ${GCP_LOCATION_ID}
 
 elasticsearch:
-  host: localhost
+  host: elasticsearch
   port: 9200
-  enabled: false
+  enabled: true
 
 fastapi:
   url: http://abusefilter:8080/api/abuse/filter
