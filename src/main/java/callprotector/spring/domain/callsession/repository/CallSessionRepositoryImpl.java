@@ -20,6 +20,7 @@ public class CallSessionRepositoryImpl implements CallSessionRepositoryCustom {
     @Override
     public List<CallSession> findFirstPageByUserId(Long userId, String sortBy, int limit, Sort.Direction direction) {
         String jpql = "SELECT c FROM CallSession c WHERE c.user.id = :userId ORDER BY c." + sortBy + " " + direction.name();
+
         return em.createQuery(jpql, CallSession.class)
                 .setParameter("userId", userId)
                 .setMaxResults(limit)
@@ -79,4 +80,26 @@ public class CallSessionRepositoryImpl implements CallSessionRepositoryCustom {
                 .setParameter("userId", userId)
                 .getResultList();
     }
+
+    @Override
+    public List<CallSession> findAbusiveCallSessions(Long userId, Long cursorId, int limit) {
+        String jpql =
+                "SELECT DISTINCT cs FROM CallSession cs " +
+                        "JOIN CallLog cl ON cl.callSession = cs " +
+                        "JOIN AbuseLog al ON al.callLog = cl " +
+                        "WHERE cs.user.id = :userId " +
+                        (cursorId != null ? "AND cs.id < :cursorId " : "") +
+                        "ORDER BY cs.id DESC";
+
+        TypedQuery<CallSession> query = em.createQuery(jpql, CallSession.class)
+                .setParameter("userId", userId)
+                .setMaxResults(limit);
+
+        if (cursorId != null) {
+            query.setParameter("cursorId", cursorId);
+        }
+
+        return query.getResultList();
+    }
+
 }
