@@ -24,36 +24,40 @@ public class CallSttLogIndexer {
 
     private final CallSttLogRepository callSttLogRepository;
     private final ElasticsearchClient esClient;
+    private static final String INDEX_NAME = "call_stt_log";
 
     @EventListener(ApplicationReadyEvent.class)
     public void reindexAllLogs() throws IOException {
-        // 1. 이미 인덱스가 존재하면 재색인 생략
-        boolean indexExists = esClient.indices()
-                .exists(b -> b.index("call_stt_log"))
-                .value();
+        // 색인된 문서가 존재하면 재색인 생략
+        long docCount = esClient.search(s -> s
+                .index(INDEX_NAME)
+                .size(0), Void.class
+        ).hits().total().value();
 
-        if (indexExists) {
-            log.info("ℹ️ call_stt_log 인덱스가 이미 존재합니다. 재색인 생략");
+        if (docCount > 0) {
+            log.info("ℹ️ call_stt_log 인덱스에 이미 {}건의 문서가 존재합니다. 재색인 생략", docCount);
             return;
         }
 
-        // 2. 인덱스 없으면 재색인 진행
+        // 색인된 문서가 없을 때만 재색인 진행
         List<CallSttLog> mongoLogs = callSttLogRepository.findAll();
         log.info("📦 MongoDB에서 불러온 CallSttLog 개수: {}", mongoLogs.size());
 
         List<BulkOperation> operations = mongoLogs.stream()
                 .map(log -> BulkOperation.of(b -> b
                         .index(i -> i
-                                .index("call_stt_log")
+                                .index(INDEX_NAME)
                                 .document(log)
-                        ))).toList();
+                        )))
+                .toList();
 
         BulkRequest bulkRequest = BulkRequest.of(b -> b.operations(operations));
         BulkResponse response = esClient.bulk(bulkRequest);
 
         if (response.errors()) {
             log.error("❌ 일부 문서 이관 실패: {}", response.items().stream()
-                    .filter(item -> item.error() != null).toList());
+                    .filter(item -> item.error() != null)
+                    .toList());
         } else {
             log.info("🚀 Elasticsearch 재색인 완료: {}건", mongoLogs.size());
         }
