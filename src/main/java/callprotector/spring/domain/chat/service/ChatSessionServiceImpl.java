@@ -61,6 +61,7 @@ public class ChatSessionServiceImpl implements ChatSessionService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ChatSessionResponseDTO.ChatSessionResponse> getSessionList(Long userId) {
         return chatSessionRepository.findByUserIdOrderByStartTimeDesc(userId).stream()
                 .map(session -> ChatSessionResponseDTO.ChatSessionResponse.builder()
@@ -70,5 +71,11 @@ public class ChatSessionServiceImpl implements ChatSessionService{
                         .build())
                 .toList();
     }
+
+    // getSessionDetail 함수 하려는데, ScriptHistoryRepository 뭐꼬 이거;; (MongoRepository로 callSessionId 기준 스크립트 이력 조회해야된다는데)
+
+
+
+
 
 }
