@@ -45,14 +45,16 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            mkdir -p /home/ubuntu/credentials/
+            cd /home/ubuntu/CallProtector_BE
+
+            echo "📦 Pull latest backend image"
             docker pull callprotect/backend-server:latest
-            docker stop my-app || true && docker rm my-app || true
-            docker run -d \
-              --name my-app \
-              --restart always \
-              --env-file /home/ubuntu/.env.prod \
-              -p 8080:8080 \
-              -v /home/ubuntu/credentials/callprotector-vertex-ai-key.json:/app/credentials/vertex-ai-key.json \
-              -e GOOGLE_APPLICATION_CREDENTIALS="/app/credentials/vertex-ai-key.json" \
-              callprotect/backend-server:latest
+
+            echo "🧹 Stop and remove existing containers"
+            docker-compose down
+
+            echo "📁 Apply latest env file"
+            cp /home/ubuntu/.env.prod .env.prod
+
+            echo "🚀 Launch all services with docker-compose"
+            docker-compose up -d --build
