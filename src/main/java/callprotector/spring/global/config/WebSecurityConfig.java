@@ -58,7 +58,8 @@ public class WebSecurityConfig
                                             "/popup.html",
                                             "/api/abuse/**",
                                             "/ws/**", // 인증 인가 처리 후 삭제 예정
-                                            "/chatstream.html"  // [Chat 관련] 임시 프론트 테스트용 HTML 직접 접근 허용
+                                            "/chatstream.html",  // [Chat 관련] 임시 프론트 테스트용 HTML 직접 접근 허용
+                                            "/api/chat/stream"
                                     )
                                     .permitAll()
                                     .anyRequest().authenticated()

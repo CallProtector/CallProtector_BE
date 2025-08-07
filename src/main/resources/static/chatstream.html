@@ -66,7 +66,8 @@
             }
 
             const encodedQuestion = encodeURIComponent(question);
-            const eventSource = new EventSource(`/api/chat/stream?sessionId=${currentSessionId}&question=${encodedQuestion}`);
+
+            const eventSource = new EventSource(`/api/chat/stream?sessionId=${currentSessionId}&question=${encodedQuestion}&token=${token}`);
 
             typingIndicator.style.display = "block";
             let dotCount = 0;
