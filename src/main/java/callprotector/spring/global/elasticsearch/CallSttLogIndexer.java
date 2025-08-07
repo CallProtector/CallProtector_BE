@@ -16,7 +16,6 @@ import co.elastic.clients.elasticsearch.core.BulkRequest;
 import java.io.IOException;
 import java.util.List;
 
-// 임시 비활성화용 어노테이션 추가
 @ConditionalOnProperty(name = "elasticsearch.enabled", havingValue = "true")
 @Slf4j
 @Component
