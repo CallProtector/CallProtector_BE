@@ -95,8 +95,38 @@ public class CallSessionResponseDTO {
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
+    public static class AbusiveCallSessionDTO {
+        private Long id;
+        private String callSessionCode;
+        private LocalDateTime createdAt;
+        private String category;
+
+        public static AbusiveCallSessionDTO fromEntity(CallSession session, String category) {
+            return AbusiveCallSessionDTO.builder()
+                    .id(session.getId())
+                    .callSessionCode(session.getCallSessionCode())
+                    .createdAt(session.getCreatedAt())
+                    .category(category)
+                    .build();
+        }
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class CallSessionPagingDTO {
         private List<CallSessionListDTO> sessions;
+        private Long nextCursorId;
+        private boolean hasNext;
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class AbusiveCallSessionPagingDTO {
+        private List<AbusiveCallSessionDTO> sessions;
         private Long nextCursorId;
         private boolean hasNext;
     }
