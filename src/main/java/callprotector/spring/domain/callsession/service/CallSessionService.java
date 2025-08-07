@@ -36,4 +36,6 @@ public interface CallSessionService {
     Long createTempSession(Long userId, CallSessionRequestDTO.CallSessionMakeDTO dto);
 
     CallSessionResponseDTO.CallSessionInfoDTO getSessionInfo(Long callSessionId);
- }
+
+    CallSessionResponseDTO.AbusiveCallSessionPagingDTO getAbusiveCallSessions(Long userId, Long cursorId, int size);
+}

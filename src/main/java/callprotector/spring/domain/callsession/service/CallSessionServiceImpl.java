@@ -458,6 +458,45 @@ public class CallSessionServiceImpl implements CallSessionService {
         return session;
     }
 
+    @Override
+    public CallSessionResponseDTO.AbusiveCallSessionPagingDTO getAbusiveCallSessions(Long userId, Long cursorId, int size) {
+        List<CallSession> sessions = callSessionRepository.findAbusiveCallSessions(userId, cursorId, size + 1);
+
+        boolean hasNext = sessions.size() > size;
+        Long nextCursorId = hasNext ? sessions.get(size - 1).getId() : null;
+
+        List<CallSessionResponseDTO.AbusiveCallSessionDTO> resultList = sessions.stream()
+                .limit(size)
+                .map(session -> {
+                    String category = resolveAbuseCategory(session.getId());
+                    return CallSessionResponseDTO.AbusiveCallSessionDTO.fromEntity(session, category);
+                })
+                .collect(Collectors.toList());
+
+        return CallSessionResponseDTO.AbusiveCallSessionPagingDTO.builder()
+                .sessions(resultList)
+                .hasNext(hasNext)
+                .nextCursorId(nextCursorId)
+                .build();
+    }
+
+
+    private String resolveAbuseCategory(Long sessionId) {
+        List<String> categories = new ArrayList<>();
+
+        if (abuseTypeLogRepository.existsByAbuseLog_CallLog_CallSession_IdAndAbuseType_VerbalAbuseTrue(sessionId)) {
+            categories.add("욕설");
+        }
+        if (abuseTypeLogRepository.existsByAbuseLog_CallLog_CallSession_IdAndAbuseType_SexualHarassTrue(sessionId)) {
+            categories.add("성희롱");
+        }
+        if (abuseTypeLogRepository.existsByAbuseLog_CallLog_CallSession_IdAndAbuseType_ThreatTrue(sessionId)) {
+            categories.add("협박");
+        }
+
+        return String.join(", ", categories);
+    }
+
     private void validateAbuseCategory(String category) {
         List<String> valid = List.of("verbalAbuse", "sexualHarass", "threat");
         if (!valid.contains(category)) {
@@ -474,7 +513,7 @@ public class CallSessionServiceImpl implements CallSessionService {
                 List<AbuseTypeLog> typeLogs = abuseTypeLogRepository.findByAbuseLog(abuseLog);
                 for (AbuseTypeLog typeLog : typeLogs) {
                     AbuseType type = typeLog.getAbuseType();
-                    if (type.isVerbalAbuse()) return "폭언";
+                    if (type.isVerbalAbuse()) return "욕설";
                     if (type.isSexualHarass()) return "성희롱";
                     if (type.isThreat()) return "협박";
                 }
