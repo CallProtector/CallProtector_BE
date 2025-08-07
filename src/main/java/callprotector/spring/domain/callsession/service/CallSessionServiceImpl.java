@@ -505,21 +505,16 @@ public class CallSessionServiceImpl implements CallSessionService {
     }
 
     private String getAbuseCategoryForSession(CallSession session) {
-        List<CallLog> callLogs = callLogRepository.findByCallSession(session);
+        List<AbuseType> types = abuseTypeLogRepository.findAbuseTypesByCallSessionId(session.getId());
 
-        for (CallLog callLog : callLogs) {
-            List<AbuseLog> abuseLogs = abuseLogRepository.findByCallLog(callLog);
-            for (AbuseLog abuseLog : abuseLogs) {
-                List<AbuseTypeLog> typeLogs = abuseTypeLogRepository.findByAbuseLog(abuseLog);
-                for (AbuseTypeLog typeLog : typeLogs) {
-                    AbuseType type = typeLog.getAbuseType();
-                    if (type.isVerbalAbuse()) return "욕설";
-                    if (type.isSexualHarass()) return "성희롱";
-                    if (type.isThreat()) return "협박";
-                }
-            }
+        Set<String> categories = new LinkedHashSet<>();
+        for (AbuseType type : types) {
+            if (type.isVerbalAbuse()) categories.add("욕설");
+            if (type.isSexualHarass()) categories.add("성희롱");
+            if (type.isThreat()) categories.add("협박");
         }
-        return "전체";
+
+        return categories.isEmpty() ? "전체" : String.join(", ", categories);
     }
 
     // 검색어가 포함된 scrpit 일부만 추출하여 반환하는 함수
