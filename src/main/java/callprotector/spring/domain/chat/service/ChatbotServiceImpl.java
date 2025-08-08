@@ -1,6 +1,6 @@
 package callprotector.spring.domain.chat.service;
 
-import callprotector.spring.domain.chat.dto.request.ScriptHistoryRequestDTO;
+import callprotector.spring.domain.chat.dto.request.SessionScriptHistoryRequestDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -20,7 +20,7 @@ public class ChatbotServiceImpl implements ChatbotService{
     private final WebClient.Builder webClientBuilder;
 
     @Override
-    public Flux<ServerSentEvent<String>> analyzeCallsession(Long sessionId, List<ScriptHistoryRequestDTO.ScriptHistoryDTO> scriptHistory) {
+    public Flux<ServerSentEvent<String>> analyzeCallsession(Long sessionId, List<SessionScriptHistoryRequestDTO.ScriptHistoryDTO> scriptHistory) {
         // FastAPI 요청 바디 생성
         Map<String, Object> requestBody = Map.of(
                 "sessionId", sessionId,

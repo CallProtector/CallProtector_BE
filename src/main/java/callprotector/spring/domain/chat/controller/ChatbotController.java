@@ -1,6 +1,6 @@
 package callprotector.spring.domain.chat.controller;
 
-import callprotector.spring.domain.chat.dto.request.ScriptHistoryRequestDTO;
+import callprotector.spring.domain.chat.dto.request.SessionScriptHistoryRequestDTO;
 import callprotector.spring.domain.chat.service.ChatbotService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ public class ChatbotController {
     private final ChatbotService chatbotService;
 
     @PostMapping(value = "/analyze/{sessionId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<String>> analyzeSession(@PathVariable Long sessionId, @RequestBody List<ScriptHistoryRequestDTO.ScriptHistoryDTO> scripts){
+    public Flux<ServerSentEvent<String>> analyzeSession(@PathVariable Long sessionId, @RequestBody List<SessionScriptHistoryRequestDTO.ScriptHistoryDTO> scripts){
         return chatbotService.analyzeCallsession(sessionId, scripts);
     }
 
