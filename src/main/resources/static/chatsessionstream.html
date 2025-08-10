@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8">
+<body>
+<input type="number" id="sessionIdInput" placeholder="세션 ID를 입력하세요" style="width: 200px; padding: 5px;">
+<button id="analyze">상담 요약 요청</button>
+
+<div id="response" style="margin-top:20px; white-space:pre-wrap;"></div>
+<div id="typing-indicator" style="display: none;">요약 중입니다<span id="dots"></span></div>
+
+<script>
+    document.getElementById("analyze").addEventListener("click", () => {
+        const sessionId = document.getElementById("sessionIdInput").value;
+        const responseDiv = document.getElementById("response");
+        const typingIndicator = document.getElementById("typing-indicator");
+        const dotsSpan = document.getElementById("dots");
+        const token = localStorage.getItem("accessToken"); // ✅ 토큰 가져오기
+
+        responseDiv.innerHTML = "";
+        typingIndicator.style.display = "block";
+
+        let dotCount = 0;
+        const dotInterval = setInterval(() => {
+            dotCount = (dotCount + 1) % 4;
+            dotsSpan.textContent = ".".repeat(dotCount);
+        }, 500);
+
+        const eventSource = new EventSource(`/api/chatbot/analyze/${sessionId}?token=${token}`); // ✅ token 추가
+
+        let buffer = "";
+
+        eventSource.onmessage = (event) => {
+            const chunk = event.data;
+            if (chunk === "[END]") {
+                try {
+                    const parsed = JSON.parse(buffer);
+                    responseDiv.innerHTML = parsed.answer;
+                } catch (e) {
+                    console.error("JSON 파싱 오류", e);
+                    responseDiv.innerHTML = "❌ 응답 파싱 실패";
+                }
+
+                typingIndicator.style.display = "none";
+                clearInterval(dotInterval);
+                eventSource.close();
+                return;
+            }
+
+            if (chunk.startsWith("[JSON]")) {
+                buffer = chunk.replace("[JSON]", "").trim();
+                console.log("🔎 JSON 수신:", buffer);
+            } else {
+                responseDiv.innerHTML += chunk;
+            }
+        };
+
+        eventSource.onerror = (err) => {
+            console.error("⛔ SSE 오류", err);
+            typingIndicator.style.display = "none";
+            clearInterval(dotInterval);
+            eventSource.close();
+        };
+    });
+</script>
+
+</body>
+</html>

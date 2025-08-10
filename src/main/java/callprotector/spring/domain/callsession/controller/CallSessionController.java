@@ -132,6 +132,8 @@ public class CallSessionController {
         return ApiResponse.onSuccess(response);
     }
 
+
+
     @Operation(
             summary = "폭언 상담 내역 조회 API",
             description = "폭언(욕설, 성희롱, 협박)이 발생한 상담 내역만 조회합니다."

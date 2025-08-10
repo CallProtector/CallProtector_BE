@@ -59,7 +59,10 @@ public class WebSecurityConfig
                                             "/api/abuse/**",
                                             "/ws/**", // 인증 인가 처리 후 삭제 예정
                                             "/chatstream.html",  // [Chat 관련] 임시 프론트 테스트용 HTML 직접 접근 허용
-                                            "/api/chat/stream"
+                                            "/api/chat/stream",
+                                            "/chatsessionstream.html", // [상담별 Chat 관련] 임시 프론트 테스트용 HTML 직접 접근 허용
+                                            "/api/chatbot/analyze/**",
+                                            "/callchatstream.html" // [상담별 Chat 후속 관련] 임시 프론트 테스트용 HTML 직접 접근 허용
                                     )
                                     .permitAll()
                                     .anyRequest().authenticated()
