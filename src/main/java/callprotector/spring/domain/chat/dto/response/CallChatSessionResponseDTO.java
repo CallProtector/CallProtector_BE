@@ -5,17 +5,16 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-public class ChatSessionResponseDTO {
+public class CallChatSessionResponseDTO {
 
     @Builder
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ChatSessionResponse{
+    public static class CallChatSessionResponse{
         private Long sessionId;
-        private String startTime;
+        private String createdAt;
         private String title;
-        private String category;
     }
 
 }

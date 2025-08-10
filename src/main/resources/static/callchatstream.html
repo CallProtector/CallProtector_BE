@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>상담별 채팅 테스트</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body { font-family: system-ui, Arial, sans-serif; line-height: 1.6; margin: 24px; }
+        .row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+        input[type="text"], input[type="number"] { padding: 8px; border: 1px solid #ddd; border-radius: 6px; width: 280px; }
+        button { padding: 8px 12px; border: 0; border-radius: 8px; background: #3b82f6; color: #fff; cursor: pointer; }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 12px; margin-right: 6px; }
+        .card { border: 1px solid #eee; border-radius: 12px; padding: 12px; margin-top: 12px; }
+        #stream { white-space: pre-wrap; background: #0b1020; color: #eaefff; padding: 10px; border-radius: 8px; min-height: 70px; }
+        #typing { display:none; }
+        #logs { margin-top: 8px; }
+        .q { color: #111; }
+        .a { color: #111; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    </style>
+</head>
+<body>
+<h2>상담별 채팅 테스트</h2>
+
+<div class="card">
+    <div class="row">
+        <label class="mono">accessToken</label>
+        <input type="text" id="tokenInput" placeholder="localStorage.accessToken에 저장 또는 여기에 직접 입력" />
+        <button id="saveToken">토큰 저장</button>
+    </div>
+    <small>※ 이미 토큰을 저장했다면 생략해도 됩니다. 저장 시 <span class="mono">localStorage.accessToken</span> 갱신.</small>
+</div>
+
+<div class="card">
+    <h3>1) 상담별 세션 확보(가져오기/생성)</h3>
+    <div class="row">
+        <input type="number" id="callSessionIdInput" placeholder="callSessionId 입력" />
+        <button id="getOrCreateByCallSessionBtn">세션 가져오기/생성</button>
+        <span>→ callChatSessionId: <b id="callChatSessionIdView">-</b></span>
+    </div>
+    <small>백엔드: <span class="mono">GET /api/call-chat-sessions/by-call-session?callSessionId=...</span></small>
+</div>
+
+
+<div class="card">
+    <h3>3) 상담원 후속 질문</h3>
+    <div class="row">
+        <input type="number" id="callChatSessionIdInput" placeholder="callChatSessionId 입력" />
+        <input type="text" id="questionInput" placeholder="질문을 입력하세요" />
+        <button id="askBtn">질문하기</button>
+    </div>
+    <div id="answerArea" class="card" style="display:none;">
+        <div><span class="badge">답변</span></div>
+        <div id="answerText"></div>
+        <div style="margin-top:8px"><span class="badge">출처</span></div>
+        <div id="sources"></div>
+    </div>
+    <small>백엔드: <span class="mono">GET /api/call-chat/stream?callChatSessionId=...&question=...&token=...</span> SSE</small>
+</div>
+
+<div class="card">
+    <h3>4) 저장된 로그 보기</h3>
+    <div class="row">
+        <input type="number" id="logsSessionIdInput" placeholder="callChatSessionId 입력" />
+        <button id="loadLogs">로그 불러오기</button>
+    </div>
+    <div id="logs"></div>
+    <small>백엔드: <span class="mono">GET /api/call-chat-log/session/{callChatSessionId}</span></small>
+</div>
+
+
+
+<script>
+    const $ = (id) => document.getElementById(id);
+    const getToken = () => (localStorage.getItem('accessToken') || $('tokenInput').value || '').trim();
+
+    $('saveToken').onclick = () => {
+        const t = $('tokenInput').value.trim();
+        if (!t) { alert('토큰을 입력하세요'); return; }
+        localStorage.setItem('accessToken', t);
+        alert('저장 완료');
+    };
+
+    // 0) 콜세션으로 세션 가져오기
+    $('getOrCreateByCallSessionBtn').onclick = async () => {
+        try {
+            const token = getToken();
+            if (!token) return alert('accessToken이 없습니다.');
+
+            const callSessionId = $('callSessionIdInput').value.trim();
+            if (!callSessionId) return alert('callSessionId를 입력하세요.');
+
+            const res = await fetch(`/api/call-chat-sessions/by-call-session?callSessionId=${encodeURIComponent(callSessionId)}`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const json = await res.json();
+            if (!res.ok || !json.isSuccess) {
+                console.error(json);
+                return alert('세션 가져오기/생성 실패');
+            }
+
+            const data = json.result;
+            $('callChatSessionIdView').innerText = data.sessionId;
+            $('callChatSessionIdInput').value = data.sessionId;
+            $('logsSessionIdInput').value = data.sessionId;
+
+            // (선택) 초기 분석에서 쓰는 callSessionId 입력란도 자동 세팅
+            $('forAnalyzeCallSessionId').value = callSessionId;
+
+            alert('콜세션 기준 세션 확보 완료');
+        } catch (e) {
+            console.error(e);
+            alert('세션 확보 중 오류');
+        }
+    };
+
+    // 3) 후속 질문 SSE
+    let esAsk;
+    $('askBtn').onclick = () => {
+        if (esAsk) esAsk.close();
+
+        const token = getToken();
+        if (!token) return alert('accessToken이 없습니다.');
+
+        const callChatSessionId = $('callChatSessionIdInput').value.trim();
+        if (!callChatSessionId) return alert('callChatSessionId를 입력하세요.');
+
+        const question = $('questionInput').value.trim();
+        if (!question) return alert('질문을 입력하세요.');
+
+        $('answerArea').style.display = 'none';
+        $('answerText').innerHTML = '';
+        $('sources').innerHTML = '';
+
+        esAsk = new EventSource(`/api/call-chat/stream?callChatSessionId=${encodeURIComponent(callChatSessionId)}&question=${encodeURIComponent(question)}&token=${encodeURIComponent(token)}`);
+
+        let jsonBuf = "";
+        esAsk.onmessage = (ev) => {
+            const chunk = ev.data;
+            if (chunk === "[END]") {
+                try {
+                    if (jsonBuf) {
+                        const parsed = JSON.parse(jsonBuf);
+                        $('answerArea').style.display = 'block';
+                        $('answerText').innerHTML = parsed.answer || '(빈 응답)';
+                        const src = parsed.sourcePages || [];
+                        $('sources').innerHTML = src.length
+                            ? src.map(p => `<div>📌 <b>유형</b>: ${p["유형"] || ''} &nbsp; ⚖ <b>관련 법률</b>: ${p["관련 법률"] || p["관련법률"] || ''}</div>`).join('')
+                            : '<div>출처 없음</div>';
+                    }
+                } catch (e) {
+                    console.error('JSON parse error', e);
+                }
+                esAsk.close();
+                return;
+            }
+            if (chunk.startsWith("[JSON]")) {
+                jsonBuf = chunk.slice(6).trim();
+            } else if (!chunk.startsWith("[ERROR]")) {
+                // 실시간 토큰을 별도 표시하고 싶으면 여기에 append
+                // console.log('token:', chunk);
+            }
+        };
+
+        esAsk.onerror = (e) => {
+            console.error('SSE stream error', e);
+            esAsk.close();
+        };
+    };
+
+    // 4) 저장된 로그 불러오기
+    $('loadLogs').onclick = async () => {
+        try {
+            const token = getToken();
+            if (!token) return alert('accessToken이 없습니다.');
+            const id = $('logsSessionIdInput').value.trim();
+            if (!id) return alert('callChatSessionId를 입력하세요.');
+
+            const res = await fetch(`/api/call-chat-log/session/${encodeURIComponent(id)}`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const json = await res.json();
+            if (!res.ok || !json.isSuccess) {
+                console.error(json);
+                return alert('로그 조회 실패');
+            }
+            const list = json.result || [];
+            $('logs').innerHTML = list.length ? list.map(item => `
+          <div class="card">
+            <div class="q"><span class="badge">Q</span> ${escapeHtml(item.question || '')}</div>
+            <div class="a" style="margin-top:6px;"><span class="badge">A</span> ${item.answer || ''}</div>
+            <div style="margin-top:6px;">
+              ${(item.sourcePages || []).map(p => `<span class="badge">${p["유형"] || '유형없음'}</span>`).join(' ')}
+            </div>
+            <div style="margin-top:6px; color:#666; font-size:12px;">${item.createdAt || ''}</div>
+          </div>
+        `).join('') : '<div>로그 없음</div>';
+        } catch (e) {
+            console.error(e);
+            alert('로그 조회 중 오류');
+        }
+    };
+
+    function escapeHtml(str) {
+        return (str || '').replace(/[&<>"']/g, s => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+        }[s]));
+    }
+
+    // 초기 토큰 UI 반영
+    const existingToken = localStorage.getItem('accessToken');
+    if (existingToken) $('tokenInput').value = existingToken;
+</script>
+</body>
+</html>
