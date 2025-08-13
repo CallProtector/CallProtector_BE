@@ -122,6 +122,14 @@
             if (pendingConnection) {
                 pendingConnection.accept();
                 console.log("✅ 통화 수락 완료");
+                const parsed = parseQueryParams(pendingConnection.parameters.Params);
+                const firstCallSid = parsed.initialCallSid;
+                // 통화 수락 후 서버로 메시지 전송
+                ws.send(JSON.stringify({
+                    event: "callAccepted",
+                    callSid: firstCallSid
+                }));
+                console.log("✅생성된 웹소켓으로 통화 수락 시 callSid 전송 : ", firstCallSid);
                 pendingConnection = null;
                 document.getElementById("accept-btn").style.display = "none";
             }
@@ -303,7 +311,7 @@
 
                     const parsedParams = parseQueryParams(pendingConnection.parameters.Params);
                     const initialCallSid = parsedParams.initialCallSid;
-                    const clientDialCallSid = pendingConnection.parameters.CallSid;
+                    // const clientDialCallSid = pendingConnection.parameters.CallSid;
                     const callerNumber = pendingConnection.parameters.From;
 
                     fetch('/api/call-sessions/user', {
@@ -313,7 +321,7 @@
                             'Authorization': `Bearer ${jwtToken}`
                         },
                         body: JSON.stringify({
-                            toClientCallSid: clientDialCallSid,
+                            // toClientCallSid: clientDialCallSid,
                             originalInboundCallSid: initialCallSid,
                             callerNumber: callerNumber
                         })
@@ -343,6 +351,9 @@
                         return;
                     }
 
+                    const parsedForSend = parseQueryParams(pendingConnection.parameters.Params);
+                    const callSid = parsedForSend.initialCallSid;
+
                     // 통화 수락 클릭 시에만 웹소켓 연결을 시작하고, 이미 연결되어 있으면 새로 연결하지 않음
                     if (!ws || ws.readyState === WebSocket.CLOSED) {
                         ws = new WebSocket(`wss://callprotect.site/ws/stt?userId=${currentUserId}`);
@@ -354,6 +365,13 @@
                         if (pendingConnection) {
                             pendingConnection.accept();
                             console.log("✅ 통화 수락 완료 (웹소켓 이미 연결됨)");
+
+                            // 통화 수락 후 서버로 메시지 전송
+                            ws.send(JSON.stringify({
+                                event: "callAccepted",
+                                callSid: callSid
+                            }));
+                            console.log("✅기존 웹소켓으로 통화 수락 시 callSid 전송 : ", callSid);
                             pendingConnection = null;
                             document.getElementById("accept-btn").style.display = "none";
                         }
