@@ -20,7 +20,6 @@ import callprotector.spring.domain.callsttlog.service.CallSttLogService;
 import callprotector.spring.domain.callsttlog.dto.response.CallSttLogResponseDTO;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -49,6 +48,9 @@ public class SttContext {
 	private static final String ABUSIVE_TYPE_NORMAL = "정상";
 	private static final String DATA_TYPE_STT = "stt";
 	private static final Boolean IS_FINAL_TRUE = true;
+
+	private long lastBeepAt = 0L;
+	private static final long BEEP_COOLDOWN_MS = 1000;
 
 	public SttContext(Long callSessionId, Long userId, CallTrack track, FastClient fastClient,
 						CallSessionService callSessionService, CallLogService callLogService, CallSttLogService callSttLogService, ClientNotifier sttWebSocketHandler) {
@@ -150,6 +152,7 @@ public class SttContext {
 								log.info("STT 결과 욕설 감지 - (isAbuse={}) / CallSession total_abuse_cnt 업데이트 시도 - CallSessionId={}", isAbuse, callSessionId);
 								callSessionService.incrementTotalAbuseCnt(callSessionId);
 								callLogService.updateAbuse(callSessionId, track);
+								sendBeepIfAllowed(1000);
 							}
 						} else {
 							// OUTBOUND는 중복 누적 방지 없이 무조건 추가
@@ -365,6 +368,7 @@ public class SttContext {
 										callSessionService.incrementTotalAbuseCnt(callSessionId);
 										log.info("🍀 고객 발화 필터링됨");
 										callLogService.updateAbuse(callSessionId, track);
+										sendBeepIfAllowed(1000);
 									}
 								} else { // OUTBOUND (상담원) 스크립트 누적
 									// 중복 누적 방지 없이 무조건 추가
@@ -425,4 +429,19 @@ public class SttContext {
 		}
 		return false;
 	}
+
+	// 상담원 비프 트리거 전송
+	private void sendBeepIfAllowed(long durationMs) {
+		if (userId == null) return;
+		long now = System.currentTimeMillis();
+		if (now - lastBeepAt < BEEP_COOLDOWN_MS) return;
+		sttWebSocketHandler.sendSttToClient(userId, Map.of(
+				"type", "beep",
+				"durationMs", durationMs,
+				"ts", now
+		));
+		lastBeepAt = now;
+		log.info("🔔 비프 트리거 전송 (userId={}, durationMs={})", userId, durationMs);
+	}
+
 }
