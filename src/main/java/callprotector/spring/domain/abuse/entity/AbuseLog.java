@@ -24,6 +24,7 @@ public class AbuseLog extends BaseEntity {
     @JoinColumn(name = "call_log_id")
     private CallLog callLog;
 
+    @Builder.Default
     @OneToMany(mappedBy = "abuseLog", cascade = CascadeType.ALL)
     private List<AbuseTypeLog> abuseTypeLogList = new ArrayList<>();
 
