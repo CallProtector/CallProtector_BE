@@ -19,6 +19,7 @@ import callprotector.spring.domain.callsttlog.service.CallSttLogService;
 import callprotector.spring.domain.user.service.UserService;
 import callprotector.spring.domain.callsession.dto.request.CallSessionRequestDTO;
 
+import callprotector.spring.global.multimodal.ShoutingDetector;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ public class TwilioMediaStreamProcessor {
 	private final UserService userService;
 	private final ClientNotifier sttWebSocketHandler;
 	private final TwilioSessionManager twilioSessionManager;
+	private final ShoutingDetector shoutingDetector;
 
 	private final Map<CallTrack, SttContext> sttContexts = new ConcurrentHashMap<>();
 
@@ -64,6 +66,11 @@ public class TwilioMediaStreamProcessor {
 		// sttContexts 맵에 저장된 모든 STTContext 인스턴스에 대해 closeStream() 호출
 		sttContexts.values().forEach(SttContext::closeStream);
 
+		// ShoutingDetector 리소스 정리
+		if (this.shoutingDetector != null) {
+			this.shoutingDetector.close();
+		}
+
 		// CallSession의 endedAt 필드 업데이트
 		if (currentCallSessionId == null) {
 			log.warn("CallSession ID가 null이므로, endedAt을 업데이트할 수 없습니다.");
@@ -89,6 +96,16 @@ public class TwilioMediaStreamProcessor {
 			sttContexts.values().forEach(ctx -> ctx.updateUserId(newUserId));
 
 			log.info("CallSessionId {}의 userId를 {}로 업데이트 왑료", this.currentCallSessionId, this.currentUserId);
+		}
+	}
+
+	public void handleCallAccepted() {
+		try {
+			// ShoutingDetector 초기화
+			shoutingDetector.initializeTarsosDSP(8000);
+			log.info("✅ 전화 수락 이벤트 수신. ShoutingDetector 초기화 완료.");
+		} catch (IOException e) {
+			log.error("ShoutingDetector 초기화 중 오류 발생", e);
 		}
 	}
 
@@ -169,7 +186,17 @@ public class TwilioMediaStreamProcessor {
 			return;
 		}
 
+		// SttContext에 오디오 데이터 처리
 		ctx.processAudio(audio);
+
+		// ShoutingDetector에 오디오 데이터 전달 (INBOUND 트랙만 분석)
+		if (track == CallTrack.INBOUND) {
+			try {
+				shoutingDetector.transferAudio(audio);
+			} catch (IOException e) {
+				log.error("ShoutingDetector에서 오디오 처리 중 오류 발생. CallSessionId: {}", currentCallSessionId, e);
+			}
+		}
 
 		long now = System.currentTimeMillis();
 
