@@ -21,6 +21,11 @@ configurations {
 
 repositories {
 	mavenCentral()
+
+	maven {
+		name = "TarsosDSP repository"
+		url = "https://mvn.0110.be/releases"
+	}
 }
 
 dependencies {
@@ -109,6 +114,9 @@ dependencies {
 	// WebFlux 의존성 추가
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
+	// TarsosDSP (멀티모달)
+	implementation 'be.tarsos.dsp:core:2.5'
+	implementation 'be.tarsos.dsp:jvm:2.5'
 }
 
 tasks.named('test') {
