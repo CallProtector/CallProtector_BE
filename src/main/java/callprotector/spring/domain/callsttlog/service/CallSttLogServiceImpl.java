@@ -4,6 +4,7 @@ import callprotector.spring.domain.callsttlog.entity.CallSttLog;
 import callprotector.spring.global.common.enums.CallTrack;
 import callprotector.spring.domain.callsttlog.repository.CallSttLogRepository;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.Refresh;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,18 +50,20 @@ public class CallSttLogServiceImpl implements CallSttLogService {
         // }
 
         // Elasticsearch 인덱싱
-        /*
-        try {
-            elasticsearchClient.index(i -> i
-                    .index("call_stt_log")
-                    .id(savedSttLog.getId())
-                    .document(savedSttLog)
-            );
-            log.info("Elasticsearch - CallSttLog 인덱싱 완료: id={}", savedSttLog.getId());
-        } catch (IOException e) {
-            log.error("❌ Elasticsearch 인덱싱 실패 - id: {}", savedSttLog.getId(), e);
-        }
-        */
+        new Thread(() -> {
+            try {
+                elasticsearchClient.index(i -> i
+                        .index("call_stt_log")
+                        .id(savedSttLog.getId())
+                        .document(savedSttLog)
+                        .refresh(Refresh.WaitFor)
+                );
+                log.info("Elasticsearch - CallSttLog 인덱싱 완료: id={}", savedSttLog.getId());
+            } catch (IOException e) {
+                log.error("❌ Elasticsearch 인덱싱 실패 - id: {}", savedSttLog.getId(), e);
+            }
+        }).start();
+
         return savedSttLog;
     }
 
