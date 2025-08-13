@@ -35,6 +35,7 @@ public class ChatSession extends BaseEntity {
     private String title; // title 필드 추가
 
 
+    @Builder.Default
     @OneToMany(mappedBy = "chatSession", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChatLog> chatLogs = new ArrayList<>();
 
