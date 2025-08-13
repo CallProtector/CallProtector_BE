@@ -311,7 +311,6 @@
 
                     const parsedParams = parseQueryParams(pendingConnection.parameters.Params);
                     const initialCallSid = parsedParams.initialCallSid;
-                    // const clientDialCallSid = pendingConnection.parameters.CallSid;
                     const callerNumber = pendingConnection.parameters.From;
 
                     fetch('/api/call-sessions/user', {
@@ -321,7 +320,6 @@
                             'Authorization': `Bearer ${jwtToken}`
                         },
                         body: JSON.stringify({
-                            // toClientCallSid: clientDialCallSid,
                             originalInboundCallSid: initialCallSid,
                             callerNumber: callerNumber
                         })

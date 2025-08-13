@@ -21,8 +21,6 @@ import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
 import be.tarsos.dsp.pitch.PitchDetectionHandler;
 import be.tarsos.dsp.pitch.PitchProcessor;
 
-import io.github.givimad.libfvadjni.VoiceActivityDetector;
-
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +39,6 @@ public class ShoutingDetector {
 
 	private volatile double accumulatedBaselineDuration = 0;
 
-	private VoiceActivityDetector vad;
 	private volatile boolean isVoiceDetected = false;
 
 	private AudioDispatcher dispatcher;
@@ -73,57 +70,12 @@ public class ShoutingDetector {
 			JVMAudioInputStream audioStream = new JVMAudioInputStream(audioInputStream);
 
 			dispatcher = new AudioDispatcher(audioStream, 1024, 0);
-			//
-			// // VAD 인스턴스 초기화
-			// vad = VoiceActivityDetector.newInstance();
-			//
-			// // 샘플링 속도, 모드 설정
-			// vad.setSampleRate(VoiceActivityDetector.SampleRate.fromValue(sampleRate));
-			// vad.setMode(VoiceActivityDetector.Mode.QUALITY);
-			//
-			// AudioProcessor vadProcessor = new AudioProcessor() {
-			// 	@Override
-			// 	public boolean process(AudioEvent audioEvent) {
-			// 		byte[] audioBuffer = audioEvent.getByteBuffer();
-			// 		short[] shortBuffer = convertBytesToShorts(audioBuffer);
-			// 		try {
-			// 			isVoiceDetected = vad.process(shortBuffer);
-			// 		} catch (IOException e) {
-			// 			log.error("VAD 처리 중 I/O 에러 발생", e);
-			// 			isVoiceDetected = false;
-			// 		} catch (IllegalArgumentException e) {
-			// 			log.error("VAD 처리 중 유효하지 않은 프레임 길이 에러", e);
-			// 			isVoiceDetected = false;
-			// 		}
-			// 		return true;
-			// 	}
-			//
-			// 	@Override
-			// 	public void processingFinished() {
-			// 	}
-			// };
-
-
 			// 피치 분석 핸들러
 			PitchDetectionHandler pitchHandler = (pitchDetectionResult, audioEvent) -> {
-				// if (!isVoiceDetected) {
-				// 	return;
-				// }
-				//
-				// float pitchInHz = pitchDetectionResult.getPitch();
-				// log.info("pitchInHz = {}", pitchInHz);
-				//
-				// if (pitchInHz > 0) {
-				// 	this.lastKnownPitch = pitchInHz;
-				// } else {
-				// 	this.lastKnownPitch = -1.0f; // 음성이지만 피치를 감지하지 못했을 경우
-				// }
-
 				float pitchInHz = pitchDetectionResult.getPitch();
 				float probability = pitchDetectionResult.getProbability();
 
-				// VAD 대신 피치값이 0보다 클 때를 음성으로 간주
-
+				// 피치값이 0보다 클 때를 음성으로 간주
 				log.info("pitchInHz = {}", pitchInHz);
 
 				if (pitchInHz > 80 && probability > 0.7f) {
@@ -158,16 +110,6 @@ public class ShoutingDetector {
 			AudioProcessor volumeHandler = new AudioProcessor() {
 				@Override
 				public boolean process(AudioEvent audioEvent) {
-					// if (!isVoiceDetected) {
-					// 	return true;
-					// }
-
-					// VAD 대신 피치값이 0보다 클 때를 음성으로 간주
-					// boolean isVoiceDetected = (ShoutingDetector.this.lastKnownPitch > 0);
-					// if (!isVoiceDetected) {
-					// 	return true;
-					// }
-
 					float[] buffer = audioEvent.getFloatBuffer();
 					double sum = IntStream.range(0, buffer.length)
 						.mapToDouble(i -> buffer[i] * buffer[i])
@@ -176,70 +118,7 @@ public class ShoutingDetector {
 					double currentVolume = rms > 0 ? 20 * Math.log10(rms / 0.001f) : -100.0;
 
 					// 볼륨을 기준으로 음성 감지 여부를 판단
-					// isVoiceDetected = currentVolume > VOLUME_DETECTION_THRESHOLD;
 					log.info("currentVolume = {}dB, isVoiceDetected = {}", currentVolume, isVoiceDetected);
-
-
-					// 기준 데이터 수집이 아직 완료되지 않았고, 음성이 감지되었을 때
-					// if (!isBaselineSet.get() && isVoiceDetected) {
-					// 	// 피치값이 유효한지(>0)와 관계없이 볼륨이 기준치 이상이면 데이터 수집 시작
-					// 	if (lastKnownPitch > 0) {
-					// 		basePitches.add((double) lastKnownPitch);
-					// 	} else {
-					// 		// 피치 감지 실패 시 0.0을 추가하여 평균 계산 시 제외되도록 함
-					// 		basePitches.add(0.0);
-					// 	}
-					//
-					// 	baseVolumes.add(currentVolume);
-					// 	accumulatedBaselineDuration += audioEvent.getBufferSize() / audioEvent.getSampleRate();
-					// 	log.info("⭐ 기준 데이터 수집 중: {}Hz, {}dB (누적 시간: {}s)", lastKnownPitch, currentVolume, accumulatedBaselineDuration);
-					//
-					// 	// 누적 시간이 10초를 초과하면 기준값 설정 완료
-					// 	if (accumulatedBaselineDuration >= BASELINE_PERIOD_SECONDS) {
-					// 		calculateBaselineAndSetThreshold();
-					// 		isBaselineSet.set(true);
-					// 		log.info("✅ 기준값 수집 완료.");
-					// 	}
-					// } // 기준값 설정이 완료되었고, 음성이 감지되었을 때 고함 감지 로직 실행
-					// else if (isBaselineSet.get() && isVoiceDetected) {
-					// 	float currentPitch = ShoutingDetector.this.lastKnownPitch;
-					// 	if (currentPitch > shoutingPitchThreshold && currentVolume > shoutingVolumeThreshold) {
-					// 		log.info("🚨🚨🚨 고함 감지! 현재 피치: {}Hz, 볼륨: {}dB", currentPitch, currentVolume);
-					// 	} else {
-					// 		log.info("✅ 정상 대화: 현재 피치 {}Hz, 볼륨 {}dB", currentPitch, currentVolume);
-					// 	}
-					// }
-					// if (!isBaselineSet.get()) {
-					// 	// 유효한 피치 데이터가 있을 때만 누적 시간과 데이터를 추가
-					// 	if (pitchInHz > 0) {
-					// 		basePitches.add((double) pitchInHz);
-					// 		accumulatedBaselineDuration += audioEvent.getBufferSize() / audioEvent.getSampleRate();
-					// 		log.info("⭐ 기준 피치 수집 중: {}Hz (누적 시간: {}s)", pitchInHz, accumulatedBaselineDuration);
-					// 	}
-					//
-					// 	// 누적 시간이 10초를 초과하면 기준값 설정
-					// 	if (accumulatedBaselineDuration >= BASELINE_PERIOD_SECONDS && !isBaselineSet.get()) {
-					// 		calculateBaselineAndSetThreshold();
-					// 		isBaselineSet.set(true);
-					// 		log.info("✅ 기준값 수집 완료.");
-					// 	}
-					// }
-
-					// if (!isBaselineSet.get()) {
-					// 	if (currentVolume > -100) {
-					// 		baseVolumes.add(currentVolume);
-					// 		log.info("⭐ 기준 볼륨 수집 중: {}dB", currentVolume);
-					// 	}
-					// } else {
-					// 	float currentPitch = ShoutingDetector.this.lastKnownPitch;
-					// 	if (currentPitch > shoutingPitchThreshold && currentVolume > shoutingVolumeThreshold) {
-					// 		log.info("🚨🚨🚨 고함 감지! 현재 피치: {}Hz, 볼륨: {}dB", currentPitch, currentVolume);
-					// 		// TODO: 여기에 삐 처리 로직 또는 웹소켓 이벤트 전송 로직 구현
-					// 	} else {
-					// 		log.info("✅ 정상 대화: 현재 피치 {}Hz, 볼륨 {}dB", currentPitch, currentVolume);
-					// 	}
-					// }
-
 
 					// 기준 데이터 수집 단계: 피치가 감지된 경우에만 볼륨 데이터 수집
 					if (!isBaselineSet.get() && isVoiceDetected) {
@@ -266,8 +145,6 @@ public class ShoutingDetector {
 				@Override
 				public void processingFinished() {}
 			};
-
-			// dispatcher.addAudioProcessor(vadProcessor);
 
 			pitchProcessor = new PitchProcessor(PitchProcessor.PitchEstimationAlgorithm.YIN, sampleRate, 1024, pitchHandler);
 			dispatcher.addAudioProcessor(pitchProcessor);
@@ -300,22 +177,6 @@ public class ShoutingDetector {
 		double medianBasePitch = basePitches.get(basePitches.size() / 2);
 		double medianBaseVolume = baseVolumes.get(baseVolumes.size() / 2);
 
-		// double averageBasePitch = basePitches.stream()
-		// 	.mapToDouble(d -> d)
-		// 	.average()
-		// 	.orElse(0.0);
-		//
-		// double averageBaseVolume = baseVolumes.stream()
-		// 	.mapToDouble(d -> d)
-		// 	.average()
-		// 	.orElse(0.0);
-
-		// this.isHighPitchUser = (averageBasePitch > PITCH_BOUNDARY);
-		// double pitchIncreaseFactor = this.isHighPitchUser ? PITCH_INCREASE_FACTOR_HIGH : PITCH_INCREASE_FACTOR_LOW;
-		//
-		// shoutingPitchThreshold = averageBasePitch * (1 + pitchIncreaseFactor);
-		// shoutingVolumeThreshold = averageBaseVolume + DB_BOUNDARY;
-
 		this.isHighPitchUser = (medianBasePitch > PITCH_BOUNDARY);
 		double pitchIncreaseFactor = this.isHighPitchUser ? PITCH_INCREASE_FACTOR_HIGH : PITCH_INCREASE_FACTOR_LOW;
 
@@ -339,9 +200,6 @@ public class ShoutingDetector {
 			if (pipedInputStream != null) {
 				pipedInputStream.close();
 			}
-			// if (vad != null) {
-			// 	vad.close();
-			// }
 		} catch (IOException e) {
 			log.error("Piped 스트림 종료 실패.", e);
 		}
