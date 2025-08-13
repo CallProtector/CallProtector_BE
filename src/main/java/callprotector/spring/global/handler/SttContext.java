@@ -258,12 +258,7 @@ public class SttContext {
 				// 세션 내 기존 욕설 여부 확인
 				boolean hasAbuseInSttLog = callSttLogService.hasAbuseInSession(callSessionId);
 
-				// // FastAPI를 통한 욕설 분석
-				// var inboundResult = fastClient.sendTextToFastAPI(finalTranscript);
-				// log.info("⚠️ [{}] INBOUND 욕설 감지 결과 → isAbuse: {}, type: {}",
-				// 	CallTrack.INBOUND, inboundResult.isAbuse(), inboundResult.getType());
-
-				boolean finalAbuse = hasAbuseInSttLog; //  || inboundResult.isAbuse();
+				boolean finalAbuse = hasAbuseInSttLog;
 
 				String finalAbuseType = hasAbuseInSttLog
 					? callSttLogService.getAbuseTypesBySessionId(callSessionId)
