@@ -8,6 +8,7 @@ import callprotector.spring.domain.callsttlog.service.CallSttLogService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import callprotector.spring.domain.user.service.UserService;
+import callprotector.spring.global.multimodal.ShoutingDetector;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,6 +39,8 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) {
         log.info("✅ WebSocket 연결됨: {}", session.getId());
 
+        ShoutingDetector shoutingDetector = new ShoutingDetector();
+
         TwilioMediaStreamProcessor processor = new TwilioMediaStreamProcessor(
             this.mapper,
             this.fastClient,
@@ -46,7 +49,8 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
             this.callSttLogService,
             this.userService,
             this.sttWebSocketHandler,
-            this.sessionManager
+            this.sessionManager,
+            shoutingDetector
         );
         activeProcessors.put(session.getId(), processor);
     }
