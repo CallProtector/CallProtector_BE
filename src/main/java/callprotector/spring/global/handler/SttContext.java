@@ -66,7 +66,7 @@ public class SttContext {
 
 	// Google STT 스트림 초기화
 	public void initializeStream(String sessionId) throws IOException {
-		client = SpeechClient.create();
+		this.client = SpeechClient.create();
 
 		RecognitionConfig config = RecognitionConfig.newBuilder()
 			.setEncoding(RecognitionConfig.AudioEncoding.MULAW)
@@ -180,7 +180,10 @@ public class SttContext {
 				stream.closeSend();
 			}
 
-			// 새 스트림 초기화
+			// 기존 클라이언트 종료 후, 새 스트림 초기화
+			if (client != null) {
+				client.close();
+			}
 			initializeStream(sessionId);
 			log.info("🔄 [{}] Google STT Stream 재시작됨", track);
 
@@ -255,16 +258,18 @@ public class SttContext {
 				// 세션 내 기존 욕설 여부 확인
 				boolean hasAbuseInSttLog = callSttLogService.hasAbuseInSession(callSessionId);
 
-				// FastAPI를 통한 욕설 분석
-				var inboundResult = fastClient.sendTextToFastAPI(finalTranscript);
-				log.info("⚠️ [{}] INBOUND 욕설 감지 결과 → isAbuse: {}, type: {}",
-					CallTrack.INBOUND, inboundResult.isAbuse(), inboundResult.getType());
+				// // FastAPI를 통한 욕설 분석
+				// var inboundResult = fastClient.sendTextToFastAPI(finalTranscript);
+				// log.info("⚠️ [{}] INBOUND 욕설 감지 결과 → isAbuse: {}, type: {}",
+				// 	CallTrack.INBOUND, inboundResult.isAbuse(), inboundResult.getType());
 
-				boolean finalAbuse = hasAbuseInSttLog || inboundResult.isAbuse();
+				boolean finalAbuse = hasAbuseInSttLog; //  || inboundResult.isAbuse();
 
 				String finalAbuseType = hasAbuseInSttLog
 					? callSttLogService.getAbuseTypesBySessionId(callSessionId)
-					: inboundResult.getType();
+					: ABUSIVE_TYPE_NORMAL;
+
+
 
 				// 최종 텍스트를 CallLog에 저장
 				callLogService.saveFinalTranscript(
