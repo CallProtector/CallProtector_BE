@@ -3,6 +3,7 @@ package callprotector.spring.global.handler;
 import callprotector.spring.domain.callsession.dto.response.CallSessionResponseDTO;
 import callprotector.spring.domain.callsttlog.dto.response.CallSttLogResponseDTO;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -26,6 +27,7 @@ import java.util.function.Consumer;
 public class SttWebSocketHandler extends TextWebSocketHandler implements ClientNotifier {
 
     private final ObjectMapper objectMapper;
+    private final TwilioSessionManager sessionManager;
 
     // WebSocket 세션 관리
     private final Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
@@ -56,7 +58,20 @@ public class SttWebSocketHandler extends TextWebSocketHandler implements ClientN
     // 데이터 통신시 (Client -> Server)
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        super.handleTextMessage(session, message);
+        // super.handleTextMessage(session, message);
+        JsonNode json = objectMapper.readTree(message.getPayload());
+        String event = json.path("event").asText();
+        String callSid = json.path("callSid").asText();
+
+        if ("callAccepted".equals(event) && callSid != null) {
+            log.info("📞 클라이언트로부터 전화 수락 이벤트 수신. CallSid: {}", callSid);
+            TwilioMediaStreamProcessor processor = sessionManager.getProcessorByCallSid(callSid);
+            if (processor != null) {
+                processor.handleCallAccepted();
+            } else {
+                log.warn("CallSid {}에 해당하는 TwilioMediaStreamProcessor를 찾을 수 없음.", callSid);
+            }
+        }
     }
 
     // 웹소켓 통신 에러시
