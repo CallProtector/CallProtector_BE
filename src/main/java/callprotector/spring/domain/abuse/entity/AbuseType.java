@@ -18,6 +18,7 @@ public class AbuseType extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Builder.Default
     @OneToMany(mappedBy = "abuseType", cascade = CascadeType.ALL)
     private List<AbuseTypeLog> abuseTypeLogList = new ArrayList<>();
 
