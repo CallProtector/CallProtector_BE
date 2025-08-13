@@ -1,10 +1,8 @@
 package callprotector.spring.domain.callsession.service;
 
-import callprotector.spring.domain.abuse.entity.AbuseLog;
 import callprotector.spring.domain.abuse.entity.AbuseType;
 import callprotector.spring.domain.abuse.repository.AbuseLogRepository;
 import callprotector.spring.domain.abuse.repository.AbuseTypeLogRepository;
-import callprotector.spring.domain.calllog.entity.CallLog;
 import callprotector.spring.domain.calllog.repository.CallLogRepository;
 import callprotector.spring.domain.callsession.entity.CallSession;
 import callprotector.spring.domain.callsession.repository.CallSessionRepository;
@@ -15,7 +13,6 @@ import callprotector.spring.global.apiPayload.code.status.ErrorStatus;
 import callprotector.spring.global.common.enums.CallTrack;
 import callprotector.spring.global.apiPayload.exception.handler.*;
 import callprotector.spring.global.handler.SttWebSocketHandler;
-import callprotector.spring.domain.abuse.entity.AbuseTypeLog;
 import callprotector.spring.domain.callsttlog.service.CallSttLogService;
 import callprotector.spring.global.ai.GeminiService.GeminiService;
 import callprotector.spring.global.ai.OpenAiService.OpenAiSummaryService;
