@@ -1,4 +1,4 @@
-package callprotector.spring.domain.chat.service;
+package callprotector.spring.domain.callchat.service;
 
 import org.springframework.http.codec.ServerSentEvent;
 import reactor.core.publisher.Flux;

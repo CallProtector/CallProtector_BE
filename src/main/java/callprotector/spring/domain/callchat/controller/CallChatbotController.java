@@ -1,6 +1,6 @@
 package callprotector.spring.domain.callchat.controller;
 
-import callprotector.spring.domain.chat.service.CallChatbotService;
+import callprotector.spring.domain.callchat.service.CallChatbotService;
 import callprotector.spring.global.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
