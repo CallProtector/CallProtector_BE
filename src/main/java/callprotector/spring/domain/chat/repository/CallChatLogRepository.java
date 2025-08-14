@@ -1,6 +1,6 @@
 package callprotector.spring.domain.chat.repository;
 
-import callprotector.spring.domain.chat.entity.CallChatLog;
+import callprotector.spring.domain.callchat.entity.CallChatLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

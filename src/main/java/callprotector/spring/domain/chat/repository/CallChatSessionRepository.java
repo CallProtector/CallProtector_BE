@@ -1,6 +1,6 @@
 package callprotector.spring.domain.chat.repository;
 
-import callprotector.spring.domain.chat.entity.CallChatSession;
+import callprotector.spring.domain.callchat.entity.CallChatSession;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
