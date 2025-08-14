@@ -21,20 +21,6 @@ import java.util.List;
 public class CallChatSessionController {
 
     private final CallChatSessionService callChatSessionService;
-    private final UserService userService;
-    private final CallSessionService callSessionService;
-
-    @PostMapping
-    public ApiResponse<CallChatSessionResponseDTO.CallChatSessionResponse> createSession(
-            @UserId Long userId,
-            @RequestParam Long callSessionId) {
-
-        User user = userService.getUserById(userId);
-        CallSession callSession = callSessionService.getCallSession(callSessionId);
-
-        return ApiResponse.onSuccess(callChatSessionService.createCallChatSession(user, callSession));
-    }
-
 
 
     @GetMapping("/list")
