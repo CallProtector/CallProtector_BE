@@ -47,7 +47,7 @@
             }
 
             if (!currentSessionId) {
-                const sessionRes = await fetch("/api/chat-session", {
+                const sessionRes = await fetch("/api/chat-sessions", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

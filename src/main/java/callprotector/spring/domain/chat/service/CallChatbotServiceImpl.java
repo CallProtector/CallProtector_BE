@@ -54,8 +54,9 @@ public class CallChatbotServiceImpl implements CallChatbotService {
 
         return webClientBuilder.build()
                 .post()
-                .uri("http://localhost:8000/api/chatbot/analyze")  // FastAPI 주소
+                .uri("http://localhost:8000/ai/callsession/analyze")  // FastAPI 주소
                 .contentType(MediaType.APPLICATION_JSON)
+                // ★★★ 이 부분 수정해야되나?
                 .bodyValue(Map.of(
                         "sessionId", sessionId,
                         "userId", userId,

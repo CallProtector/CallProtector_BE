@@ -65,7 +65,9 @@ public class ChatStreamController {
         StringBuilder jsonBuffer = new StringBuilder();
 
         return webClient.post()
-                .uri("/stream")
+                .uri("ai/chat/stream")
+                .contentType(MediaType.APPLICATION_JSON)           // ✅ 추가
+                .accept(MediaType.TEXT_EVENT_STREAM)               // ✅ 추
                 .bodyValue(Map.of("session_id", sessionId, "question", question))
                 .retrieve()
                 .bodyToFlux(String.class)
@@ -104,6 +106,6 @@ public class ChatStreamController {
                         log.error("❌ JSON 파싱 오류", e);
                     }
                 })
-                .delayElements(Duration.ofMillis(20));
+                .delayElements(Duration.ofMillis(5));
     }
 }
