@@ -127,6 +127,6 @@ public class CallChatStreamController {
                         log.error("❌ 상담별 채팅 저장 실패", e);
                     }
                 })
-                .delayElements(Duration.ofMillis(20));
+                .delayElements(Duration.ofMillis(5));
     }
 }
