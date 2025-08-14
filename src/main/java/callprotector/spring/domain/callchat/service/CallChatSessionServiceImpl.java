@@ -36,26 +36,6 @@ public class CallChatSessionServiceImpl implements CallChatSessionService {
                 });
     }
 
-    @Override
-    @Transactional
-    public CallChatSessionResponseDTO.CallChatSessionResponse createCallChatSession(User user, CallSession callSession) {
-        String callsessionCode = callSession.getCallSessionCode(); // title callsessionCode 사용
-
-        CallChatSession session = CallChatSession.builder()
-                .user(user)
-                .callSession(callSession)
-                .title(callsessionCode)
-                .build();
-
-        CallChatSession saved = callChatSessionRepository.save(session);
-
-        return CallChatSessionResponseDTO.CallChatSessionResponse.builder()
-                .sessionId(saved.getId())
-                .title(saved.getTitle())
-                .createdAt(saved.getCreatedAt().toString())
-                .build();
-    }
-
 
     @Override
     @Transactional(readOnly = true)
