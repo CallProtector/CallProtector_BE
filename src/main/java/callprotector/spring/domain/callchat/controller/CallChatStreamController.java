@@ -5,6 +5,7 @@ import callprotector.spring.domain.callsttlog.service.CallSttLogService;
 import callprotector.spring.domain.callchat.entity.CallChatSession;
 import callprotector.spring.domain.callchat.service.CallChatLogService;
 import callprotector.spring.domain.callchat.service.CallChatSessionService;
+import callprotector.spring.global.client.ChatbotClient;
 import callprotector.spring.global.security.TokenProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
 import java.time.Duration;
@@ -30,7 +30,8 @@ import java.util.Map;
 @Tag(name = "CallChatStream", description = "상담별 채팅 질문 전송 관련 API")
 public class CallChatStreamController {
 
-    private final WebClient webClient = WebClient.create("http://localhost:8000"); // FastAPI
+    private final ChatbotClient chatbotClient;
+
     private final CallChatLogService callChatLogService;
     private final CallChatSessionService callChatSessionService;
     private final TokenProvider tokenProvider;
@@ -38,8 +39,10 @@ public class CallChatStreamController {
     // 08/13 추가: STT 로그 조회용
     private final CallSttLogService callSttLogService;
 
-
-    @Operation(summary = "상담별 채팅 질문 전송 API", description ="상담원이 입력한 법률 질문을, 문맥을 유지하고 있는 챗봇에게 전송하고 응답을 받아옵니다.")
+    @Operation(
+            summary = "상담별 채팅 질문 전송 API",
+            description ="상담원이 입력한 법률 질문을, 문맥을 유지하고 있는 챗봇에게 전송하고 응답을 받아옵니다."
+    )
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamCallChat(
             @Parameter(description = "대화가 기록될 CallChatSession ID", required = true)
@@ -81,23 +84,17 @@ public class CallChatStreamController {
             contextScripts = scripts;
         }
 
-
-
         StringBuilder jsonBuffer = new StringBuilder();
 
         // 3) FastAPI 호출
-        return webClient.post()
-                .uri("ai/callchat/stream")
-                .contentType(MediaType.APPLICATION_JSON)                 // 추가
-                .accept(MediaType.TEXT_EVENT_STREAM)                     // 추가
-                // ★★★  08/13 수정(해야됨묘ㅋ) ~
-                .bodyValue(Map.of(
-                        "session_id", callChatSessionId,   // 백엔드 메모리 키로 쓰고 싶으면 이 값 활용
-                        "question", question,
-                        "context_scripts", contextScripts
-                ))
-                .retrieve()
-                .bodyToFlux(String.class)
+        return chatbotClient.sendChatRequest(
+                        "/ai/callchat/stream",
+                        Map.of(
+                                "session_id", callChatSessionId,   // 백엔드 메모리 키로 쓰고 싶으면 이 값 활용
+                                "question", question,
+                                "context_scripts", contextScripts
+                        )
+                )
                 .map(raw -> {                                            // data: 조건부 제거
                     String s = raw == null ? "" : raw.trim();
                     if (s.startsWith("data:")) s = s.substring(5).trim();
