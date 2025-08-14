@@ -9,6 +9,7 @@ import callprotector.spring.global.handler.TwilioMediaStreamProcessor;
 import callprotector.spring.global.handler.TwilioSessionManager;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,13 +20,14 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/call-sessions")
+@Tag(name = "CallSession", description = "상담 내역 관련 API")
 public class CallSessionController {
 
     private final CallSessionService callSessionService;
     private final TwilioSessionManager twilioSessionManager;
 
     @Operation(
-            summary = "상담 내역 조회 API",
+            summary = "상담 내역 전체 조회 API",
             description = "검색어(keyword), 폭언 카테고리(category), 정렬 순서(order), 커서 기반 페이지네이션(cursorId)을 기반으로 상담 내역을 조회합니다."
     )
     @GetMapping("")
@@ -69,7 +71,10 @@ public class CallSessionController {
         );
     }
 
-    @Operation(summary = "callSession 상세 조회 API", description = "상담 내역 상세 조회 시 callSession을 조회합니다.")
+    @Operation(
+            summary = "상담 내역 상세 조회 API",
+            description = "상담 내역 상세 조회 시 callSession을 조회합니다."
+    )
     @GetMapping("/{callSessionId}")
     public ApiResponse<CallSessionResponseDTO.CallSessionDetailResponseDTO> getCallSession(
         @PathVariable("callSessionId") Long id,
@@ -93,8 +98,8 @@ public class CallSessionController {
     }
 
     @Operation(
-        summary = "AI 상담 요약 생성 API - Gemini 2.5 flash",
-        description = "CallSession ID를 기반으로 고객과 상담원의 통화 내용을 요약하여 CallSession의 summary_detailed 필드에 저장합니다."
+            summary = "AI 상담 요약 생성 API - Gemini 2.5 flash",
+            description = "CallSession ID를 기반으로 고객과 상담원의 통화 내용을 요약하여 CallSession의 summary_detailed 필드에 저장합니다."
     )
     @PostMapping("/{callSessionId}/summary/detailed")
     public ApiResponse<CallSessionResponseDTO.CallSessionSummaryResponseDTO> generateSummaryGemini(
@@ -106,8 +111,8 @@ public class CallSessionController {
     }
 
     @Operation(
-        summary = "전화 수락 시 call session 생성 API",
-        description = "전화 수락 시 해당 userId로 callsession을 생성하고 세션 정보를 반환합니다."
+            summary = "전화 수락 시 callSession 생성 API",
+            description = "전화 수락 시 해당 userId로 callsession을 생성하고 세션 정보를 반환합니다."
     )
     @PatchMapping("/user")
     public ApiResponse<CallSessionResponseDTO.CallSessionInfoDTO> acceptCallFromClient(
@@ -132,11 +137,9 @@ public class CallSessionController {
         return ApiResponse.onSuccess(response);
     }
 
-
-
     @Operation(
             summary = "폭언 상담 내역 조회 API",
-            description = "폭언(욕설, 성희롱, 협박)이 발생한 상담 내역만 조회합니다."
+            description = "폭언(욕설, 성희롱, 협박)이 발생한 상담 내역을 조회합니다."
     )
     @GetMapping("/abusive")
     public ApiResponse<CallSessionResponseDTO.AbusiveCallSessionPagingDTO> getAbusiveCallSessions(
