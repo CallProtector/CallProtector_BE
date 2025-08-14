@@ -59,7 +59,7 @@ gcp:
 elasticsearch:
   host: localhost
   port: 9200
-  enabled: false
+  enabled: true
 
 fastapi:
   url: http://localhost:8000/api/abuse/filter
