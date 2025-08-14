@@ -8,6 +8,9 @@ import callprotector.spring.domain.callchat.service.CallChatSessionService;
 import callprotector.spring.global.security.TokenProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -24,6 +27,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/call-chat")
+@Tag(name = "CallChatStream", description = "상담별 채팅 질문 전송 관련 API")
 public class CallChatStreamController {
 
     private final WebClient webClient = WebClient.create("http://localhost:8000"); // FastAPI
@@ -31,14 +35,20 @@ public class CallChatStreamController {
     private final CallChatSessionService callChatSessionService;
     private final TokenProvider tokenProvider;
 
-    // ★★★  08/13 추가: STT 로그 조회용
+    // 08/13 추가: STT 로그 조회용
     private final CallSttLogService callSttLogService;
 
 
+    @Operation(summary = "상담별 채팅 질문 전송 API", description ="상담원이 불러온 폭언 발생한 상담 내역을 챗봇에게 전송하고, 분석 결과를 받아옵니다.")
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamCallChat(
+            @Parameter(description = "대화가 기록될 CallChatSession ID", required = true)
             @RequestParam Long callChatSessionId,
+
+            @Parameter(description = "질문 내용", required = true)
             @RequestParam String question,
+
+            @Parameter(description = "JWT 토큰", required = true)
             @RequestParam String token
     ) {
         // 1) JWT → userId
