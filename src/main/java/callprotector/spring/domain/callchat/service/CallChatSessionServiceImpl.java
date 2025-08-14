@@ -1,4 +1,4 @@
-package callprotector.spring.domain.chat.service;
+package callprotector.spring.domain.callchat.service;
 
 import callprotector.spring.domain.callsession.entity.CallSession;
 import callprotector.spring.domain.callchat.dto.response.CallChatSessionResponseDTO;
@@ -15,7 +15,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class CallChatSessionServiceImpl implements CallChatSessionService{
+public class CallChatSessionServiceImpl implements CallChatSessionService {
 
     private final CallChatSessionRepository callChatSessionRepository;
 
