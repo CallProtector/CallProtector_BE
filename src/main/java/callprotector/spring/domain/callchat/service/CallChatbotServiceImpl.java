@@ -4,12 +4,11 @@ import callprotector.spring.domain.callsession.service.CallSessionService;
 import callprotector.spring.domain.callsttlog.entity.CallSttLog;
 import callprotector.spring.domain.callsttlog.service.CallSttLogService;
 import callprotector.spring.domain.user.service.UserService;
+import callprotector.spring.global.client.ChatbotClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -20,7 +19,8 @@ import java.util.Map;
 @Slf4j
 public class CallChatbotServiceImpl implements CallChatbotService {
 
-    private final WebClient.Builder webClientBuilder;
+    private final ChatbotClient chatbotClient;
+
     private final CallSttLogService callSttLogService;
 
     // 저장을 위한 추가 주입
@@ -41,6 +41,7 @@ public class CallChatbotServiceImpl implements CallChatbotService {
 
         // MongoDB 에서 script 조회
         List<CallSttLog> logs = callSttLogService.getAllBySessionId(sessionId);
+
         // STT 스크립트 -> FastAPI 요청 페이로드 구성
         List<Map<String, String>> scripts = logs.stream()
                 .map(log -> Map.of(
@@ -52,19 +53,14 @@ public class CallChatbotServiceImpl implements CallChatbotService {
         // [JSON] 청크 버퍼
         StringBuilder jsonBuffer = new StringBuilder();
 
-        return webClientBuilder.build()
-                .post()
-                .uri("http://localhost:8000/ai/callsession/analyze")  // FastAPI 주소
-                .contentType(MediaType.APPLICATION_JSON)
-                // ★★★ 이 부분 수정해야되나?
-                .bodyValue(Map.of(
-                        "sessionId", sessionId,
-                        "userId", userId,
-                        "scripts", scripts
-                ))
-                .accept(MediaType.TEXT_EVENT_STREAM)
-                .retrieve()
-                .bodyToFlux(String.class)
+        return chatbotClient.sendChatRequest(
+                        "/ai/callsession/analyze",
+                        Map.of(
+                                "sessionId", sessionId,
+                                "userId", userId,
+                                "scripts", scripts
+                        )
+                )
                 // 1) "data:" 접두사는 있을 수도/없을 수도 → 조건부 제거
                 .map(raw -> {
                     String s = raw == null ? "" : raw.trim();
