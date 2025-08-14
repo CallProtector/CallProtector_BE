@@ -62,7 +62,8 @@ public class WebSecurityConfig
                                             "/api/chat/stream",
                                             "/chatsessionstream.html", // [상담별 Chat 관련] 임시 프론트 테스트용 HTML 직접 접근 허용
                                             "/api/chatbot/analyze/**",
-                                            "/callchatstream.html" // [상담별 Chat 후속 관련] 임시 프론트 테스트용 HTML 직접 접근 허용
+                                            "/callchatstream.html", // [상담별 Chat 후속 관련] 임시 프론트 테스트용 HTML 직접 접근 허용
+                                            "/api/call-chat/stream"
                                     )
                                     .permitAll()
                                     .anyRequest().authenticated()

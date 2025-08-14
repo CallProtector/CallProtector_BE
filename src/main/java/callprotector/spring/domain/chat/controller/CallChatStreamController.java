@@ -1,5 +1,7 @@
 package callprotector.spring.domain.chat.controller;
 
+import callprotector.spring.domain.callsttlog.entity.CallSttLog;
+import callprotector.spring.domain.callsttlog.service.CallSttLogService;
 import callprotector.spring.domain.chat.entity.CallChatSession;
 import callprotector.spring.domain.chat.service.CallChatLogService;
 import callprotector.spring.domain.chat.service.CallChatSessionService;
@@ -14,6 +16,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -26,6 +30,10 @@ public class CallChatStreamController {
     private final CallChatLogService callChatLogService;
     private final CallChatSessionService callChatSessionService;
     private final TokenProvider tokenProvider;
+
+    // ★★★  08/13 추가: STT 로그 조회용
+    private final CallSttLogService callSttLogService;
+
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamCallChat(
@@ -42,17 +50,41 @@ public class CallChatStreamController {
             throw new IllegalArgumentException("해당 상담 기반 세션에 접근할 권한이 없습니다.");
         }
 
+        // ★★★  08/13 추가: Scripts 구성 (callchatbot 서비스 로직 재사용)
+        List<Map<String, String>> contextScripts = List.of(); // 기본 빈 리스트
+        if (session.getCallSession() != null) {
+            Long callSessionId = session.getCallSession().getId();
+            List<CallSttLog> logs = callSttLogService.getAllBySessionId(callSessionId);
+
+            // (A) 전부 전송 (2번과 동일)
+            List<Map<String, String>> scripts = new ArrayList<>(logs.size());
+            for (CallSttLog log : logs) {
+                scripts.add(Map.of(
+                        "speaker", log.getTrack().name(),  // INBOUND / OUTBOUND
+                        "text", log.getScript()
+                ));
+            }
+
+            // (옵션) 페이로드 최적화: abuse 구간 ±2턴 + 총 6000자 컷
+            // scripts = trimByAbuseWindowAndLength(logs, 2, 6000);
+
+            contextScripts = scripts;
+        }
+
+
+
         StringBuilder jsonBuffer = new StringBuilder();
 
         // 3) FastAPI 호출 (일반 대화용 /stream 재사용)
         return webClient.post()
-                .uri("/stream")
+                .uri("ai/callchat/stream")
                 .contentType(MediaType.APPLICATION_JSON)                 // 추가
                 .accept(MediaType.TEXT_EVENT_STREAM)                     // 추가
+                // ★★★  08/13 수정(해야됨묘ㅋ) ~
                 .bodyValue(Map.of(
                         "session_id", callChatSessionId,   // 백엔드 메모리 키로 쓰고 싶으면 이 값 활용
                         "question", question,
-                        "mode", "CALL" // (선택) 프롬프트 차별화 플래그
+                        "context_scripts", contextScripts
                 ))
                 .retrieve()
                 .bodyToFlux(String.class)
