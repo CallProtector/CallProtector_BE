@@ -11,9 +11,9 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-        show_sql: true
-        format_sql: true
-        use_sql_comments: true
+        show_sql: false
+        format_sql: false
+        use_sql_comments: false
         hbm2ddl:
           auto: update
         default_batch_fetch_size: 1000
@@ -63,3 +63,6 @@ elasticsearch:
 
 fastapi:
   url: http://localhost:8000/api/abuse/filter
+
+chatbot:
+  url: http://localhost:8000
