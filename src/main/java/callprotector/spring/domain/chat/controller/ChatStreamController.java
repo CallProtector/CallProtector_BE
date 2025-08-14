@@ -3,6 +3,7 @@ package callprotector.spring.domain.chat.controller;
 import callprotector.spring.domain.chat.entity.ChatSession;
 import callprotector.spring.domain.chat.service.ChatLogService;
 import callprotector.spring.domain.chat.service.ChatSessionService;
+import callprotector.spring.global.client.ChatbotClient;
 import callprotector.spring.global.security.TokenProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
 import java.time.Duration;
@@ -29,12 +29,16 @@ import java.util.Map;
 @Tag(name = "ChatStream", description = "일반 채팅 질문 전송 관련 API")
 public class ChatStreamController {
 
-    private final WebClient webClient = WebClient.create("http://localhost:8000"); // FastAPI URL
+    private final ChatbotClient chatbotClient;
+
     private final ChatLogService chatLogService;
     private final ChatSessionService chatSessionService;
     private final TokenProvider tokenProvider;
 
-    @Operation(summary = "일반 채팅 질문 전송 API", description ="상담원이 입력한 일반 법률 질문을 챗봇에게 전송하고 응답을 받아옵니다.")
+    @Operation(
+            summary = "일반 채팅 질문 전송 API",
+            description ="상담원이 입력한 일반 법률 질문을 챗봇에게 전송하고 응답을 받아옵니다."
+    )
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamChat(
             @Parameter(description = "대화가 기록될 ChatSession ID", required = true)
@@ -61,13 +65,10 @@ public class ChatStreamController {
 
         StringBuilder jsonBuffer = new StringBuilder();
 
-        return webClient.post()
-                .uri("ai/chat/stream")
-                .contentType(MediaType.APPLICATION_JSON)           // 추가
-                .accept(MediaType.TEXT_EVENT_STREAM)               // 추가
-                .bodyValue(Map.of("session_id", sessionId, "question", question))
-                .retrieve()
-                .bodyToFlux(String.class)
+        return chatbotClient.sendChatRequest(
+                        "/ai/chat/stream",
+                        Map.of("session_id", sessionId, "question", question)
+                )
                 .map(data -> data.replace("data:", "").trim())
                 .doOnNext(chunk -> {
                     if (chunk.startsWith("[JSON]")) {
