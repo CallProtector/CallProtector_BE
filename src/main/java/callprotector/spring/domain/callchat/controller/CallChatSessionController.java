@@ -35,25 +35,6 @@ public class CallChatSessionController {
         return ApiResponse.onSuccess(callChatSessionService.createCallChatSession(user, callSession));
     }
 
-    // 기존에 있는 CallChatSession 기준으로 불러오기 (이어서 진행하기 위함)
-    @GetMapping("/by-call-session")
-    public ApiResponse<CallChatSessionResponseDTO.CallChatSessionResponse> getOrCreateByCallSession(
-            @UserId Long userId,
-            @RequestParam Long callSessionId
-    ) {
-        var user = userService.getUserById(userId);
-        var callSession = callSessionService.getCallSession(callSessionId);
-
-        var sess = callChatSessionService.getOrCreate(user, callSession);
-
-        return ApiResponse.onSuccess(
-                CallChatSessionResponseDTO.CallChatSessionResponse.builder()
-                        .sessionId(sess.getId())
-                        .title(sess.getTitle())
-                        .createdAt(sess.getCreatedAt().toString())
-                        .build()
-        );
-    }
 
 
     @GetMapping("/list")
