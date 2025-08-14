@@ -44,8 +44,8 @@ public class ChatStreamController {
             @RequestParam String question,
 
             @Parameter(description = "JWT 토큰", required = true)
-            @RequestParam String token
-    ) {
+            @RequestParam String token) {
+
         // JWT 추출 (쿼리로만 받음)
         String jwt = token;
         log.info("🔑 전달된 JWT (query): {}", jwt);

@@ -32,7 +32,7 @@ public class ChatSessionController {
     }
 
 
-    @Operation(summary = "일반 채팅 세션 목록 조회 API", description = "일반 챗봇 채팅 세션을 조회합니다.")
+    @Operation(summary = "일반 채팅 세션 목록 조회 API", description = "유저에 해당하는 일반 챗봇 채팅 세션을 조회합니다.")
     @GetMapping("/list")
     public ApiResponse<List<ChatSessionResponseDTO.ChatSessionResponse>> getSessionList(@UserId Long userId) {
         return ApiResponse.onSuccess(chatSessionService.getSessionList(userId));
