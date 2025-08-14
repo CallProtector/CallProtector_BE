@@ -85,7 +85,7 @@ public class CallChatStreamController {
 
         StringBuilder jsonBuffer = new StringBuilder();
 
-        // 3) FastAPI 호출 (일반 대화용 /stream 재사용)
+        // 3) FastAPI 호출
         return webClient.post()
                 .uri("ai/callchat/stream")
                 .contentType(MediaType.APPLICATION_JSON)                 // 추가
