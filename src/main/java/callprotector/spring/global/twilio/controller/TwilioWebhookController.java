@@ -2,6 +2,7 @@ package callprotector.spring.global.twilio.controller;
 
 import com.twilio.twiml.VoiceResponse;
 import com.twilio.twiml.voice.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -13,6 +14,10 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/twilio")
+@Tag(
+        name = "TwilioWebhook",
+        description = "Twilio 음성 통화 Webhook API. 인바운드 콜 수신 시 브라우저 클라이언트와 WebSocket을 연결하고 통화 흐름(TwiML)을 제어합니다."
+)
 public class TwilioWebhookController {
     private static final String BROWSER_CLIENT_ID = "browserUser";
     private static final String WS_URL ="wss://callprotect.site/ws/audio";
