@@ -9,7 +9,6 @@ import java.util.List;
 
 public interface CallChatSessionService {
     public CallChatSession getOrCreate(User user, CallSession callSession);
-    public CallChatSessionResponseDTO.CallChatSessionResponse createCallChatSession(User user, CallSession callSession);
     public CallChatSession getSessionById(Long sessionId);
     public List<CallChatSessionResponseDTO.CallChatSessionResponse> getSessionListDtoByUserId(Long userId);
 }
