@@ -1,4 +1,4 @@
-package callprotector.spring.domain.chat.controller;
+package callprotector.spring.domain.callchat.controller;
 
 import callprotector.spring.domain.chat.service.CallChatbotService;
 import callprotector.spring.global.security.TokenProvider;
