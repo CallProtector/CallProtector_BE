@@ -1,5 +1,6 @@
-package callprotector.spring.domain.chat.dto.response;
+package callprotector.spring.domain.callchat.dto.response;
 
+import callprotector.spring.domain.chat.dto.response.SourcePageDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

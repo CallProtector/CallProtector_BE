@@ -2,7 +2,7 @@ package callprotector.spring.domain.callchat.controller;
 
 import callprotector.spring.domain.callsession.entity.CallSession;
 import callprotector.spring.domain.callsession.service.CallSessionService;
-import callprotector.spring.domain.chat.dto.response.CallChatSessionResponseDTO;
+import callprotector.spring.domain.callchat.dto.response.CallChatSessionResponseDTO;
 import callprotector.spring.domain.chat.service.CallChatSessionService;
 import callprotector.spring.domain.user.entity.User;
 import callprotector.spring.domain.user.service.UserService;
