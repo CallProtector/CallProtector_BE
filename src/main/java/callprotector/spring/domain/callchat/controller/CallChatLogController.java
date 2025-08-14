@@ -6,6 +6,7 @@ import callprotector.spring.domain.callchat.service.CallChatLogService;
 import callprotector.spring.domain.callchat.service.CallChatSessionService;
 import callprotector.spring.global.annotation.UserId;
 import callprotector.spring.global.apiPayload.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ public class CallChatLogController {
     private final CallChatLogService callChatLogService;
 
 
+    @Operation( summary = "상담별 채팅 세션별 로그 조회 API", description = "CallChatSession에 해당하는 CallChatLog들을 조회합니다.")
     @GetMapping("/session/{sessionId}")
     public ApiResponse<List<CallChatLogResponseDTO.CallChatLogResponse>> getLogs(
             @UserId Long userId,
