@@ -39,7 +39,7 @@ public class CallChatStreamController {
     private final CallSttLogService callSttLogService;
 
 
-    @Operation(summary = "상담별 채팅 질문 전송 API", description ="상담원이 불러온 폭언 발생한 상담 내역을 챗봇에게 전송하고, 분석 결과를 받아옵니다.")
+    @Operation(summary = "상담별 채팅 질문 전송 API", description ="상담원이 입력한 법률 질문을, 문맥을 유지하고 있는 챗봇에게 전송하고 응답을 받아옵니다.")
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamCallChat(
             @Parameter(description = "대화가 기록될 CallChatSession ID", required = true)
