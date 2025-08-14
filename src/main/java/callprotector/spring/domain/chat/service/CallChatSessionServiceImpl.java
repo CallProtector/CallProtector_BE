@@ -3,7 +3,7 @@ package callprotector.spring.domain.chat.service;
 import callprotector.spring.domain.callsession.entity.CallSession;
 import callprotector.spring.domain.callchat.dto.response.CallChatSessionResponseDTO;
 import callprotector.spring.domain.callchat.entity.CallChatSession;
-import callprotector.spring.domain.chat.repository.CallChatSessionRepository;
+import callprotector.spring.domain.callchat.repository.CallChatSessionRepository;
 import callprotector.spring.domain.user.entity.User;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;

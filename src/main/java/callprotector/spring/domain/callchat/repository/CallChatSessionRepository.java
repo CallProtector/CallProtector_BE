@@ -1,4 +1,4 @@
-package callprotector.spring.domain.chat.repository;
+package callprotector.spring.domain.callchat.repository;
 
 import callprotector.spring.domain.callchat.entity.CallChatSession;
 import java.util.Optional;
