@@ -34,10 +34,7 @@ public class ChatStreamController {
     private final ChatSessionService chatSessionService;
     private final TokenProvider tokenProvider;
 
-    @Operation(
-            summary = "일반 채팅 질문 전송 API",
-            description ="상담원이 입력한 일반 법률 질문을 챗봇에게 전송하고 응답을 받아옵니다."
-    )
+    @Operation(summary = "일반 채팅 질문 전송 API", description ="상담원이 입력한 일반 법률 질문을 챗봇에게 전송하고 응답을 받아옵니다.")
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamChat(
             @Parameter(description = "대화가 기록될 ChatSession ID", required = true)
@@ -66,8 +63,8 @@ public class ChatStreamController {
 
         return webClient.post()
                 .uri("ai/chat/stream")
-                .contentType(MediaType.APPLICATION_JSON)           // ✅ 추가
-                .accept(MediaType.TEXT_EVENT_STREAM)               // ✅ 추
+                .contentType(MediaType.APPLICATION_JSON)           // 추가
+                .accept(MediaType.TEXT_EVENT_STREAM)               // 추가
                 .bodyValue(Map.of("session_id", sessionId, "question", question))
                 .retrieve()
                 .bodyToFlux(String.class)

@@ -24,26 +24,17 @@ public class ChatSessionController {
     private final ChatSessionService chatSessionService;
     private final UserService userService;
 
-    @Operation(
-            summary = "일반 채팅 세션 생성 API",
-            description = "일반 법률 상담용 챗봇 채팅 세션을 생성합니다."
-    )
+    @Operation(summary = "일반 채팅 세션 생성 API", description = "일반 법률 상담용 챗봇 채팅 세션을 생성합니다.")
     @PostMapping
-    public ApiResponse<ChatSessionResponseDTO.ChatSessionResponse> createSession(
-            @UserId Long userId
-    ) {
+    public ApiResponse<ChatSessionResponseDTO.ChatSessionResponse> createSession(@UserId Long userId) {
         User user = userService.getUserById(userId);
         return ApiResponse.onSuccess(chatSessionService.createSession(user));
     }
 
-    @Operation(
-            summary = "일반 채팅 세션 목록 조회 API",
-            description = "일반 챗봇 채팅 세션을 조회합니다."
-    )
+
+    @Operation(summary = "일반 채팅 세션 목록 조회 API", description = "일반 챗봇 채팅 세션을 조회합니다.")
     @GetMapping("/list")
-    public ApiResponse<List<ChatSessionResponseDTO.ChatSessionResponse>> getSessionList(
-            @UserId Long userId
-    ) {
+    public ApiResponse<List<ChatSessionResponseDTO.ChatSessionResponse>> getSessionList(@UserId Long userId) {
         return ApiResponse.onSuccess(chatSessionService.getSessionList(userId));
     }
 
