@@ -6,6 +6,9 @@ import callprotector.spring.domain.chat.service.ChatSessionService;
 import callprotector.spring.global.security.TokenProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -23,6 +26,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/chat")
+@Tag(name = "ChatStream", description = "일반 채팅 질문 전송 관련 API")
 public class ChatStreamController {
 
     private final WebClient webClient = WebClient.create("http://localhost:8000"); // FastAPI URL
@@ -30,16 +34,24 @@ public class ChatStreamController {
     private final ChatSessionService chatSessionService;
     private final TokenProvider tokenProvider;
 
+    @Operation(
+            summary = "일반 채팅 질문 전송 API",
+            description ="상담원이 입력한 일반 법률 질문을 챗봇에게 전송하고 응답을 받아옵니다."
+    )
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> streamChat(
+            @Parameter(description = "대화가 기록될 ChatSession ID", required = true)
             @RequestParam Long sessionId,
+
+            @Parameter(description = "질문 내용", required = true)
             @RequestParam String question,
+
+            @Parameter(description = "JWT 토큰", required = true)
             @RequestParam String token
     ) {
         // JWT 추출 (쿼리로만 받음)
         String jwt = token;
         log.info("🔑 전달된 JWT (query): {}", jwt);
-
 
         // userId 추출
         Long userId = tokenProvider.validateAndGetUserId(jwt);
