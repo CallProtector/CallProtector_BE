@@ -2,8 +2,8 @@ package callprotector.spring.domain.chat.service;
 
 import callprotector.spring.domain.callchat.dto.response.CallChatLogResponseDTO;
 import callprotector.spring.domain.chat.dto.response.SourcePageDTO;
-import callprotector.spring.domain.chat.entity.CallChatLog;
-import callprotector.spring.domain.chat.entity.CallChatSession;
+import callprotector.spring.domain.callchat.entity.CallChatLog;
+import callprotector.spring.domain.callchat.entity.CallChatSession;
 import callprotector.spring.domain.chat.repository.CallChatLogRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.transaction.annotation.Transactional;

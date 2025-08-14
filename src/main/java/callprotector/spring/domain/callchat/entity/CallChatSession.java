@@ -1,4 +1,4 @@
-package callprotector.spring.domain.chat.entity;
+package callprotector.spring.domain.callchat.entity;
 
 import callprotector.spring.domain.callsession.entity.CallSession;
 import callprotector.spring.domain.user.entity.User;

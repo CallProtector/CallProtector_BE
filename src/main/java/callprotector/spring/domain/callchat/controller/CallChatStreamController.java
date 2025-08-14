@@ -2,7 +2,7 @@ package callprotector.spring.domain.callchat.controller;
 
 import callprotector.spring.domain.callsttlog.entity.CallSttLog;
 import callprotector.spring.domain.callsttlog.service.CallSttLogService;
-import callprotector.spring.domain.chat.entity.CallChatSession;
+import callprotector.spring.domain.callchat.entity.CallChatSession;
 import callprotector.spring.domain.chat.service.CallChatLogService;
 import callprotector.spring.domain.chat.service.CallChatSessionService;
 import callprotector.spring.global.security.TokenProvider;
