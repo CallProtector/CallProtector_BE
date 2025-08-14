@@ -63,3 +63,6 @@ elasticsearch:
 
 fastapi:
   url: http://abusefilter:8080/api/abuse/filter
+
+chatbot:
+  url: http://chatbot:8000
