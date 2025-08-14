@@ -25,17 +25,11 @@ public class ChatLogController {
     private final ChatLogService chatLogService;
     private final ChatSessionService chatSessionService;
 
-    @Operation(
-            summary = "일반 채팅 세션별 로그 조회 API",
-            description = "ChatSession에 해당하는 ChatLog들을 조회합니다."
-    )
+    @Operation( summary = "일반 채팅 세션별 로그 조회 API", description = "ChatSession에 해당하는 ChatLog들을 조회합니다.")
     @GetMapping("/session/{sessionId}")
-    public ApiResponse<List<ChatLogResponseDTO.ChatLogResponse>> getLogs(
-            @UserId Long userId,
-
-            @Parameter(description = "조회할 ChatSession ID")
-            @PathVariable Long sessionId
-    ) {
+    public ApiResponse<List<ChatLogResponseDTO.ChatLogResponse>> getLogs(@UserId Long userId,
+                                                                         @Parameter(description = "조회할 ChatSession ID")
+                                                                         @PathVariable Long sessionId) {
         // 세션 소유권 검증
         ChatSession session = chatSessionService.getSessionById(sessionId);
         if (!session.getUser().getId().equals(userId)) {
