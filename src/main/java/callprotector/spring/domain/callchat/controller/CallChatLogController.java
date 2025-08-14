@@ -7,6 +7,7 @@ import callprotector.spring.domain.callchat.service.CallChatSessionService;
 import callprotector.spring.global.annotation.UserId;
 import callprotector.spring.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ public class CallChatLogController {
     @GetMapping("/session/{sessionId}")
     public ApiResponse<List<CallChatLogResponseDTO.CallChatLogResponse>> getLogs(
             @UserId Long userId,
+            @Parameter(description = "조회할 CallChatSession ID")
             @PathVariable Long sessionId
     ) {
         CallChatSession session = callChatSessionService.getSessionById(sessionId);
