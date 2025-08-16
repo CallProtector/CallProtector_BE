@@ -141,6 +141,9 @@ public class TwilioMediaStreamProcessor {
 			inboundCtx.initializeStream(session.getId());
 			sttContexts.put(CallTrack.INBOUND, inboundCtx);
 
+			// ShoutingDetector에 INBOUND SttContext 연결
+			shoutingDetector.setSttContext(inboundCtx);
+
 			// OUTBOUND STTContext 생성 및 초기화
 			SttContext outboundCtx = new SttContext(
 				currentCallSessionId,
