@@ -445,4 +445,8 @@ public class SttContext {
 		log.info("🔔 비프 트리거 전송 (userId={}, durationMs={})", userId, durationMs);
 	}
 
+	public void triggerBeep() {
+		sendBeepIfAllowed(BEEP_DURATION_MS);
+	}
+
 }
