@@ -51,6 +51,7 @@ public class SttContext {
 
 	private long lastBeepAt = 0L;
 	private static final long BEEP_COOLDOWN_MS = 1000;
+	private static final long BEEP_DURATION_MS = 1000;
 
 	public SttContext(Long callSessionId, Long userId, CallTrack track, FastClient fastClient,
 						CallSessionService callSessionService, CallLogService callLogService, CallSttLogService callSttLogService, ClientNotifier sttWebSocketHandler) {
@@ -152,7 +153,7 @@ public class SttContext {
 								log.info("STT 결과 욕설 감지 - (isAbuse={}) / CallSession total_abuse_cnt 업데이트 시도 - CallSessionId={}", isAbuse, callSessionId);
 								callSessionService.incrementTotalAbuseCnt(callSessionId);
 								callLogService.updateAbuse(callSessionId, track);
-								sendBeepIfAllowed(1000);
+								sendBeepIfAllowed(BEEP_DURATION_MS);
 							}
 						} else {
 							// OUTBOUND는 중복 누적 방지 없이 무조건 추가
@@ -368,7 +369,7 @@ public class SttContext {
 										callSessionService.incrementTotalAbuseCnt(callSessionId);
 										log.info("🍀 고객 발화 필터링됨");
 										callLogService.updateAbuse(callSessionId, track);
-										sendBeepIfAllowed(1000);
+										sendBeepIfAllowed(BEEP_DURATION_MS);
 									}
 								} else { // OUTBOUND (상담원) 스크립트 누적
 									// 중복 누적 방지 없이 무조건 추가
