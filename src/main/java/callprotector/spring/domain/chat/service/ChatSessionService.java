@@ -13,7 +13,7 @@ public interface ChatSessionService {
 
     ChatSessionResponseDTO.ChatSessionResponse createSession(User user);
 
-    public void updateTitleIfEmpty(ChatSession session, String firstQuestion);
+    public String updateTitleIfEmpty(ChatSession session, String firstQuestion);
 
     public List<ChatSessionResponseDTO.ChatSessionResponse> getSessionList(Long userId);
 
