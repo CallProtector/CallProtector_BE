@@ -13,11 +13,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+// ★ ServerSentEvent 사용
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
+// ★ 제목 생성은 블로킹 가능성이 있으므로 boundedElastic로
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
 import java.util.Map;
@@ -39,37 +44,49 @@ public class ChatStreamController {
             summary = "일반 채팅 질문 전송 API",
             description ="상담원이 입력한 일반 법률 질문을 챗봇에게 전송하고 응답을 받아옵니다."
     )
+    // ★ 반환 타입: Flux<ServerSentEvent<String>>
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> streamChat(
+    public Flux<ServerSentEvent<String>> streamChat(
             @Parameter(description = "대화가 기록될 ChatSession ID", required = true)
             @RequestParam Long sessionId,
-
             @Parameter(description = "질문 내용", required = true)
             @RequestParam String question,
-
             @Parameter(description = "JWT 토큰", required = true)
             @RequestParam String token) {
 
-        // JWT 추출 (쿼리로만 받음)
         String jwt = token;
-        log.info("🔑 전달된 JWT (query): {}", jwt);
-
-        // userId 추출
         Long userId = tokenProvider.validateAndGetUserId(jwt);
 
-        // 세션 소유권 검증
         ChatSession session = chatSessionService.getSessionById(sessionId);
         if (!session.getUser().getId().equals(userId)) {
             throw new IllegalArgumentException("해당 세션에 접근할 권한이 없습니다.");
         }
 
         StringBuilder jsonBuffer = new StringBuilder();
+        final boolean shouldEmitTitle = (session.getTitle() == null || session.getTitle().isBlank());
 
-        return chatbotClient.sendChatRequest(
+        // ★ 1) 제목 이벤트: 먼저 보냄
+        Mono<ServerSentEvent<String>> titleEvent = shouldEmitTitle
+                ? Mono.fromCallable(() -> {
+            String newTitle = chatSessionService.updateTitleIfEmpty(session, question);
+            ObjectMapper mapper = new ObjectMapper();
+            String payload = mapper.writeValueAsString(Map.of(
+                    "sessionId", sessionId,
+                    "title", newTitle
+            ));
+            return ServerSentEvent.<String>builder()
+                    .event("title")
+                    .data(payload)
+                    .build();
+        }).subscribeOn(Schedulers.boundedElastic())
+                : Mono.empty();
+
+        // ★ 2) AI 응답 스트림
+        Flux<ServerSentEvent<String>> aiStream = chatbotClient.sendChatRequest(
                         "/ai/chat/stream",
                         Map.of("session_id", sessionId, "question", question)
                 )
-                .map(data -> data.replace("data:", "").trim())
+                .map(raw -> raw.replaceFirst("^data:\\s*", "").trim())
                 .doOnNext(chunk -> {
                     if (chunk.startsWith("[JSON]")) {
                         String jsonPart = chunk.replace("[JSON]", "").trim();
@@ -79,31 +96,28 @@ public class ChatStreamController {
                 .doOnComplete(() -> {
                     try {
                         if (jsonBuffer.length() > 0) {
-                            log.info("📥 최종 JSON: {}", jsonBuffer);
-
-                            // JSON 키 공백 정리
                             String normalizedJson = jsonBuffer.toString()
                                     .replaceAll("\"\\s*([^\"]*?)\\s*\"\\s*:", "\"$1\":")
                                     .replaceAll(":\\s*\"\\s*([^\"]*?)\\s*\"", ":\"$1\"");
-
                             ObjectMapper mapper = new ObjectMapper();
                             JsonNode jsonNode = mapper.readTree(normalizedJson);
-
                             String answer = jsonNode.get("answer").asText();
-                            log.info("💾 DB 저장 전 answer: {}", answer);
-
                             String sourcePages = mapper.writeValueAsString(jsonNode.get("sourcePages"));
                             chatLogService.saveChatLog(sessionId, question, answer, sourcePages);
-
-                            // 첫 질문이면 세션 타이틀 생성
-                            if (session.getTitle() == null || session.getTitle().isBlank()) {
-                                chatSessionService.updateTitleIfEmpty(session, question);
-                            }
                         }
                     } catch (Exception e) {
                         log.error("❌ JSON 파싱 오류", e);
                     }
                 })
+                .map(chunk -> ServerSentEvent.<String>builder().data(chunk).build())
+                .onErrorResume(ex -> {
+                    log.error("❌ SSE 스트림 에러", ex);
+                    return Flux.just(ServerSentEvent.<String>builder()
+                            .event("error").data("stream_failed").build());
+                });
+
+        // ★ 3) 순서 변경: 제목 먼저 → AI 스트림
+        return Flux.concat(titleEvent, aiStream)
                 .delayElements(Duration.ofMillis(5));
     }
 }
