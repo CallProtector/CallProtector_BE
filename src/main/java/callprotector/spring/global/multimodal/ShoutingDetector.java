@@ -21,8 +21,10 @@ import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
 import be.tarsos.dsp.pitch.PitchDetectionHandler;
 import be.tarsos.dsp.pitch.PitchProcessor;
 
+import callprotector.spring.global.handler.SttContext;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -54,6 +56,8 @@ public class ShoutingDetector {
 	private static final double PITCH_BOUNDARY = 165.0; // 피치 높낮이 구분 기준
 	private static final double DB_BOUNDARY = 20.0; // 데시벨 증가 경계값
 
+	@Setter
+    private SttContext sttContext;
 
 	public void initializeTarsosDSP(int sampleRate) throws IOException {
 		if (dispatcher == null) {
@@ -133,7 +137,7 @@ public class ShoutingDetector {
 						float currentPitch = ShoutingDetector.this.lastKnownPitch;
 						if (currentPitch > shoutingPitchThreshold && currentVolume > shoutingVolumeThreshold) {
 							log.info("🚨🚨🚨 고함 감지! 현재 피치: {}Hz, 볼륨: {}dB", currentPitch, currentVolume);
-							// TODO: 여기에 삐 처리 로직 또는 웹소켓 이벤트 전송 로직 구현
+							sttContext.triggerBeep(); // 삐처리
 						} else {
 							log.info("✅ 정상 대화: 현재 피치 {}Hz, 볼륨 {}dB", currentPitch, currentVolume);
 						}
