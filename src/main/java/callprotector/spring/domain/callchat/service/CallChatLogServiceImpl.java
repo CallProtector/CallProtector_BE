@@ -55,7 +55,6 @@ public class CallChatLogServiceImpl implements CallChatLogService {
 
                     return CallChatLogResponseDTO.CallChatLogResponse.builder()
                             .id(log.getId())
-                            .callSessionId(log.getCallChatSession().getCallSession().getId()) // CallSessionId 추가
                             .question(log.getQuestion())
                             .answer(log.getAnswer())
                             .sourcePages(sourcePagesList)
