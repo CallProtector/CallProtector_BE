@@ -21,5 +21,6 @@ public class CallChatLogResponseDTO {
         private String answer;
         private List<SourcePageDTO.SourcePage> sourcePages;
         private String createdAt;
+        private Long CallSessionId;
     }
 }
