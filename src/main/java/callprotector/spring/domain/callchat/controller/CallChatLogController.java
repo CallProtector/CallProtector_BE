@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -31,7 +30,7 @@ public class CallChatLogController {
 
     @Operation( summary = "상담별 채팅 세션별 로그 조회 API", description = "CallChatSession에 해당하는 CallChatLog들을 조회합니다.")
     @GetMapping("/session/{sessionId}")
-    public ApiResponse<List<CallChatLogResponseDTO.CallChatLogResponse>> getLogs(
+    public ApiResponse<CallChatLogResponseDTO.CallChatLogListResponse> getLogs(
             @UserId Long userId,
             @Parameter(description = "조회할 CallChatSession ID")
             @PathVariable Long sessionId
@@ -41,7 +40,14 @@ public class CallChatLogController {
             throw new IllegalArgumentException("해당 세션에 접근할 권한이 없습니다.");
         }
 
-        return ApiResponse.onSuccess(callChatLogService.getLogDtosBySession(sessionId));
+        var logs = callChatLogService.getLogDtosBySession(sessionId);
+
+        return ApiResponse.onSuccess(
+                CallChatLogResponseDTO.CallChatLogListResponse.builder()
+                        .callSessionId(session.getCallSession().getId()) // 상위에 한 번만
+                        .logs(logs)
+                        .build()
+        );
     }
 
 
