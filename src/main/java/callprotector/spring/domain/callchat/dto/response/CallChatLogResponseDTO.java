@@ -22,4 +22,13 @@ public class CallChatLogResponseDTO {
         private List<SourcePageDTO.SourcePage> sourcePages;
         private String createdAt;
     }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CallChatLogListResponse {
+        private Long callSessionId;
+        private List<CallChatLogResponseDTO.CallChatLogResponse> logs;
+    }
 }
