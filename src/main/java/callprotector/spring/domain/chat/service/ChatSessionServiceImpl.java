@@ -51,12 +51,13 @@ public class ChatSessionServiceImpl implements ChatSessionService{
 
     @Override
     @Transactional
-    public void updateTitleIfEmpty(ChatSession session, String firstQuestion) {
+    public String updateTitleIfEmpty(ChatSession session, String firstQuestion) {
         if (session.getTitle() == null || session.getTitle().isBlank()) {
             String generatedTitle = openAiTitleService.generateTitle(firstQuestion);
             session.setTitle(generatedTitle);
             chatSessionRepository.save(session);
         }
+        return session.getTitle();
 
     }
 
