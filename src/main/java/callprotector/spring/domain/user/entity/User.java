@@ -29,10 +29,6 @@ public class User extends BaseEntity {
     //@Column(nullable = false, length = 16) <- 에러 방지 위해, 일단 주석 : 당장 회원가입 시 사용하지 않기 때문에
     private String password;
 
-    @Column(nullable = false)
-    @Builder.Default
-    private Long totalCall = 0L;
-
     @Column(nullable = false, length = 15)
     private String phoneNumber;
 
@@ -42,9 +38,5 @@ public class User extends BaseEntity {
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<ChatSession> chatSessions = new ArrayList<>();
-
-
-
-
 
 }
