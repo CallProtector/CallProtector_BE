@@ -17,7 +17,7 @@ public enum ErrorStatus implements BaseErrorCode {
     _FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON4030", "금지된 요청입니다."),
 
     // Mail 관련 예외
-    MAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "MAILR4091", "이미 가입된 이메일입니다."),
+    MAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "MAIL4091", "이미 가입된 이메일입니다."),
 
     // User 관련 에러
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER4041", "사용자가 없습니다."),
