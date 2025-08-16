@@ -1,5 +1,7 @@
 package callprotector.spring.domain.user.service;
 
+import callprotector.spring.global.apiPayload.code.status.ErrorStatus;
+import callprotector.spring.global.apiPayload.exception.handler.MailGeneralException;
 import callprotector.spring.global.apiPayload.exception.handler.PasswordMismatchException;
 import callprotector.spring.global.apiPayload.exception.handler.UserNotFoundException;
 import callprotector.spring.domain.user.entity.User;
@@ -39,7 +41,7 @@ public class UserServiceImpl implements UserService{
         // 이미 가입된 이메일인지 확인
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isPresent()) {
-            throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+            throw new MailGeneralException(ErrorStatus.MAIL_ALREADY_EXISTS);
         }
 
         String code = String.format("%06d", new Random().nextInt(999999));

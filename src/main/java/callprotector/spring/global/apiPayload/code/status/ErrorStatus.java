@@ -16,6 +16,9 @@ public enum ErrorStatus implements BaseErrorCode {
     _UNAUTHORIZED(HttpStatus.UNAUTHORIZED,"COMMON4010","인증이 필요합니다."),
     _FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON4030", "금지된 요청입니다."),
 
+    // Mail 관련 예외
+    MAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "MAILR4091", "이미 가입된 이메일입니다."),
+
     // User 관련 에러
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER4041", "사용자가 없습니다."),
     USER_VALIDATION_ERROR(HttpStatus.UNAUTHORIZED, "USER4011", "등록되지 않은 이메일입니다."),
