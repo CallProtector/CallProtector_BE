@@ -17,7 +17,6 @@ public class CallChatLogResponseDTO {
     @AllArgsConstructor
     public static class CallChatLogResponse {
         private Long id;
-        private Long callSessionId;
         private String question;
         private String answer;
         private List<SourcePageDTO.SourcePage> sourcePages;
