@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -36,7 +35,6 @@ public class ChatSessionServiceImpl implements ChatSessionService{
 
         ChatSession session = ChatSession.builder()
                 .user(user)
-                .startTime(LocalDateTime.now())
                 .status(1) // 진행 중
                 .build();
 
@@ -44,7 +42,7 @@ public class ChatSessionServiceImpl implements ChatSessionService{
 
         return ChatSessionResponseDTO.ChatSessionResponse.builder()
                 .sessionId(saved.getId())
-                .startTime(saved.getStartTime().toString())
+                .startTime(saved.getCreatedAt().toString())
                 .title(saved.getTitle()) // title 추가
                 .build();
     }
@@ -58,25 +56,18 @@ public class ChatSessionServiceImpl implements ChatSessionService{
             chatSessionRepository.save(session);
         }
         return session.getTitle();
-
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ChatSessionResponseDTO.ChatSessionResponse> getSessionList(Long userId) {
-        return chatSessionRepository.findByUserIdOrderByStartTimeDesc(userId).stream()
+        return chatSessionRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
                 .map(session -> ChatSessionResponseDTO.ChatSessionResponse.builder()
                         .sessionId(session.getId())
                         .title(session.getTitle())
-                        .startTime(session.getStartTime().toString())
+                        .startTime(session.getCreatedAt().toString())
                         .build())
                 .toList();
     }
-
     // getSessionDetail 함수 하려는데, ScriptHistoryRepository 뭐꼬 이거;; (MongoRepository로 callSessionId 기준 스크립트 이력 조회해야된다는데)
-
-
-
-
-
 }
