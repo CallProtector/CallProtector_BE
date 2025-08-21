@@ -8,6 +8,7 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.IntStream;
 
@@ -55,6 +56,9 @@ public class ShoutingDetector {
 	private static final double PITCH_INCREASE_FACTOR_LOW = 1.05; // TODO: 피치 변화율2
 	private static final double PITCH_BOUNDARY = 165.0; // 피치 높낮이 구분 기준
 	private static final double DB_BOUNDARY = 0.1; // 데시벨 증가 경계값 // TODO: 세기 변화량
+
+	private final CountDownLatch initializationLatch = new CountDownLatch(1);
+
 
 	@Setter
     private SttContext sttContext;
@@ -155,6 +159,7 @@ public class ShoutingDetector {
 
 			dispatcher.addAudioProcessor(volumeHandler);
 			new Thread(dispatcher, "Audio Dispatcher").start();
+			initializationLatch.countDown();
 		}
 	}
 
@@ -164,6 +169,10 @@ public class ShoutingDetector {
 			return;
 		}
 		pipedOutputStream.write(audioData);
+	}
+
+	public void awaitInitialization() throws InterruptedException {
+		initializationLatch.await();
 	}
 
 	private void calculateBaselineAndSetThreshold() {
