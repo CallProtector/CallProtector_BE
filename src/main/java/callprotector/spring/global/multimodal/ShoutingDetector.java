@@ -51,10 +51,10 @@ public class ShoutingDetector {
 	private float lastKnownPitch = -1.0f;
 
 	private static final double BASELINE_PERIOD_SECONDS = 1.5;
-	private static final double PITCH_INCREASE_FACTOR_HIGH = 1.15;
-	private static final double PITCH_INCREASE_FACTOR_LOW = 1.69;
+	private static final double PITCH_INCREASE_FACTOR_HIGH = 1.03; // TODO: 피치 변화율1
+	private static final double PITCH_INCREASE_FACTOR_LOW = 1.05; // TODO: 피치 변화율2
 	private static final double PITCH_BOUNDARY = 165.0; // 피치 높낮이 구분 기준
-	private static final double DB_BOUNDARY = 20.0; // 데시벨 증가 경계값
+	private static final double DB_BOUNDARY = 0.1; // 데시벨 증가 경계값 // TODO: 세기 변화량
 
 	@Setter
     private SttContext sttContext;
@@ -184,7 +184,7 @@ public class ShoutingDetector {
 		this.isHighPitchUser = (medianBasePitch > PITCH_BOUNDARY);
 		double pitchIncreaseFactor = this.isHighPitchUser ? PITCH_INCREASE_FACTOR_HIGH : PITCH_INCREASE_FACTOR_LOW;
 
-		shoutingPitchThreshold = medianBasePitch * (1 + pitchIncreaseFactor);
+		shoutingPitchThreshold = medianBasePitch * (pitchIncreaseFactor);
 		shoutingVolumeThreshold = medianBaseVolume + DB_BOUNDARY;
 
 
