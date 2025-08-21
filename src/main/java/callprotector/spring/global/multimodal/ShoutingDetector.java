@@ -57,9 +57,6 @@ public class ShoutingDetector {
 	private static final double PITCH_BOUNDARY = 165.0; // 피치 높낮이 구분 기준
 	private static final double DB_BOUNDARY = 0.1; // 데시벨 증가 경계값 // TODO: 세기 변화량
 
-	private final CountDownLatch initializationLatch = new CountDownLatch(1);
-
-
 	@Setter
     private SttContext sttContext;
 
@@ -159,7 +156,6 @@ public class ShoutingDetector {
 
 			dispatcher.addAudioProcessor(volumeHandler);
 			new Thread(dispatcher, "Audio Dispatcher").start();
-			initializationLatch.countDown();
 		}
 	}
 
@@ -169,10 +165,6 @@ public class ShoutingDetector {
 			return;
 		}
 		pipedOutputStream.write(audioData);
-	}
-
-	public void awaitInitialization() throws InterruptedException {
-		initializationLatch.await();
 	}
 
 	private void calculateBaselineAndSetThreshold() {

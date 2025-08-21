@@ -162,18 +162,6 @@ public class TwilioMediaStreamProcessor {
 			log.error("세션 {}에 대한 STT 컨텍스트 초기화 실패", session.getId(), e);
 			throw new RuntimeException("STT Context 초기화 실패", e);
 		}
-
-		// 세션 정보 전달 - call_session_code, 날짜 (stt 페이지 상단)
-		// CallSessionResponseDTO.CallSessionInfoDTO sessionInfo =
-		// 	callSessionService.getSessionInfo(currentCallSessionId);
-		// log.info("🧾 생성된 CallSession 정보: sessionCode = {}, createdAt = {}, totalAbuseCnt = {}",
-		// 	sessionInfo.getCallSessionCode(), sessionInfo.getCreatedAt(), sessionInfo.getTotalAbuseCnt());
-
-		// sttWebSocketHandler.registerUserSession(currentUserId, session);
-		// sttWebSocketHandler.sendSessionInfoToClient(currentUserId, sessionInfo);
-
-
-
 	}
 
 	private void handleMediaEvent(WebSocketSession session, JsonNode json) throws IOException {
@@ -195,11 +183,7 @@ public class TwilioMediaStreamProcessor {
 		// ShoutingDetector에 오디오 데이터 전달 (INBOUND 트랙만 분석)
 		if (track == CallTrack.INBOUND) {
 			try {
-				shoutingDetector.awaitInitialization();
 				shoutingDetector.transferAudio(audio);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				log.error("ShoutingDetector 초기화 대기 중 인터럽트 발생.", e);
 			} catch (IOException e) {
 				log.error("ShoutingDetector에서 오디오 처리 중 오류 발생. CallSessionId: {}", currentCallSessionId, e);
 			}
