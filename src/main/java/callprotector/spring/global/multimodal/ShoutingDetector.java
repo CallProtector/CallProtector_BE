@@ -11,15 +11,13 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.IntStream;
 
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
-import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
 import be.tarsos.dsp.pitch.PitchDetectionHandler;
 import be.tarsos.dsp.pitch.PitchProcessor;
+import be.tarsos.dsp.io.TarsosDSPAudioFormat;
+import be.tarsos.dsp.io.TarsosDSPAudioInputStream;
 
 import callprotector.spring.global.handler.SttContext;
 import lombok.Getter;
@@ -63,16 +61,59 @@ public class ShoutingDetector {
 	public void initializeTarsosDSP(int sampleRate) throws IOException {
 		if (dispatcher == null) {
 			// PipedInputStream과 PipedOutputStream을 연결하여 오디오 파이프라인 구축
+			// pipedOutputStream = new PipedOutputStream();
+			// pipedInputStream = new PipedInputStream(pipedOutputStream);
+
+			// AudioFormat format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, sampleRate, 16, 1, 2, sampleRate, false);
+			//
+			// // AudioInputStream 생성
+			// AudioInputStream audioInputStream = new AudioInputStream(pipedInputStream, format, -1);
+			//
+			// // JVMAudioInputStream 생성
+			// JVMAudioInputStream audioStream = new JVMAudioInputStream(audioInputStream);
+			//
+
 			pipedOutputStream = new PipedOutputStream();
 			pipedInputStream = new PipedInputStream(pipedOutputStream);
 
-			AudioFormat format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, sampleRate, 16, 1, 2, sampleRate, false);
+			// TarsosDSPAudioFormat을 사용하여 포맷 정의
+			TarsosDSPAudioFormat tarsosDSPFormat = new TarsosDSPAudioFormat(
+				TarsosDSPAudioFormat.Encoding.PCM_SIGNED,
+				sampleRate,
+				16,  // 16-bit
+				1,   // mono
+				2,   // 2 bytes per frame
+				sampleRate,
+				false
+			);
 
-			// AudioInputStream 생성
-			AudioInputStream audioInputStream = new AudioInputStream(pipedInputStream, format, -1);
+			// TarsosDSPAudioInputStream을 직접 구현하여 PipedInputStream과 연결
+			TarsosDSPAudioInputStream audioStream = new TarsosDSPAudioInputStream() {
+				@Override
+				public TarsosDSPAudioFormat getFormat() {
+					return tarsosDSPFormat;
+				}
 
-			// JVMAudioInputStream 생성
-			JVMAudioInputStream audioStream = new JVMAudioInputStream(audioInputStream);
+				@Override
+				public long skip(long bytesToSkip) throws IOException {
+					return pipedInputStream.skip(bytesToSkip);
+				}
+
+				@Override
+				public int read(byte[] buffer, int offset, int length) throws IOException {
+					return pipedInputStream.read(buffer, offset, length);
+				}
+
+				@Override
+				public void close() throws IOException {
+					pipedInputStream.close();
+				}
+
+				@Override
+				public long getFrameLength() {
+					return -1;
+				}
+			};
 
 			dispatcher = new AudioDispatcher(audioStream, 1024, 0);
 			// 피치 분석 핸들러
@@ -164,7 +205,10 @@ public class ShoutingDetector {
 			log.info("🗑️초기화 전 오디오 데이터는 버림");
 			return;
 		}
-		pipedOutputStream.write(audioData);
+		// pipedOutputStream.write(audioData);
+		// Twilio의 u-law 데이터를 16비트 PCM으로 변환
+		byte[] pcmData = convertULawToPcm(audioData);
+		pipedOutputStream.write(pcmData);
 	}
 
 	private void calculateBaselineAndSetThreshold() {
@@ -220,6 +264,18 @@ public class ShoutingDetector {
 		// ByteBuffer를 사용하여 바이트 순서를 고려하여 변환
 		ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shorts);
 		return shorts;
+	}
+
+	// u-law -> PCM 변환 메서드 추가
+	private byte[] convertULawToPcm(byte[] uLawData) {
+		byte[] pcmData = new byte[uLawData.length * 2];
+		ByteBuffer buffer = ByteBuffer.wrap(pcmData).order(ByteOrder.LITTLE_ENDIAN);
+
+		for (byte ulawByte : uLawData) {
+			int pcmValue = ULawDecoder.uLawToPcm(ulawByte);
+			buffer.putShort((short) pcmValue);
+		}
+		return pcmData;
 	}
 
 }
