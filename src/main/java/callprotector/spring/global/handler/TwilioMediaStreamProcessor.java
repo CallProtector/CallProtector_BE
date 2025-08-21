@@ -195,11 +195,7 @@ public class TwilioMediaStreamProcessor {
 		// ShoutingDetector에 오디오 데이터 전달 (INBOUND 트랙만 분석)
 		if (track == CallTrack.INBOUND) {
 			try {
-				shoutingDetector.awaitInitialization();
 				shoutingDetector.transferAudio(audio);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				log.error("ShoutingDetector 초기화 대기 중 인터럽트 발생.", e);
 			} catch (IOException e) {
 				log.error("ShoutingDetector에서 오디오 처리 중 오류 발생. CallSessionId: {}", currentCallSessionId, e);
 			}
