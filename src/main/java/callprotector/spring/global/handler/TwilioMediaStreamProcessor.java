@@ -162,18 +162,6 @@ public class TwilioMediaStreamProcessor {
 			log.error("세션 {}에 대한 STT 컨텍스트 초기화 실패", session.getId(), e);
 			throw new RuntimeException("STT Context 초기화 실패", e);
 		}
-
-		// 세션 정보 전달 - call_session_code, 날짜 (stt 페이지 상단)
-		// CallSessionResponseDTO.CallSessionInfoDTO sessionInfo =
-		// 	callSessionService.getSessionInfo(currentCallSessionId);
-		// log.info("🧾 생성된 CallSession 정보: sessionCode = {}, createdAt = {}, totalAbuseCnt = {}",
-		// 	sessionInfo.getCallSessionCode(), sessionInfo.getCreatedAt(), sessionInfo.getTotalAbuseCnt());
-
-		// sttWebSocketHandler.registerUserSession(currentUserId, session);
-		// sttWebSocketHandler.sendSessionInfoToClient(currentUserId, sessionInfo);
-
-
-
 	}
 
 	private void handleMediaEvent(WebSocketSession session, JsonNode json) throws IOException {

@@ -60,19 +60,6 @@ public class ShoutingDetector {
 
 	public void initializeTarsosDSP(int sampleRate) throws IOException {
 		if (dispatcher == null) {
-			// PipedInputStream과 PipedOutputStream을 연결하여 오디오 파이프라인 구축
-			// pipedOutputStream = new PipedOutputStream();
-			// pipedInputStream = new PipedInputStream(pipedOutputStream);
-
-			// AudioFormat format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, sampleRate, 16, 1, 2, sampleRate, false);
-			//
-			// // AudioInputStream 생성
-			// AudioInputStream audioInputStream = new AudioInputStream(pipedInputStream, format, -1);
-			//
-			// // JVMAudioInputStream 생성
-			// JVMAudioInputStream audioStream = new JVMAudioInputStream(audioInputStream);
-			//
-
 			pipedOutputStream = new PipedOutputStream();
 			pipedInputStream = new PipedInputStream(pipedOutputStream);
 
@@ -252,18 +239,6 @@ public class ShoutingDetector {
 		} catch (IOException e) {
 			log.error("Piped 스트림 종료 실패.", e);
 		}
-	}
-
-	// 바이트 배열 -> Short 배열로 변환
-	private short[] convertBytesToShorts(byte[] bytes) {
-		// PCM_SIGNED 16-bit은 2바이트 단위이므로, 홀수 길이는 오류
-		if (bytes.length % 2 != 0) {
-			throw new IllegalArgumentException("Byte array length must be even.");
-		}
-		short[] shorts = new short[bytes.length / 2];
-		// ByteBuffer를 사용하여 바이트 순서를 고려하여 변환
-		ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shorts);
-		return shorts;
 	}
 
 	// u-law -> PCM 변환 메서드 추가
