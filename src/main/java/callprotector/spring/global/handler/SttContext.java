@@ -51,7 +51,7 @@ public class SttContext {
 
 	private long lastBeepAt = 0L;
 	private static final long BEEP_COOLDOWN_MS = 1000;
-	private static final long BEEP_DURATION_MS = 1000;
+	private static final long BEEP_DURATION_MS = 2000;
 
 	public SttContext(Long callSessionId, Long userId, CallTrack track, FastClient fastClient,
 						CallSessionService callSessionService, CallLogService callLogService, CallSttLogService callSttLogService, ClientNotifier sttWebSocketHandler) {
