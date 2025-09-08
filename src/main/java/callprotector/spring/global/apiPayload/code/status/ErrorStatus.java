@@ -44,6 +44,12 @@ public enum ErrorStatus implements BaseErrorCode {
     // 폭언 카테고리 관련 에러
     INVALID_CATEGORY_FILTER(HttpStatus.BAD_REQUEST, "CATEGORY4001", "유효하지 않은 카테고리입니다."),
 
+    // Chat 관련 에러
+    CHAT_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT4041", "세션을 찾을 수 없습니다."),
+    CHAT_SESSION_FORBIDDEN(HttpStatus.FORBIDDEN, "CHAT4031", "해당 세션에 접근할 권한이 없습니다."),
+    CHAT_LOG_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CHAT5001", "채팅 로그 저장에 실패했습니다."),
+    CHAT_LOG_PARSE_ERROR(HttpStatus.BAD_REQUEST, "CHAT4001", "채팅 로그 파싱에 실패했습니다."),
+
     // AI 상담 요약 관련 에러
     SUMMARY_AI_GEMINI_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AISUMMARY5001", "요약 생성 중 기술적 오류가 발생하여 상담 내역을 요약할 수 없습니다."),
     SUMMARY_AI_OPENAI_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AISUMMARY5002", "요약 생성 중 기술적 오류가 발생하여 상담 내역을 요약할 수 없습니다.");

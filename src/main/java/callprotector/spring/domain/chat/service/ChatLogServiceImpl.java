@@ -5,6 +5,8 @@ import callprotector.spring.domain.chat.entity.ChatLog;
 import callprotector.spring.domain.chat.entity.ChatSession;
 import callprotector.spring.domain.chat.repository.ChatLogRepository;
 import callprotector.spring.domain.chat.dto.response.ChatLogResponseDTO;
+import callprotector.spring.global.apiPayload.code.status.ErrorStatus;
+import callprotector.spring.global.apiPayload.exception.handler.ChatGeneralException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,14 +31,19 @@ public class ChatLogServiceImpl implements ChatLogService {
     @Override
     @Transactional
     public void saveChatLog(Long sessionId, String question, String answer, String sourcePages) {
-        ChatSession session = chatSessionService.getSessionById(sessionId);
+        try {
+            ChatSession session = chatSessionService.getSessionById(sessionId);
 
-        chatLogRepository.save(ChatLog.builder()
-                .chatSession(session)
-                .question(question)
-                .answer(answer)
-                .sourcePages(sourcePages) // JSON 문자열 그대로 저장
-                .build());
+            chatLogRepository.save(ChatLog.builder()
+                    .chatSession(session)
+                    .question(question)
+                    .answer(answer)
+                    .sourcePages(sourcePages)
+                    .build());
+        } catch (Exception e) {
+            log.error("❌ 채팅 로그 저장 실패", e);
+            throw new ChatGeneralException(ErrorStatus.CHAT_LOG_SAVE_FAILED);
+        }
 
     }
 
@@ -60,7 +67,7 @@ public class ChatLogServiceImpl implements ChatLogService {
                             .id(log.getId())
                             .question(log.getQuestion())
                             .answer(log.getAnswer())
-                            .sourcePages(sourcePagesList) // ✅ 리스트로 반환
+                            .sourcePages(sourcePagesList) // 리스트로 반환
                             .createdAt(log.getCreatedAt().toString())
                             .build();
                 })

@@ -5,6 +5,8 @@ import callprotector.spring.domain.user.entity.User;
 import callprotector.spring.domain.chat.repository.ChatSessionRepository;
 import callprotector.spring.domain.chat.dto.response.ChatSessionResponseDTO;
 import callprotector.spring.global.ai.OpenAiService.OpenAiTitleService;
+import callprotector.spring.global.apiPayload.code.status.ErrorStatus;
+import callprotector.spring.global.apiPayload.exception.handler.ChatGeneralException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,7 +27,7 @@ public class ChatSessionServiceImpl implements ChatSessionService{
     @Transactional(readOnly = true)
     public ChatSession getSessionById(Long sessionId) {
         return chatSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다."));
+                .orElseThrow(() -> new ChatGeneralException(ErrorStatus.CHAT_SESSION_NOT_FOUND));
     }
 
     @Override
@@ -69,5 +71,5 @@ public class ChatSessionServiceImpl implements ChatSessionService{
                         .build())
                 .toList();
     }
-    // getSessionDetail 함수 하려는데, ScriptHistoryRepository 뭐꼬 이거;; (MongoRepository로 callSessionId 기준 스크립트 이력 조회해야된다는데)
+
 }
