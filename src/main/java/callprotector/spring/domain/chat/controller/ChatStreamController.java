@@ -3,6 +3,8 @@ package callprotector.spring.domain.chat.controller;
 import callprotector.spring.domain.chat.entity.ChatSession;
 import callprotector.spring.domain.chat.service.ChatLogService;
 import callprotector.spring.domain.chat.service.ChatSessionService;
+import callprotector.spring.global.apiPayload.code.status.ErrorStatus;
+import callprotector.spring.global.apiPayload.exception.handler.ChatGeneralException;
 import callprotector.spring.global.client.ChatbotClient;
 import callprotector.spring.global.security.TokenProvider;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -59,7 +61,7 @@ public class ChatStreamController {
 
         ChatSession session = chatSessionService.getSessionById(sessionId);
         if (!session.getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("해당 세션에 접근할 권한이 없습니다.");
+            throw new ChatGeneralException(ErrorStatus.CHAT_SESSION_FORBIDDEN);
         }
 
         StringBuilder jsonBuffer = new StringBuilder();
@@ -107,6 +109,7 @@ public class ChatStreamController {
                         }
                     } catch (Exception e) {
                         log.error("❌ JSON 파싱 오류", e);
+                        throw new ChatGeneralException(ErrorStatus.CHAT_LOG_PARSE_ERROR);
                     }
                 })
                 .map(chunk -> ServerSentEvent.<String>builder().data(chunk).build())
