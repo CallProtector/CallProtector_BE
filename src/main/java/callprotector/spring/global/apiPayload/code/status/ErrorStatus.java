@@ -22,9 +22,9 @@ public enum ErrorStatus implements BaseErrorCode {
     VERIFICATION_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "VERIFY4001", "인증 코드가 만료되었습니다."),
     VERIFICATION_CODE_INVALID(HttpStatus.BAD_REQUEST, "VERIFY4002", "인증 코드가 올바르지 않습니다."),
 
-
-
-
+    // Auth 관련 예외
+    EMAIL_NOT_VERIFIED(HttpStatus.UNAUTHORIZED, "VERIFY4011", "이메일 인증이 완료되지 않았습니다."),
+    PASSWORD_POLICY_VIOLATION(HttpStatus.BAD_REQUEST, "USER4001", "비밀번호는 8~16자이며, 영문, 숫자, 특수문자를 모두 포함해야 합니다."),
 
     // User 관련 에러
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER4041", "사용자가 없습니다."),
