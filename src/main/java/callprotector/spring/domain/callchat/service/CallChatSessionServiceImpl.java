@@ -5,6 +5,8 @@ import callprotector.spring.domain.callchat.dto.response.CallChatSessionResponse
 import callprotector.spring.domain.callchat.entity.CallChatSession;
 import callprotector.spring.domain.callchat.repository.CallChatSessionRepository;
 import callprotector.spring.domain.user.entity.User;
+import callprotector.spring.global.apiPayload.code.status.ErrorStatus;
+import callprotector.spring.global.apiPayload.exception.handler.CallChatGeneralException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +43,7 @@ public class CallChatSessionServiceImpl implements CallChatSessionService {
     @Transactional(readOnly = true)
     public CallChatSession getSessionById(Long sessionId) {
         return callChatSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("상담 기반 세션을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CallChatGeneralException(ErrorStatus.CALLCHAT_SESSION_NOT_FOUND));
     }
 
     @Override

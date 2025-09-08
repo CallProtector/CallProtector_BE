@@ -5,6 +5,8 @@ import callprotector.spring.domain.callsttlog.service.CallSttLogService;
 import callprotector.spring.domain.callchat.entity.CallChatSession;
 import callprotector.spring.domain.callchat.service.CallChatLogService;
 import callprotector.spring.domain.callchat.service.CallChatSessionService;
+import callprotector.spring.global.apiPayload.code.status.ErrorStatus;
+import callprotector.spring.global.apiPayload.exception.handler.CallChatGeneralException;
 import callprotector.spring.global.client.ChatbotClient;
 import callprotector.spring.global.security.TokenProvider;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -60,7 +62,7 @@ public class CallChatStreamController {
         // 2) 세션 소유권 검증
         CallChatSession session = callChatSessionService.getSessionById(callChatSessionId);
         if (!session.getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("해당 상담 기반 세션에 접근할 권한이 없습니다.");
+            throw new CallChatGeneralException(ErrorStatus.CALLCHAT_SESSION_FORBIDDEN);
         }
 
         // ★★★  08/13 추가: Scripts 구성 (callchatbot 서비스 로직 재사용)
@@ -132,6 +134,7 @@ public class CallChatStreamController {
                         );
                     } catch (Exception e) {
                         log.error("❌ 상담별 채팅 저장 실패", e);
+                        throw new CallChatGeneralException(ErrorStatus.CALLCHAT_LOG_SAVE_FAILED);
                     }
                 })
                 .delayElements(Duration.ofMillis(5));
