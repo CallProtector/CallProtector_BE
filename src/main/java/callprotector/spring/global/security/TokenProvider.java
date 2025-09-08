@@ -21,7 +21,8 @@ public class TokenProvider {
     private final SecretKey key = Keys.hmacShaKeyFor(SECRET_STRING.getBytes(StandardCharsets.UTF_8));
 
     public String create(User user) {
-        Date expiryDate = Date.from(Instant.now().plus(1, ChronoUnit.DAYS));
+        // JWT token 인증 만료 시간 설정
+        Date expiryDate = Date.from(Instant.now().plus(30, ChronoUnit.DAYS));
         return Jwts.builder()
                 .signWith(key, SignatureAlgorithm.HS512) // signWith 파라미터 순서 변경
                 .setSubject(user.getEmail())
