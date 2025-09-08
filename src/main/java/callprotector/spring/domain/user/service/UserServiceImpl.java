@@ -1,14 +1,11 @@
 package callprotector.spring.domain.user.service;
 
 import callprotector.spring.global.apiPayload.code.status.ErrorStatus;
-import callprotector.spring.global.apiPayload.exception.handler.MailGeneralException;
-import callprotector.spring.global.apiPayload.exception.handler.PasswordMismatchException;
-import callprotector.spring.global.apiPayload.exception.handler.UserNotFoundException;
+import callprotector.spring.global.apiPayload.exception.handler.*;
 import callprotector.spring.domain.user.entity.User;
 import callprotector.spring.domain.user.entity.VerificationToken;
 import callprotector.spring.domain.user.repository.UserRepository;
 import callprotector.spring.domain.user.repository.VerificationTokenRepository;
-import callprotector.spring.global.apiPayload.exception.handler.UserValidationException;
 import callprotector.spring.global.security.TokenProvider;
 import callprotector.spring.global.util.PasswordValidator;
 import callprotector.spring.domain.user.dto.request.UserRequestDTO;
@@ -74,17 +71,18 @@ public class UserServiceImpl implements UserService{
     @Override
     @Transactional
     public UserResponseDTO.SignupDTO create(UserRequestDTO.SignupDTO dto) {
-        // 1. 비밀번호 유효성 검사
-        if (!PasswordValidator.isValid(dto.getPassword())) {
-            throw new IllegalArgumentException("비밀번호는 8~16자이며, 영문, 숫자, 특수문자를 모두 포함해야 합니다.");
-        }
 
-        // 2. 이메일 인증 완료 여부 확인
+        // 1. 이메일 인증 완료 여부 확인
         VerificationToken token = tokenRepository.findTopByEmailOrderByExpiresAtDesc(dto.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("이메일 인증이 필요합니다."));
+                .orElseThrow(() -> new AuthGeneralException(ErrorStatus.EMAIL_NOT_VERIFIED));
 
         if (!token.isVerified()) {
-            throw new IllegalArgumentException("이메일 인증이 완료되지 않았습니다.");
+            throw new AuthGeneralException(ErrorStatus.EMAIL_NOT_VERIFIED);
+        }
+
+        // 2. 비밀번호 유효성 검사
+        if (!PasswordValidator.isValid(dto.getPassword())) {
+            throw new AuthGeneralException(ErrorStatus.PASSWORD_POLICY_VIOLATION);
         }
 
         // 3. User 저장
