@@ -55,18 +55,18 @@ public class UserServiceImpl implements UserService{
     @Override
     @Transactional
     public void verifyCode(String email, String code) {
+        // 인증 요청 자체가 없는 경우
         VerificationToken token = tokenRepository.findTopByEmailOrderByExpiresAtDesc(email)
-                .orElseThrow(() -> new IllegalArgumentException("인증 요청이 없습니다."));
-
+                .orElseThrow(() -> new MailGeneralException(ErrorStatus.VERIFICATION_NOT_FOUND));
+        // 인증 코드 만료된 경우
         if (token.isExpired()) {
-            throw new IllegalArgumentException("인증 코드가 만료되었습니다.");
+            throw new MailGeneralException(ErrorStatus.VERIFICATION_CODE_EXPIRED);
         }
-
+        // 인증 코드 불일치
         if (!token.getCode().equals(code)) {
-            throw new IllegalArgumentException("인증 코드가 올바르지 않습니다.");
+            throw new MailGeneralException(ErrorStatus.VERIFICATION_CODE_INVALID);
         }
-
-        // ✅ 인증 성공 처리
+        // 인증 성공 처리
         token.markVerified(); // verified = true 로 표시
     }
 
