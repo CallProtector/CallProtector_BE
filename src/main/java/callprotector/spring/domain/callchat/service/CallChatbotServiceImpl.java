@@ -4,6 +4,8 @@ import callprotector.spring.domain.callsession.service.CallSessionService;
 import callprotector.spring.domain.callsttlog.entity.CallSttLog;
 import callprotector.spring.domain.callsttlog.service.CallSttLogService;
 import callprotector.spring.domain.user.service.UserService;
+import callprotector.spring.global.apiPayload.code.status.ErrorStatus;
+import callprotector.spring.global.apiPayload.exception.handler.CallChatGeneralException;
 import callprotector.spring.global.client.ChatbotClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +43,10 @@ public class CallChatbotServiceImpl implements CallChatbotService {
 
         // MongoDB 에서 script 조회
         List<CallSttLog> logs = callSttLogService.getAllBySessionId(sessionId);
+        if (logs.isEmpty()) {
+            throw new CallChatGeneralException(ErrorStatus.CALLCHAT_LOG_DOES_NOT_EXISTS);
+            // 필요하다면 CALLCHAT_NO_STT_LOG 같은 코드 추가 가능
+        }
 
         // STT 스크립트 -> FastAPI 요청 페이로드 구성
         List<Map<String, String>> scripts = logs.stream()
@@ -93,8 +99,12 @@ public class CallChatbotServiceImpl implements CallChatbotService {
                                 answer,
                                 sourcePages
                         );
+                    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                        log.error("❌ 초기 분석 JSON 파싱 실패", e);
+                        throw new CallChatGeneralException(ErrorStatus.CALLCHAT_LOG_PARSE_ERROR);
                     } catch (Exception e) {
                         log.error("❌ 초기 분석 결과 저장 실패", e);
+                        throw new CallChatGeneralException(ErrorStatus.CALLCHAT_LOG_SAVE_FAILED);
                     }
                 })
                 // 4) 프론트로는 원문 그대로 전달
