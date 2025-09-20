@@ -436,11 +436,18 @@ public class SttContext {
 		if (userId == null) return;
 		long now = System.currentTimeMillis();
 		if (now - lastBeepAt < BEEP_COOLDOWN_MS) return;
+
+		sttWebSocketHandler.sendSttToClient(userId, Map.of(
+				"type", "mute",
+				"ts", now
+		));
+
 		sttWebSocketHandler.sendSttToClient(userId, Map.of(
 				"type", "beep",
 				"durationMs", durationMs,
 				"ts", now
 		));
+
 		lastBeepAt = now;
 		log.info("🔔 비프 트리거 전송 (userId={}, durationMs={})", userId, durationMs);
 	}
