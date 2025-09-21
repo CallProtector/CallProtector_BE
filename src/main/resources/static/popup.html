@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>Twilio 수신 테스트</title>
-    <script src="https://sdk.twilio.com/js/client/v1.13/twilio.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@twilio/voice-sdk@2.11.2/dist/twilio.min.js"></script>
     <style>
         .log-line {
             font-family: 'Arial', sans-serif;
@@ -286,12 +286,19 @@
                     sessionInfoDiv.innerText = "🚨 서버 오류: 사용자 ID 없음";
                     return;
                 }
-                const device = new Twilio.Device(accessToken, { debug: true });
 
-                device.on('ready', () => {
+                const DeviceCtor = window.Device || (window.Twilio && Twilio.Device);
+                if (!DeviceCtor) {
+                    console.error("🚨 Twilio SDK가 로드되지 않았습니다. 스크립트 경로/네트워크를 확인하세요.");
+                    sessionInfoDiv.innerText = "🚨 Twilio SDK 로드 실패";
+                    return;
+                }
+                const device = new DeviceCtor(accessToken, { logLevel: 1 });
+
+                device.on('registered', () => {
                     console.log('✅ Device ready');
                     // Twilio.Device.audio.speakerDevices.set('default');
-                    console.log('Twilio.Device.audio on ready:', Twilio.Device.audio);
+                    console.log('Twilio.Device.audio on registered:', (Twilio && Twilio.Device && Twilio.Device.audio) || device.audio);
                 });
 
                 device.on('incoming', conn => {
@@ -301,6 +308,8 @@
                     document.getElementById("update-session-btn").style.display = "inline";
                     // incoming 통화가 수락되기 전에 취소되었을 때 처리 필요
                 });
+
+                device.register().catch(err => console.error('🚨 register() 실패:', err));
 
                 // Twilio Device 초기화 이후 세션 useId 변경을 위한 이벤트 리스너
                 document.getElementById("update-session-btn").addEventListener("click", () => {
