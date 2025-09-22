@@ -117,6 +117,9 @@ dependencies {
 	// TarsosDSP (멀티모달)
 	implementation 'be.tarsos.dsp:core:2.5'
 	implementation 'be.tarsos.dsp:jvm:2.5'
+
+	// SOLAPI - CoolSMS (SMS 발송)
+	implementation 'com.solapi:sdk:1.0.3'
 }
 
 tasks.named('test') {
