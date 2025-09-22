@@ -66,3 +66,8 @@ fastapi:
 
 chatbot:
   url: http://chatbot:8000
+
+solapi:
+  api-key: ${SOLAPI_API_KEY}
+  api-secret: ${SOLAPI_API_SECRET}
+  sender: ${SOLAPI_SENDER}

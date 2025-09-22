@@ -59,10 +59,15 @@ gcp:
 elasticsearch:
   host: localhost
   port: 9200
-  enabled: true
+  enabled: false
 
 fastapi:
   url: http://localhost:8000/api/abuse/filter
 
 chatbot:
   url: http://localhost:8000
+
+solapi:
+  api-key: ${SOLAPI_API_KEY}
+  api-secret: ${SOLAPI_API_SECRET}
+  sender: ${SOLAPI_SENDER}
