@@ -59,7 +59,10 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // AI 상담 요약 관련 에러
     SUMMARY_AI_GEMINI_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AISUMMARY5001", "요약 생성 중 기술적 오류가 발생하여 상담 내역을 요약할 수 없습니다."),
-    SUMMARY_AI_OPENAI_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AISUMMARY5002", "요약 생성 중 기술적 오류가 발생하여 상담 내역을 요약할 수 없습니다.");
+    SUMMARY_AI_OPENAI_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AISUMMARY5002", "요약 생성 중 기술적 오류가 발생하여 상담 내역을 요약할 수 없습니다."),
+
+    // SMS 발송 관련 에러
+    SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SMS5001", "강제 통화 종료 사유 SMS 발송에 실패했습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
