@@ -124,7 +124,24 @@ public class CallSessionServiceImpl implements CallSessionService {
                 if (customerPhone == null || customerPhone.isBlank()) {
                     log.warn("❗ 고객 번호가 없어 종료 안내 SMS 발송을 생략합니다. sessionId={}", callSession.getId());
                 } else {
-                    Set<String> labels = buildAbuseLabels(callSession.getId());
+                    final int maxTries = 15;
+                    final long intervalMs = 200;
+                    Set<String> labels = new LinkedHashSet<>();
+
+                    for (int i = 0; i < maxTries; i++) {
+                        labels = buildAbuseLabels(callSession.getId());
+                        if (!(labels.size() == 1 && labels.contains("부적절한 발언"))) {
+                            if (i > 0) {
+                                log.info("통화 종료 직후 {}회 재조회 후 폭언 유형 감지: {}", i + 1, labels);
+                            }
+                            break;
+                        }
+                        try { Thread.sleep(intervalMs); } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
+
                     try {
                         smsService.sendTerminationNotice(customerPhone, labels);
                         log.info("✅ 통화 강제 종료 사유 SMS 발송 완료 - to={}, types={}", customerPhone, labels);
@@ -646,7 +663,7 @@ public class CallSessionServiceImpl implements CallSessionService {
                 .existsByAbuseLog_CallLog_CallSession_IdAndAbuseType_ThreatTrue(sessionId)) {
             labels.add("협박");
         }
-        if (labels.isEmpty()) labels.add("폭언");
+        if (labels.isEmpty()) labels.add("부적절한 발언");
         return labels;
     }
 }
