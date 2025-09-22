@@ -1,9 +1,7 @@
 package callprotector.spring.domain.callsession.service;
 
 import callprotector.spring.domain.abuse.entity.AbuseType;
-import callprotector.spring.domain.abuse.repository.AbuseLogRepository;
 import callprotector.spring.domain.abuse.repository.AbuseTypeLogRepository;
-import callprotector.spring.domain.calllog.repository.CallLogRepository;
 import callprotector.spring.domain.callsession.entity.CallSession;
 import callprotector.spring.domain.callsession.repository.CallSessionRepository;
 import callprotector.spring.domain.callsttlog.entity.CallSttLog;
@@ -21,6 +19,7 @@ import callprotector.spring.domain.callsession.service.helper.CallSessionCodeGen
 import callprotector.spring.domain.callsession.dto.request.CallSessionRequestDTO;
 import callprotector.spring.domain.callsession.dto.response.CallSessionResponseDTO;
 
+import callprotector.spring.global.sms.service.SmsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,13 +45,12 @@ public class CallSessionServiceImpl implements CallSessionService {
     private final CallSessionCodeGenerator codeGenerator;
     private final SttWebSocketHandler sttWebSocketHandler;
     private final CallSttLogService callSttLogService;
-    private final AbuseLogRepository abuseLogRepository;
     private final AbuseTypeLogRepository abuseTypeLogRepository;
-    private final CallLogRepository callLogRepository;
     private final CallSttLogSearchRepository callSttLogSearchRepository;
     private final OpenAiSummaryService openAiSummaryService;
     private final GeminiService geminiService;
     private final UserService userService;
+    private final SmsService smsService;
 
     @Override
     @Transactional(readOnly = true)
@@ -121,6 +119,19 @@ public class CallSessionServiceImpl implements CallSessionService {
                 log.info("Twilio Call SID {} - 통화 종료 성공.", callSid);
 
                 callSession.updateEndedAt();
+
+                String customerPhone = callSession.getCallerNumber();
+                if (customerPhone == null || customerPhone.isBlank()) {
+                    log.warn("❗ 고객 번호가 없어 종료 안내 SMS 발송을 생략합니다. sessionId={}", callSession.getId());
+                } else {
+                    Set<String> labels = buildAbuseLabels(callSession.getId());
+                    try {
+                        smsService.sendTerminationNotice(customerPhone, labels);
+                        log.info("✅ 통화 강제 종료 사유 SMS 발송 완료 - to={}, types={}", customerPhone, labels);
+                    } catch (Exception e) {
+                        log.error("❌ 통화 강제 종료 사유 SMS 발송 실패 - sessionId={}, err={}", callSession.getId(), e.getMessage(), e);
+                    }
+                }
             } catch (ApiException e) {
                 log.error("❌ Twilio 통화 종료 실패 (Call SID: {}): {}", callSid, e.getMessage(), e);
             }
@@ -619,5 +630,23 @@ public class CallSessionServiceImpl implements CallSessionService {
             .simple(callSession.getSummarySimple())
             .detailed(callSession.getSummaryDetailed())
             .build();
+    }
+
+    private Set<String> buildAbuseLabels(Long sessionId) {
+        Set<String> labels = new LinkedHashSet<>();
+        if (abuseTypeLogRepository
+                .existsByAbuseLog_CallLog_CallSession_IdAndAbuseType_VerbalAbuseTrue(sessionId)) {
+            labels.add("욕설");
+        }
+        if (abuseTypeLogRepository
+                .existsByAbuseLog_CallLog_CallSession_IdAndAbuseType_SexualHarassTrue(sessionId)) {
+            labels.add("성희롱");
+        }
+        if (abuseTypeLogRepository
+                .existsByAbuseLog_CallLog_CallSession_IdAndAbuseType_ThreatTrue(sessionId)) {
+            labels.add("협박");
+        }
+        if (labels.isEmpty()) labels.add("폭언");
+        return labels;
     }
 }
