@@ -56,6 +56,10 @@ public class CallSession extends BaseEntity {
     @Column(name= "summary_detailed", length = 2000)
     private String summaryDetailed;
 
+    // 통화 강제 종료 여부
+    @Column(nullable = false)
+    private boolean forcedTerminated = false;
+
     public void updateAbuseCnt() {
         this.totalAbuseCnt = (this.totalAbuseCnt == null ? 0 : this.totalAbuseCnt) + 1;
     }
@@ -79,4 +83,7 @@ public class CallSession extends BaseEntity {
     public void updateUser(User user) {
         this.user = user;
     }
+
+    public void markForcedTerminated() { this.forcedTerminated = true; }
+
 }
