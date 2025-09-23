@@ -54,6 +54,10 @@ public class ShoutingDetector {
 	private static final double PITCH_BOUNDARY = 165.0; // 피치 높낮이 구분 기준
 	private static final double DB_BOUNDARY = 20.0; // 데시벨 증가 경계값 // TODO: 세기 변화량
 
+	private static final double DEFAULT_BASELINE_PITCH_HZ = 150.0; // TODO: default pitch
+	private static final double DEFAULT_BASELINE_VOLUME_DB = 30.0; // TODO: default dB
+	private double provisionalBasePitchHz = DEFAULT_BASELINE_PITCH_HZ;
+	private double provisionalBaseVolumeDb = DEFAULT_BASELINE_VOLUME_DB;
 
 	@Setter
     private SttContext sttContext;
@@ -103,6 +107,10 @@ public class ShoutingDetector {
 			};
 
 			dispatcher = new AudioDispatcher(audioStream, 1024, 0);
+
+			// 임시 임계값 적용
+			setThresholdsFrom(provisionalBasePitchHz, provisionalBaseVolumeDb, false);
+
 			// 피치 분석 핸들러
 			PitchDetectionHandler pitchHandler = (pitchDetectionResult, audioEvent) -> {
 				float pitchInHz = pitchDetectionResult.getPitch();
@@ -131,7 +139,6 @@ public class ShoutingDetector {
 					// 누적 시간이 3초를 초과하면 기준값 설정
 					if (accumulatedBaselineDuration >= BASELINE_PERIOD_SECONDS && !isBaselineSet.get()) {
 						calculateBaselineAndSetThreshold();
-						isBaselineSet.set(true);
 						log.info("✅ 기준값 수집 완료.");
 					}
 				}
@@ -161,8 +168,8 @@ public class ShoutingDetector {
 						}
 					}
 
-					// 고함 감지 단계: 기준 설정이 완료되고 피치가 감지된 경우
-					if (isBaselineSet.get() && isVoiceDetected) {
+					// 고함 감지 단계: 피치가 감지된 경우
+					if (isVoiceDetected) {
 						float currentPitch = ShoutingDetector.this.lastKnownPitch;
 						if (currentPitch > shoutingPitchThreshold && currentVolume > shoutingVolumeThreshold) {
 							log.info("🚨🚨🚨 고함 감지! 현재 피치: {}Hz, 볼륨: {}dB", currentPitch, currentVolume);
@@ -196,32 +203,7 @@ public class ShoutingDetector {
 		// Twilio의 u-law 데이터를 16비트 PCM으로 변환
 		byte[] pcmData = convertULawToPcm(audioData);
 		pipedOutputStream.write(pcmData);
-	}
-
-	private void calculateBaselineAndSetThreshold() {
-		if (basePitches.isEmpty() || baseVolumes.isEmpty()) {
-			shoutingPitchThreshold = 500;
-			shoutingVolumeThreshold = 1.0;
-			return;
-		}
-
-		// 정렬
-		Collections.sort(basePitches);
-		Collections.sort(baseVolumes);
-
-		// 중앙값 추출
-		double medianBasePitch = basePitches.get(basePitches.size() / 2);
-		double medianBaseVolume = baseVolumes.get(baseVolumes.size() / 2);
-
-		this.isHighPitchUser = (medianBasePitch > PITCH_BOUNDARY);
-		double pitchIncreaseFactor = this.isHighPitchUser ? PITCH_INCREASE_FACTOR_HIGH : PITCH_INCREASE_FACTOR_LOW;
-
-		shoutingPitchThreshold = medianBasePitch * (pitchIncreaseFactor);
-		shoutingVolumeThreshold = medianBaseVolume + DB_BOUNDARY;
-
-
-		log.info("✅ 기준 피치 설정 완료: {}Hz, 고함 임계값: {}Hz", medianBasePitch, shoutingPitchThreshold);
-		log.info("✅ 기준 볼륨 설정 완료: {}dB, 고함 임계값: {}dB", medianBaseVolume, shoutingVolumeThreshold);
+		pipedOutputStream.flush();
 	}
 
 
@@ -241,6 +223,28 @@ public class ShoutingDetector {
 		}
 	}
 
+	private void calculateBaselineAndSetThreshold() {
+		if (basePitches.isEmpty() || baseVolumes.isEmpty()) {
+			log.warn("베이스라인 수집치 부족 → default 임계값 유지");
+			setThresholdsFrom(provisionalBasePitchHz, provisionalBaseVolumeDb,false);
+			return;
+		}
+
+		// 정렬
+		Collections.sort(basePitches);
+		Collections.sort(baseVolumes);
+
+		// 중앙값 추출
+		double medianBasePitch = basePitches.get(basePitches.size() / 2);
+		double medianBaseVolume = baseVolumes.get(baseVolumes.size() / 2);
+
+		setThresholdsFrom(medianBasePitch, medianBaseVolume,true);
+
+
+		log.info("✅ 기준 피치 설정 완료: {}Hz, 고함 임계값: {}Hz", medianBasePitch, shoutingPitchThreshold);
+		log.info("✅ 기준 볼륨 설정 완료: {}dB, 고함 임계값: {}dB", medianBaseVolume, shoutingVolumeThreshold);
+	}
+
 	// u-law -> PCM 변환 메서드 추가
 	private byte[] convertULawToPcm(byte[] uLawData) {
 		byte[] pcmData = new byte[uLawData.length * 2];
@@ -251,6 +255,24 @@ public class ShoutingDetector {
 			buffer.putShort((short) pcmValue);
 		}
 		return pcmData;
+	}
+
+	// 공통 임계값 세팅 유틸
+	private void setThresholdsFrom(double basePitch, double baseVolume, boolean markBaselineSet) {
+		this.isHighPitchUser = (basePitch > PITCH_BOUNDARY);
+		double pitchIncreaseFactor = this.isHighPitchUser ? PITCH_INCREASE_FACTOR_HIGH : PITCH_INCREASE_FACTOR_LOW;
+
+		this.shoutingPitchThreshold  = basePitch  * pitchIncreaseFactor;
+		this.shoutingVolumeThreshold = baseVolume + DB_BOUNDARY;
+
+		if (markBaselineSet) {
+			isBaselineSet.set(true);
+			log.info("✅ 개별 기준 임계값 적용: basePitch={}Hz, baseVol={}dB → thresPitch={}Hz, thresVol={}dB",
+				basePitch, baseVolume, shoutingPitchThreshold, shoutingVolumeThreshold);
+		} else {
+			log.info("⏳ 임시 임계값 적용(default: basePitch={}Hz, baseVol={}dB → thresPitch={}Hz, thresVol={}dB",
+				basePitch, baseVolume, shoutingPitchThreshold, shoutingVolumeThreshold);
+		}
 	}
 
 }
