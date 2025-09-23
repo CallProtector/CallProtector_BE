@@ -118,37 +118,10 @@ public class CallSessionServiceImpl implements CallSessionService {
                 Call.updater(callSid).setStatus(Call.UpdateStatus.COMPLETED).update();
                 log.info("Twilio Call SID {} - 통화 종료 성공.", callSid);
 
+                callSession.markForcedTerminated();
+
                 callSession.updateEndedAt();
 
-                String customerPhone = callSession.getCallerNumber();
-                if (customerPhone == null || customerPhone.isBlank()) {
-                    log.warn("❗ 고객 번호가 없어 종료 안내 SMS 발송을 생략합니다. sessionId={}", callSession.getId());
-                } else {
-                    final int maxTries = 15;
-                    final long intervalMs = 200;
-                    Set<String> labels = new LinkedHashSet<>();
-
-                    for (int i = 0; i < maxTries; i++) {
-                        labels = buildAbuseLabels(callSession.getId());
-                        if (!(labels.size() == 1 && labels.contains("부적절한 발언"))) {
-                            if (i > 0) {
-                                log.info("통화 종료 직후 {}회 재조회 후 폭언 유형 감지: {}", i + 1, labels);
-                            }
-                            break;
-                        }
-                        try { Thread.sleep(intervalMs); } catch (InterruptedException ie) {
-                            Thread.currentThread().interrupt();
-                            break;
-                        }
-                    }
-
-                    try {
-                        smsService.sendTerminationNotice(customerPhone, labels);
-                        log.info("✅ 통화 강제 종료 사유 SMS 발송 완료 - to={}, types={}", customerPhone, labels);
-                    } catch (Exception e) {
-                        log.error("❌ 통화 강제 종료 사유 SMS 발송 실패 - sessionId={}, err={}", callSession.getId(), e.getMessage(), e);
-                    }
-                }
             } catch (ApiException e) {
                 log.error("❌ Twilio 통화 종료 실패 (Call SID: {}): {}", callSid, e.getMessage(), e);
             }
@@ -649,21 +622,4 @@ public class CallSessionServiceImpl implements CallSessionService {
             .build();
     }
 
-    private Set<String> buildAbuseLabels(Long sessionId) {
-        Set<String> labels = new LinkedHashSet<>();
-        if (abuseTypeLogRepository
-                .existsByAbuseLog_CallLog_CallSession_IdAndAbuseType_VerbalAbuseTrue(sessionId)) {
-            labels.add("욕설");
-        }
-        if (abuseTypeLogRepository
-                .existsByAbuseLog_CallLog_CallSession_IdAndAbuseType_SexualHarassTrue(sessionId)) {
-            labels.add("성희롱");
-        }
-        if (abuseTypeLogRepository
-                .existsByAbuseLog_CallLog_CallSession_IdAndAbuseType_ThreatTrue(sessionId)) {
-            labels.add("협박");
-        }
-        if (labels.isEmpty()) labels.add("부적절한 발언");
-        return labels;
-    }
 }
