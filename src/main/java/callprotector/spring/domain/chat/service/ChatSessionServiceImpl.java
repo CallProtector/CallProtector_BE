@@ -68,6 +68,9 @@ public class ChatSessionServiceImpl implements ChatSessionService{
                         .sessionId(session.getId())
                         .title(session.getTitle())
                         .startTime(session.getCreatedAt().toString())
+                        .lastUserQuestionAt(session.getLastUserQuestionAt() != null
+                                ? session.getLastUserQuestionAt().toString()
+                                : null)
                         .build())
                 .toList();
     }
