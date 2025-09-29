@@ -54,6 +54,9 @@ public class CallChatSessionServiceImpl implements CallChatSessionService {
                         .sessionId(session.getId())
                         .createdAt(session.getCreatedAt().toString()) // BaseEntity.getCreatedAt()
                         .title(session.getTitle())
+                        .lastUserQuestionAt(session.getLastUserQuestionAt() != null
+                                ? session.getLastUserQuestionAt().toString()
+                                : null)
                         .build())
                 .toList();
     }
