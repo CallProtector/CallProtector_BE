@@ -15,6 +15,7 @@ public class CallChatSessionResponseDTO {
         private Long sessionId;
         private String createdAt;
         private String title;
+        private String lastUserQuestionAt;
     }
 
 }
