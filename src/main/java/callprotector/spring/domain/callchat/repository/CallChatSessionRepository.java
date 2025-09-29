@@ -9,7 +9,7 @@ import java.util.List;
 
 @Repository
 public interface CallChatSessionRepository extends JpaRepository<CallChatSession, Long> {
-    List<CallChatSession> findByUserIdOrderByIdDesc(Long userId);
+    List<CallChatSession> findByUserIdOrderByLastUserQuestionAtDesc(Long userId);
 
     // CallChatSessionRepository
     Optional<CallChatSession> findByUserIdAndCallSessionId(Long userId, Long callSessionId);
