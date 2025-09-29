@@ -30,18 +30,18 @@ public class CallChatLogServiceImpl implements CallChatLogService {
         try {
             CallChatSession session = callChatSessionService.getSessionById(sessionId);
 
-            CallChatLog log = CallChatLog.builder()
-                    .callChatSession(session)
-                    .question(question)
-                    .answer(answer)
-                    .sourcePages(sourcePages)
-                    .build();
-
-            callChatLogRepository.save(log);
+            CallChatLog saved = callChatLogRepository.save(
+                    CallChatLog.builder()
+                            .callChatSession(session)
+                            .question(question)
+                            .answer(answer)
+                            .sourcePages(sourcePages)
+                            .build()
+            );
 
             // 사용자 질문이 존재하면 마지막 사용자 질문 시각 갱신
             if (question != null && !question.isBlank()) {
-                session.touchLastUserQuestionAt(LocalDateTime.now());
+                session.touchLastUserQuestionAt(saved.getCreatedAt());
             }
 
 

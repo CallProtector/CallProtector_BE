@@ -35,15 +35,17 @@ public class ChatLogServiceImpl implements ChatLogService {
         try {
             ChatSession session = chatSessionService.getSessionById(sessionId);
 
-            chatLogRepository.save(ChatLog.builder()
-                    .chatSession(session)
-                    .question(question)
-                    .answer(answer)
-                    .sourcePages(sourcePages)
-                    .build());
+            ChatLog saved = chatLogRepository.save(
+                    ChatLog.builder()
+                            .chatSession(session)
+                            .question(question)
+                            .answer(answer)
+                            .sourcePages(sourcePages)
+                            .build()
+            );
             // 사용자 질문이 존재하면 마지막 사용자 질문 시각 갱신
             if (question != null && !question.isBlank()) {
-                session.touchLastUserQuestionAt(LocalDateTime.now());
+                session.touchLastUserQuestionAt(saved.getCreatedAt());
             }
         } catch (Exception e) {
             log.error("❌ 채팅 로그 저장 실패", e);

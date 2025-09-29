@@ -49,7 +49,7 @@ public class CallChatSessionServiceImpl implements CallChatSessionService {
     @Override
     @Transactional(readOnly = true)
     public List<CallChatSessionResponseDTO.CallChatSessionResponse> getSessionListDtoByUserId(Long userId) {
-        return callChatSessionRepository.findByUserIdOrderByLastUserQuestionAtDesc(userId).stream()
+        return callChatSessionRepository.findAllForUserOrderByLastUserQuestion(userId).stream()
                 .map(session -> CallChatSessionResponseDTO.CallChatSessionResponse.builder()
                         .sessionId(session.getId())
                         .createdAt(session.getCreatedAt().toString()) // BaseEntity.getCreatedAt()
