@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -21,7 +22,6 @@ import java.util.List;
 public class CallChatLogServiceImpl implements CallChatLogService {
 
     private final CallChatLogRepository callChatLogRepository;
-
     private final CallChatSessionService callChatSessionService;
 
     @Override
@@ -38,6 +38,13 @@ public class CallChatLogServiceImpl implements CallChatLogService {
                     .build();
 
             callChatLogRepository.save(log);
+
+            // 사용자 질문이 존재하면 마지막 사용자 질문 시각 갱신
+            if (question != null && !question.isBlank()) {
+                session.touchLastUserQuestionAt(LocalDateTime.now());
+            }
+
+
         } catch (Exception e) {
             log.error("❌ 상담별 채팅 로그 저장 실패", e);
             throw new CallChatGeneralException(ErrorStatus.CALLCHAT_LOG_SAVE_FAILED);
