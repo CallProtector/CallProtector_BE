@@ -63,7 +63,7 @@ public class ChatSessionServiceImpl implements ChatSessionService{
     @Override
     @Transactional(readOnly = true)
     public List<ChatSessionResponseDTO.ChatSessionResponse> getSessionList(Long userId) {
-        return chatSessionRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+        return chatSessionRepository.findByUserIdOrderByLastUserQuestionAtDesc(userId).stream()
                 .map(session -> ChatSessionResponseDTO.ChatSessionResponse.builder()
                         .sessionId(session.getId())
                         .title(session.getTitle())
