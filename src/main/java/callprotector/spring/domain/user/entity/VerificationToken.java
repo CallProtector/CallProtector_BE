@@ -20,7 +20,7 @@ public class VerificationToken {
 
     private LocalDateTime expiresAt;
 
-    private boolean verified; // ✅ 인증 완료 여부 저장
+    private boolean verified; // 인증 완료 여부 저장
 
     public static VerificationToken create(String email, String code) {
         VerificationToken token = new VerificationToken();
