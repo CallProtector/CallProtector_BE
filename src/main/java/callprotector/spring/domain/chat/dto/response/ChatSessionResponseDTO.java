@@ -16,6 +16,7 @@ public class ChatSessionResponseDTO {
         private String startTime;
         private String title;
         private String category;
+        private String lastUserQuestionAt;
     }
 
 }
