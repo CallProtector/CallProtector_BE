@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -40,6 +41,10 @@ public class ChatLogServiceImpl implements ChatLogService {
                     .answer(answer)
                     .sourcePages(sourcePages)
                     .build());
+            // 사용자 질문이 존재하면 마지막 사용자 질문 시각 갱신
+            if (question != null && !question.isBlank()) {
+                session.touchLastUserQuestionAt(LocalDateTime.now());
+            }
         } catch (Exception e) {
             log.error("❌ 채팅 로그 저장 실패", e);
             throw new ChatGeneralException(ErrorStatus.CHAT_LOG_SAVE_FAILED);
