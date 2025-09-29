@@ -6,6 +6,7 @@ import callprotector.spring.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,4 +37,12 @@ public class CallChatSession extends BaseEntity {
 
     @OneToMany(mappedBy = "callChatSession", cascade = CascadeType.ALL)
     private List<CallChatLog> logs = new ArrayList<>();
+
+    // 마지막 사용자 질문 시각(denorm)
+    @Column(name = "last_user_question_at")
+    private LocalDateTime lastUserQuestionAt;
+
+    public void touchLastUserQuestionAt(LocalDateTime t) {
+        this.lastUserQuestionAt = t;
+    }
 }
