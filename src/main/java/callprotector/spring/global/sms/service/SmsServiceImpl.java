@@ -26,7 +26,7 @@ public class SmsServiceImpl implements SmsService {
 
         String joinedTypes = String.join(", ", (abuseTypes == null || abuseTypes.isEmpty())
                 ? Set.of("부적절한 발언") : abuseTypes);
-        String text = "[CallProtector] 폭언(" + joinedTypes + ") 3회 발생으로 인해 통화가 종료되었습니다.";
+        String text = "[온음] 폭언(" + joinedTypes + ") 3회 발생으로 인해 통화가 자동 종료되었습니다.";
 
         Message m = new Message();
         m.setFrom(from);
