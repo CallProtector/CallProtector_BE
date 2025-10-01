@@ -438,11 +438,6 @@ public class SttContext {
 		if (now - lastBeepAt < BEEP_COOLDOWN_MS) return;
 
 		sttWebSocketHandler.sendSttToClient(userId, Map.of(
-				"type", "mute",
-				"ts", now
-		));
-
-		sttWebSocketHandler.sendSttToClient(userId, Map.of(
 				"type", "beep",
 				"durationMs", durationMs,
 				"ts", now
