@@ -3,8 +3,11 @@ package callprotector.spring.global.handler;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import callprotector.spring.global.twilio.service.TwilioRestService;
 import com.google.api.gax.rpc.ClientStream;
 import com.google.api.gax.rpc.ResponseObserver;
 import com.google.api.gax.rpc.StreamController;
@@ -53,8 +56,13 @@ public class SttContext {
 	private static final long BEEP_COOLDOWN_MS = 1000;
 	private static final long BEEP_DURATION_MS = 2000;
 
+	private final String customerCallSid;
+	private final TwilioRestService twilioRestService;
+	private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
 	public SttContext(Long callSessionId, Long userId, CallTrack track, FastClient fastClient,
-						CallSessionService callSessionService, CallLogService callLogService, CallSttLogService callSttLogService, ClientNotifier sttWebSocketHandler) {
+					  CallSessionService callSessionService, CallLogService callLogService, CallSttLogService callSttLogService, ClientNotifier sttWebSocketHandler,
+					  String customerCallSid, TwilioRestService twilioRestService) {
 		this.callSessionId = callSessionId;
 		this.userId = userId;
 		this.track = track;
@@ -63,6 +71,8 @@ public class SttContext {
 		this.callLogService = callLogService;
 		this.callSttLogService = callSttLogService;
 		this.sttWebSocketHandler = sttWebSocketHandler;
+		this.customerCallSid = customerCallSid;
+		this.twilioRestService = twilioRestService;
 	}
 
 	// Google STT 스트림 초기화
@@ -153,7 +163,7 @@ public class SttContext {
 								log.info("STT 결과 욕설 감지 - (isAbuse={}) / CallSession total_abuse_cnt 업데이트 시도 - CallSessionId={}", isAbuse, callSessionId);
 								callSessionService.incrementTotalAbuseCnt(callSessionId);
 								callLogService.updateAbuse(callSessionId, track);
-								sendBeepIfAllowed(BEEP_DURATION_MS);
+								sendBeepIfAllowed(BEEP_DURATION_MS, callSessionId);
 							}
 						} else {
 							// OUTBOUND는 중복 누적 방지 없이 무조건 추가
@@ -369,7 +379,7 @@ public class SttContext {
 										callSessionService.incrementTotalAbuseCnt(callSessionId);
 										log.info("🍀 고객 발화 필터링됨");
 										callLogService.updateAbuse(callSessionId, track);
-										sendBeepIfAllowed(BEEP_DURATION_MS);
+										sendBeepIfAllowed(BEEP_DURATION_MS, callSessionId);
 									}
 								} else { // OUTBOUND (상담원) 스크립트 누적
 									// 중복 누적 방지 없이 무조건 추가
@@ -432,23 +442,50 @@ public class SttContext {
 	}
 
 	// 상담원 비프 트리거 전송
-	private void sendBeepIfAllowed(long durationMs) {
+	private void sendBeepIfAllowed(long durationMs, Long callSessionId) {
+		log.info("🎯 sendBeepIfAllowed() 호출됨 - userId={}, track={}, callSessionId={}, customerCallSid={}, lastBeepAt={}",
+				userId, track, callSessionId, customerCallSid, lastBeepAt);
+
 		if (userId == null) return;
 		long now = System.currentTimeMillis();
 		if (now - lastBeepAt < BEEP_COOLDOWN_MS) return;
 
+		// CallSession에서 ConferenceSid 조회
+		String conferenceSid = callSessionService.getConferenceSid(callSessionId);
+		if (conferenceSid == null) {
+			log.warn("❗ ConferenceSid 없음 - callSessionId={}", callSessionId);
+			return;
+		}
+
+		// Twilio REST API로 고객 leg 음소거
+		if (track == CallTrack.INBOUND && customerCallSid != null && twilioRestService != null) {
+			twilioRestService.muteParticipantByConferenceSid(conferenceSid, customerCallSid, true);
+			log.info("📢 고객 음성 Mute 요청 완료 (ConferenceSid={}, ParticipantCallSid={})",
+					conferenceSid, customerCallSid);
+		}
+
+		// 상담원 클라이언트에 비프 트리거 전송
 		sttWebSocketHandler.sendSttToClient(userId, Map.of(
 				"type", "beep",
 				"durationMs", durationMs,
 				"ts", now
 		));
 
+		// 비동기적으로 음소거 해제 예약
+		if (track == CallTrack.INBOUND && customerCallSid != null && twilioRestService != null) {
+			scheduler.schedule(() -> {
+				twilioRestService.muteParticipantByConferenceSid(conferenceSid, customerCallSid, false);
+				log.info("✅ 고객 음성 Unmute 완료 (ConferenceSid={}, ParticipantCallSid={})",
+						conferenceSid, customerCallSid);
+			}, durationMs, TimeUnit.MILLISECONDS);
+		}
+
 		lastBeepAt = now;
-		log.info("🔔 비프 트리거 전송 (userId={}, durationMs={})", userId, durationMs);
+		log.info("🔔 비프 트리거 전송 및 음소거 처리 완료 (userId={}, durationMs={})", userId, durationMs);
 	}
 
 	public void triggerBeep() {
-		sendBeepIfAllowed(BEEP_DURATION_MS);
+		sendBeepIfAllowed(BEEP_DURATION_MS, callSessionId);
 	}
 
 }
