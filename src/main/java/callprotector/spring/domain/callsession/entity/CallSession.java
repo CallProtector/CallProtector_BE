@@ -49,6 +49,10 @@ public class CallSession extends BaseEntity {
     @Column(name = "twilio_call_sid", length = 34)
     private String twilioCallSid;
 
+    // CF로 시작하는 34자리 문자열
+    @Column(name = "twilio_conference_sid", length = 34)
+    private String twilioConferenceSid;
+
     // 상담 요약
     @Column(name= "summary_simple",length = 2000)
     private String summarySimple;
@@ -85,5 +89,7 @@ public class CallSession extends BaseEntity {
     }
 
     public void markForcedTerminated() { this.forcedTerminated = true; }
+
+    public void updateConferenceSid(String conferenceSid) { this.twilioConferenceSid = conferenceSid; }
 
 }
