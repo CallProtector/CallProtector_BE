@@ -38,4 +38,8 @@ public interface CallSessionService {
     CallSessionResponseDTO.CallSessionInfoDTO getSessionInfo(Long callSessionId);
 
     CallSessionResponseDTO.AbusiveCallSessionPagingDTO getAbusiveCallSessions(Long userId, Long cursorId, int size);
+
+    void updateConferenceSidByCallSid(String customerCallSid, String conferenceSid);
+
+    String getConferenceSid(Long callSessionId);
 }

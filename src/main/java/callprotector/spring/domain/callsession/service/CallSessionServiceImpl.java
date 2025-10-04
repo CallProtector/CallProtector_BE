@@ -434,6 +434,23 @@ public class CallSessionServiceImpl implements CallSessionService {
         return getCallSessionInfo(session);
     }
 
+    @Override
+    public void updateConferenceSidByCallSid(String customerCallSid, String conferenceSid) {
+        CallSession callSession = callSessionRepository.findByTwilioCallSid(customerCallSid)
+                .orElseThrow(() -> new IllegalArgumentException("❌ CallSession을 찾을 수 없음. customerCallSid=" + customerCallSid));
+
+        callSession.updateConferenceSid(conferenceSid);
+        log.info("✅ CallSession ConferenceSid 업데이트 완료 - callSessionId={}, conferenceSid={}",
+                callSession.getId(), conferenceSid);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getConferenceSid(Long callSessionId) {
+        return callSessionRepository.findConferenceSidById(callSessionId)
+                .orElseThrow(() -> new IllegalArgumentException("❌ ConferenceSid를 찾을 수 없음. callSessionId=" + callSessionId));
+    }
+
     @Transactional
     protected CallSession createCallSession(User user, CallSessionRequestDTO.CallSessionMakeDTO dto) {
 
