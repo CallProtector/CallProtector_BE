@@ -55,6 +55,8 @@ public class WebSecurityConfig
                                             "/swagger-resources/**",
                                             "/api/auth/**",
                                             "/twilio/voice",
+                                            "/twilio/connect-agent-to-conference",
+                                            "/twilio/conference-status",
                                             "/popup.html",
                                             "/api/abuse/**",
                                             "/ws/**", // 인증 인가 처리 후 삭제 예정
