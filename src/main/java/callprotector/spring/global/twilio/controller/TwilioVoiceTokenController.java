@@ -33,6 +33,9 @@ public class TwilioVoiceTokenController {
     @Value("${twilio.api.secret}")
     private String TWILIO_API_SECRET;
 
+    @Value("${twilio.twiml.app.sid}")
+    private String TWILIO_TWIML_APP_SID;
+
     @GetMapping
     public ApiResponse<TwilioTokenResponseDTO> getToken(
         @UserId Long userId
@@ -40,6 +43,7 @@ public class TwilioVoiceTokenController {
         String fixedIdentity = "browserUser"; // 고정 ID - 단일 사용자로 구현, 추후 상담사 분배 시에 다중 사용자로 확장 가능
         VoiceGrant grant = new VoiceGrant();
         grant.setIncomingAllow(true);
+        grant.setOutgoingApplicationSid(TWILIO_TWIML_APP_SID);
 
         AccessToken token = new AccessToken.Builder(
                 TWILIO_ACCOUNT_SID,
