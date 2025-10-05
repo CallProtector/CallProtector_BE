@@ -20,7 +20,9 @@ import java.util.Map;
 )
 public class TwilioWebhookController {
     private static final String BROWSER_CLIENT_ID = "browserUser";
-    private static final String WS_URL ="wss://callprotect.site/ws/audio";
+    private static final String NGROK_HOST = "pet-pipefish-friendly.ngrok-free.app"; // 현재 ngrok 주소
+    private static final String WS_URL = "wss://" + NGROK_HOST + "/ws/audio";
+    private static final String STATUS_CALLBACK_URL = "https://" + NGROK_HOST + "/twilio/conference-status";
 
     @PostMapping(value = "/voice", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
     public String onIncomingCall(@RequestParam Map<String, String> params) {
@@ -30,43 +32,76 @@ public class TwilioWebhookController {
         String callerNumber = params.get("From");
         String inboundCallSid = params.get("CallSid");
 
-        Client clientVerb = new Client.Builder(BROWSER_CLIENT_ID) // 브라우저 Client ID - TwilioVoiceTokenController의 fixedIdentity와 일치해야 함
-            .parameter(new Parameter.Builder()
-                .name("initialCallSid")
-                .value(inboundCallSid)
-                .build())
-            .build();
+        // STT 실시간 Stream 연결
+        Start stream = new Start.Builder()
+                .stream(new Stream.Builder()
+                        .url(WS_URL)
+                        .track(Stream.Track.BOTH_TRACKS)
+                        .parameter(new Parameter.Builder().name("primaryCallSid").value(inboundCallSid).build())
+                        .parameter(new Parameter.Builder().name("callerNumber").value(callerNumber).build())
+                        .build())
+                .build();
+
+        // 상담원(Client) 연결 설정
+        Client agentClient = new Client.Builder(BROWSER_CLIENT_ID)
+                .parameter(new Parameter.Builder().name("initialCallSid").value(inboundCallSid).build())
+                .url("https://" + NGROK_HOST + "/twilio/connect-agent-to-conference")
+                .build();
+
+        Dial agentDial = new Dial.Builder().client(agentClient).build();
 
         VoiceResponse response = new VoiceResponse.Builder()
                 .say(new Say.Builder("테스트")
-                    .voice(Say.Voice.ALICE)
-                    .language(Say.Language.KO_KR)
-                    .build())
-                .start(new Start.Builder()
-                        .stream(new Stream.Builder()
-                                .url(WS_URL)
-                                .track(Stream.Track.BOTH_TRACKS)
-                                .parameter(new com.twilio.twiml.voice.Parameter.Builder()
-                                    .name("primaryCallSid")
-                                    .value(inboundCallSid)
-                                        .build())
-                                .parameter(new com.twilio.twiml.voice.Parameter.Builder()
-                                        .name("callerNumber")
-                                        .value(callerNumber)
-                                        .build())
-                                .build())
-                        .build())
-                .dial(new Dial.Builder()
-                        .timeout(30) // 30초 안에 응답 없으면 통화 불가 안내 멘트
-                        .client(clientVerb)
-                        .build())
-                .say(new Say.Builder("지금은 통화가 불가능한 시간입니다. 나중에 다시 걸어주세요.") // 안내 멘트 수정 예정
                         .voice(Say.Voice.ALICE)
-                        .language(Say.Language.KO_KR)
-                        .build())
-
+                        .language(Say.Language.KO_KR).build())
+                .start(stream)
+                .dial(agentDial)
                 .build();
 
-        return response.toXml(); // TwiML 반환
+        // 추가할 Conference XML
+        String conferenceXml =
+                "<Dial>" +
+                        "<Conference startConferenceOnEnter=\"true\" " +
+                        "endConferenceOnExit=\"false\" " +
+                        "statusCallback=\"" + STATUS_CALLBACK_URL + "\" " +
+                        "statusCallbackEvent=\"start end join leave\">" +
+                        inboundCallSid +
+                        "</Conference>" +
+                        "</Dial>";
+
+        // TwiML에 Conference 삽입
+        String finalTwiml = response.toXml().replace("</Response>", conferenceXml + "</Response>");
+
+        log.info("📡 TwiML XML :\n{}", finalTwiml);
+        return finalTwiml;
+    }
+
+    @PostMapping(value = "/connect-agent-to-conference", produces = MediaType.APPLICATION_XML_VALUE)
+    public String connectAgentToConference(@RequestParam Map<String, String> params) {
+        String customerCallSid = params.get("initialCallSid");
+        if (customerCallSid == null || customerCallSid.isBlank()) {
+            customerCallSid = params.get("ParentCallSid");
+        }
+
+        log.info("☆ Agent Answered - ConferenceName={}", customerCallSid);
+
+        VoiceResponse response = new VoiceResponse.Builder()
+                .say(new Say.Builder("상담원 연결")
+                        .language(Say.Language.KO_KR)
+                        .voice(Say.Voice.ALICE)
+                        .build())
+                .build();
+
+        String conferenceXml =
+                "<Dial>" +
+                        "<Conference startConferenceOnEnter=\"true\" endConferenceOnExit=\"true\">" +
+                        customerCallSid +
+                        "</Conference>" +
+                        "</Dial>";
+
+        String finalTwiml = response.toXml().replace("</Response>", conferenceXml + "</Response>");
+        log.info("📡 TwiML XML (상담원 Join) :\n{}", finalTwiml);
+
+        return finalTwiml;
     }
 }
