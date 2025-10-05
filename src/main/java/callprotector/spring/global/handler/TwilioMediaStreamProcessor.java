@@ -5,6 +5,8 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import callprotector.spring.domain.callsession.repository.CallSessionRepository;
+import callprotector.spring.global.twilio.service.TwilioRestService;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -37,6 +39,8 @@ public class TwilioMediaStreamProcessor {
 	private final ClientNotifier sttWebSocketHandler;
 	private final TwilioSessionManager twilioSessionManager;
 	private final ShoutingDetector shoutingDetector;
+	private final TwilioRestService twilioRestService;
+	private final CallSessionRepository callSessionRepository;
 
 	private final Map<CallTrack, SttContext> sttContexts = new ConcurrentHashMap<>();
 
@@ -136,8 +140,11 @@ public class TwilioMediaStreamProcessor {
 				callSessionService,
 				callLogService,
 				callSttLogService,
-				sttWebSocketHandler
+				sttWebSocketHandler,
+				this.primaryCallSid,
+				this.twilioRestService
 			);
+			inboundCtx.updateUserId(currentUserId);
 			inboundCtx.initializeStream(session.getId());
 			sttContexts.put(CallTrack.INBOUND, inboundCtx);
 
@@ -153,8 +160,11 @@ public class TwilioMediaStreamProcessor {
 				callSessionService,
 				callLogService,
 				callSttLogService,
-				sttWebSocketHandler
+				sttWebSocketHandler,
+				null,
+				null
 			);
+			inboundCtx.updateUserId(currentUserId);
 			outboundCtx.initializeStream(session.getId());
 			sttContexts.put(CallTrack.OUTBOUND, outboundCtx);
 

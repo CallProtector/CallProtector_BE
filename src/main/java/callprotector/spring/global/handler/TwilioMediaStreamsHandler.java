@@ -1,10 +1,12 @@
 package callprotector.spring.global.handler;
 
+import callprotector.spring.domain.callsession.repository.CallSessionRepository;
 import callprotector.spring.global.client.FastClient;
 import callprotector.spring.domain.calllog.service.CallLogService;
 import callprotector.spring.domain.callsession.service.CallSessionService;
 import callprotector.spring.domain.callsttlog.service.CallSttLogService;
 
+import callprotector.spring.global.twilio.service.TwilioRestService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import callprotector.spring.domain.user.service.UserService;
@@ -32,6 +34,8 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
     private final UserService userService;
     private final ClientNotifier sttWebSocketHandler;
     private final TwilioSessionManager sessionManager;
+    private final TwilioRestService twilioRestService;
+    private final CallSessionRepository callSessionRepository;
 
     private final Map<String, TwilioMediaStreamProcessor> activeProcessors = new ConcurrentHashMap<>();
 
@@ -50,7 +54,9 @@ public class TwilioMediaStreamsHandler extends AbstractWebSocketHandler {
             this.userService,
             this.sttWebSocketHandler,
             this.sessionManager,
-            shoutingDetector
+            shoutingDetector,
+            this.twilioRestService,
+            callSessionRepository
         );
         activeProcessors.put(session.getId(), processor);
     }
