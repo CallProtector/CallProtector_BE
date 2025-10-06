@@ -57,6 +57,7 @@ public class WebSecurityConfig
                                             "/twilio/voice",
                                             "/twilio/connect-agent-to-conference",
                                             "/twilio/conference-status",
+                                            "twilio//agent-twiML",
                                             "/popup.html",
                                             "/api/abuse/**",
                                             "/ws/**", // 인증 인가 처리 후 삭제 예정
