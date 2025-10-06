@@ -102,34 +102,35 @@
         OUTBOUND: { currentIndex: 0, finalReceived: false }
     };
 
-    function parseQueryParams(queryString) {
-        const params = {};
-        if (!queryString) {
-            return params;
+    // CallSid 추출 함수
+    function getCustomerCallSid(conn) {
+        const sid = conn.parameters.CallSid;
+        if (!sid) {
+            console.error("🚨 CallSid 추출 실패:", conn.parameters);
+            return null;
         }
-        queryString.split('&').forEach(pair => {
-            const [key, value] = pair.split('=');
-            if (key && value) {
-                params[decodeURIComponent(key)] = decodeURIComponent(value);
-            }
-        });
-        return params;
+        return sid;
     }
 
     function setupWebSocketListeners(websocket) {
         websocket.onopen = () => {
             console.log("🌐 WebSocket 연결 성공, 통화 수락 진행");
             if (pendingConnection) {
+                const customerCallSid = getCustomerCallSid(pendingConnection);
+                if (!customerCallSid) {
+                    console.error("🚨 CallSid 추출 실패. 통화 수락 중단.");
+                    pendingConnection.disconnect();
+                    return;
+                }
+
                 pendingConnection.accept();
                 console.log("✅ 통화 수락 완료");
-                const parsed = parseQueryParams(pendingConnection.parameters.Params);
-                const firstCallSid = parsed.initialCallSid;
-                // 통화 수락 후 서버로 메시지 전송
+
                 ws.send(JSON.stringify({
                     event: "callAccepted",
-                    callSid: firstCallSid
+                    callSid: customerCallSid
                 }));
-                console.log("✅생성된 웹소켓으로 통화 수락 시 callSid 전송 : ", firstCallSid);
+                console.log("✅ 생성된 웹소켓으로 callSid 전송 : ", customerCallSid);
                 pendingConnection = null;
                 document.getElementById("accept-btn").style.display = "none";
             }
@@ -318,8 +319,12 @@
                         return;
                     }
 
-                    const parsedParams = parseQueryParams(pendingConnection.parameters.Params);
-                    const initialCallSid = parsedParams.initialCallSid;
+                    const customerCallSid = getCustomerCallSid(pendingConnection);
+                    if (!customerCallSid) {
+                        alert("통화 연결 정보가 유효하지 않습니다.");
+                        return;
+                    }
+
                     const callerNumber = pendingConnection.parameters.From;
 
                     fetch('/api/call-sessions/user', {
@@ -329,7 +334,7 @@
                             'Authorization': `Bearer ${jwtToken}`
                         },
                         body: JSON.stringify({
-                            originalInboundCallSid: initialCallSid,
+                            originalInboundCallSid: customerCallSid,
                             callerNumber: callerNumber
                         })
                     })
@@ -358,12 +363,17 @@
                         return;
                     }
 
-                    const parsedForSend = parseQueryParams(pendingConnection.parameters.Params);
-                    const callSid = parsedForSend.initialCallSid;
+                    const customerCallSid = getCustomerCallSid(pendingConnection);
+                    if (!customerCallSid) {
+                        alert("통화 수락 중단. 정보가 유효하지 않습니다.");
+                        return;
+                    }
+
+                    const callSid = customerCallSid;
 
                     // 통화 수락 클릭 시에만 웹소켓 연결을 시작하고, 이미 연결되어 있으면 새로 연결하지 않음
                     if (!ws || ws.readyState === WebSocket.CLOSED) {
-                        ws = new WebSocket(`wss://callprotect.site/ws/stt?userId=${currentUserId}`);
+                        ws = new WebSocket(`wss://pet-pipefish-friendly.ngrok-free.app/ws/stt?userId=${currentUserId}`);
 
                         // 웹소켓 연결 리스너 설정
                         setupWebSocketListeners(ws);
