@@ -44,7 +44,7 @@ public class TwilioMediaStreamProcessor {
 	private Long currentCallSessionId;
 	private String primaryCallSid;
 
-	private static final long STREAM_RESTART_INTERVAL_MS = 5_000;
+	private static final long STREAM_RESTART_INTERVAL_MS = 10_000;
 	private static final long TEMP_USERID = 1;
 
 	public void handleTwilioMessage(WebSocketSession session, TextMessage message) throws Exception {
