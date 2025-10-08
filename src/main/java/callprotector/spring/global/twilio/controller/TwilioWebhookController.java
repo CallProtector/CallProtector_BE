@@ -38,7 +38,8 @@ public class TwilioWebhookController {
             .build();
 
         VoiceResponse response = new VoiceResponse.Builder()
-                .say(new Say.Builder("테스트")
+                .say(new Say.Builder("산업안전보건법에 따라 고객응대 근로자 보호 조치가 시행되고 있습니다." +
+                        "세 번 이상 폭언이 감지되면 에이아이에 의해 통화가 자동 종료됩니다.")
                     .voice(Say.Voice.ALICE)
                     .language(Say.Language.KO_KR)
                     .build())
