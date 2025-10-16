@@ -54,7 +54,7 @@ public class ShoutingDetector {
 	private static final double PITCH_BOUNDARY = 165.0; // 피치 높낮이 구분 기준
 	private static final double DB_BOUNDARY = 7.0; // 데시벨 증가 경계값 // TODO: 세기 변화량
 
-	private static final double DEFAULT_BASELINE_PITCH_HZ = 150.0; // TODO: default pitch
+	private static final double DEFAULT_BASELINE_PITCH_HZ = 190.0; // TODO: default pitch
 	private static final double DEFAULT_BASELINE_VOLUME_DB = 30.0; // TODO: default dB
 	private double provisionalBasePitchHz = DEFAULT_BASELINE_PITCH_HZ;
 	private double provisionalBaseVolumeDb = DEFAULT_BASELINE_VOLUME_DB;
