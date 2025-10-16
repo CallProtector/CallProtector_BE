@@ -49,8 +49,8 @@ public class ShoutingDetector {
 	private float lastKnownPitch = -1.0f;
 
 	private static final double BASELINE_PERIOD_SECONDS = 1.5;
-	private static final double PITCH_INCREASE_FACTOR_HIGH = 1.45; // TODO: 피치 변화율1
-	private static final double PITCH_INCREASE_FACTOR_LOW = 1.68; // TODO: 피치 변화율2
+	private static final double PITCH_INCREASE_FACTOR_HIGH = 1.6; // TODO: 피치 변화율1
+	private static final double PITCH_INCREASE_FACTOR_LOW = 1.8; // TODO: 피치 변화율2
 	private static final double PITCH_BOUNDARY = 165.0; // 피치 높낮이 구분 기준
 	private static final double DB_BOUNDARY = 8.0; // 데시벨 증가 경계값 // TODO: 세기 변화량
 
